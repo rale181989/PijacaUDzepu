@@ -1,0 +1,62 @@
+.center-spinner {
+  display: block;
+  margin: 80px auto;
+}
+
+.market-block {
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+ion-item.inactive ion-label h2 {
+  color: var(--ion-color-medium);
+  text-decoration: line-through;
+}
+
+ion-item ion-label p.desc {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.market-actions {
+  display: flex;
+  gap: 8px;
+  padding: 4px 16px 8px;
+}
+
+.stalls-section {
+  padding: 0 16px 12px;
+}
+
+.stalls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.stalls-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ion-color-dark);
+}
+
+.no-stalls {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  padding: 8px 0;
+}
+
+ion-chip {
+  margin: 4px;
+
+  .chip-action {
+    cursor: pointer;
+    margin-left: 6px;
+    font-size: 16px;
+
+    &.delete {
+      color: var(--ion-color-danger);
+    }
+  }
+}

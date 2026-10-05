@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/vendor-products"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ isEdit ? 'Izmeni proizvod' : 'Dodaj proizvod' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <form *ngIf="!loading" (ngSubmit)="save()">
+    <ion-item>
+      <ion-input label="Naziv proizvoda" labelPlacement="floating"
+                 [(ngModel)]="model.name" name="name" required></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-input label="Cena (din)" labelPlacement="floating" type="number"
+                 [(ngModel)]="model.price" name="price" required min="0.01"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-select label="Jedinica mere" labelPlacement="floating"
+                  [(ngModel)]="model.unit" name="unit" interface="popover">
+        <ion-select-option value="Kg">Kilogram (kg)</ion-select-option>
+        <ion-select-option value="Komad">Komad</ion-select-option>
+        <ion-select-option value="Veza">Veza</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-toggle [(ngModel)]="model.isAvailable" name="isAvailable">
+        Dostupno
+      </ion-toggle>
+    </ion-item>
+
+    <div class="image-section">
+      <img *ngIf="imageUrl" [src]="getImageUrl(imageUrl)" class="product-preview" />
+      <ion-button fill="outline" (click)="fileInput.click()" expand="block">
+        <ion-icon name="camera-outline" slot="start"></ion-icon>
+        {{ imageUrl ? 'Promeni sliku' : 'Dodaj sliku' }}
+      </ion-button>
+      <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+      <p *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</p>
+    </div>
+
+    <ion-button expand="block" type="submit" size="large" [disabled]="saving" class="ion-margin-top">
+      <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+      {{ isEdit ? 'Sačuvaj izmene' : 'Dodaj proizvod' }}
+    </ion-button>
+  </form>
+</ion-content>

@@ -1,0 +1,19 @@
+.center-spinner { display: block; margin: 40px auto; }
+
+ion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-total {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.total-row {
+  text-align: right;
+  padding: 16px;
+  font-size: 18px;
+  color: var(--ion-color-primary);
+}

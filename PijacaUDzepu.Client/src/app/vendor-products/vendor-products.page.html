@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Moji proizvodi</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/vendor-product-form">
+        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && products.length === 0" class="empty-state">
+    <ion-icon name="leaf-outline" size="large"></ion-icon>
+    <p>Nemate proizvode</p>
+    <ion-button routerLink="/vendor-product-form">Dodaj prvi proizvod</ion-button>
+  </div>
+
+  <ion-list *ngIf="!loading">
+    <ion-item-sliding *ngFor="let product of products">
+      <ion-item [routerLink]="['/vendor-product-form', product.id]">
+        <ion-thumbnail slot="start">
+          <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" />
+        </ion-thumbnail>
+        <ion-label>
+          <h2>{{ product.name }}</h2>
+          <p>{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}</p>
+        </ion-label>
+        <ion-toggle slot="end" [checked]="product.isAvailable"
+                    (ionChange)="toggleAvailability(product)"
+                    (click)="$event.stopPropagation()">
+        </ion-toggle>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="confirmDelete(product)">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button routerLink="/vendor-product-form">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

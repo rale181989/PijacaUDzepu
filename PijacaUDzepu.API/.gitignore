@@ -1,0 +1,12 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.pdb
+*.exe
+
+## Secrets
+appsettings.Development.json

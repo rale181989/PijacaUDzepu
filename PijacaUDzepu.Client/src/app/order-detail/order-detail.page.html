@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/my-orders"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Porudžbina #{{ order?.id }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <ng-container *ngIf="order">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ order.vendorName }}</ion-card-title>
+        <ion-badge [color]="getStatusColor(order.status)">
+          {{ getStatusLabel(order.status) }}
+        </ion-badge>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Datum: {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+        <p *ngIf="order.note">Napomena: {{ order.note }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-list>
+      <ion-list-header>
+        <ion-label>Stavke</ion-label>
+      </ion-list-header>
+      <ion-item *ngFor="let item of order.items">
+        <ion-label>
+          <h3>{{ item.productName }}</h3>
+          <p>{{ item.quantity }} {{ getUnitLabel(item.unit) }} x {{ item.unitPrice | number:'1.0-0' }} din</p>
+        </ion-label>
+        <ion-note slot="end" class="item-total">
+          {{ item.totalPrice | number:'1.0-0' }} din
+        </ion-note>
+      </ion-item>
+    </ion-list>
+
+    <div class="total-row">
+      <strong>Ukupno: {{ order.totalAmount | number:'1.0-0' }} din</strong>
+    </div>
+  </ng-container>
+</ion-content>

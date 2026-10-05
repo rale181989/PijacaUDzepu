@@ -1,0 +1,44 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Registracija</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="register-container">
+    <form (ngSubmit)="register()">
+      <ion-item>
+        <ion-input label="Ime" labelPlacement="floating"
+                   [(ngModel)]="model.firstName" name="firstName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Prezime" labelPlacement="floating"
+                   [(ngModel)]="model.lastName" name="lastName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Korisničko ime" labelPlacement="floating"
+                   [(ngModel)]="model.userName" name="userName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Lozinka" labelPlacement="floating" type="password"
+                   [(ngModel)]="model.password" name="password" required minlength="4"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Telefon" labelPlacement="floating" type="tel"
+                   [(ngModel)]="model.phoneNumber" name="phoneNumber"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" [disabled]="loading" class="ion-margin-top">
+        <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+        Registruj se
+      </ion-button>
+    </form>
+
+    <p class="ion-text-center ion-margin-top">
+      Već imate nalog? <a routerLink="/login">Prijavite se</a>
+    </p>
+  </div>
+</ion-content>

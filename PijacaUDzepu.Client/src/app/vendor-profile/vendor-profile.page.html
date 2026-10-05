@@ -1,0 +1,83 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Moj profil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <form *ngIf="!loading" (ngSubmit)="save()">
+    <ion-item>
+      <ion-input label="Naziv" labelPlacement="floating"
+                 [(ngModel)]="model.name" name="name" required></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-select label="Pijaca" labelPlacement="floating"
+                  [(ngModel)]="model.marketId" name="marketId" required
+                  (ionChange)="onMarketChange()" interface="popover">
+        <ion-select-option *ngFor="let market of markets" [value]="market.id">
+          {{ market.name }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-select label="Tezga" labelPlacement="floating"
+                  [(ngModel)]="model.stallId" name="stallId"
+                  interface="popover"
+                  [disabled]="stalls.length === 0">
+        <ion-select-option [value]="null">-- Bez tezge --</ion-select-option>
+        <ion-select-option *ngFor="let stall of stalls" [value]="stall.id">
+          Tezga {{ stall.label }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-textarea label="Opis" labelPlacement="floating"
+                    [(ngModel)]="model.description" name="description" rows="3"></ion-textarea>
+    </ion-item>
+
+    <ion-item>
+      <ion-input label="Telefon" labelPlacement="floating" type="tel"
+                 [(ngModel)]="model.phone" name="phone"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" type="submit" [disabled]="saving" class="ion-margin-top">
+      <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+      Sačuvaj
+    </ion-button>
+  </form>
+
+  <div *ngIf="!loading" class="password-section">
+    <h3>Promena lozinke</h3>
+    <form (ngSubmit)="changePassword()">
+      <ion-item>
+        <ion-input label="Trenutna lozinka" labelPlacement="floating" type="password"
+                   [(ngModel)]="currentPassword" name="currentPassword" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Nova lozinka" labelPlacement="floating" type="password"
+                   [(ngModel)]="newPassword" name="newPassword" required minlength="4"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Potvrdite novu lozinku" labelPlacement="floating" type="password"
+                   [(ngModel)]="confirmPassword" name="confirmPassword" required></ion-input>
+      </ion-item>
+      <p *ngIf="confirmPassword && !passwordsMatch" class="error-text">
+        Lozinke se ne poklapaju
+      </p>
+      <ion-button expand="block" type="submit"
+                  [disabled]="changingPassword || !currentPassword || !newPassword || !confirmPassword || !passwordsMatch || newPassword.length < 4"
+                  class="ion-margin-top">
+        <ion-spinner *ngIf="changingPassword" name="crescent" slot="start"></ion-spinner>
+        Promeni lozinku
+      </ion-button>
+    </form>
+  </div>
+</ion-content>

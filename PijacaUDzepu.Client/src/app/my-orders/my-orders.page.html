@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Moje porudžbine</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && orders.length === 0" class="empty-state">
+    <ion-icon name="receipt-outline" size="large"></ion-icon>
+    <p>Nemate porudžbine</p>
+  </div>
+
+  <ion-list *ngIf="!loading">
+    <ion-card *ngFor="let order of orders" [routerLink]="['/order-detail', order.id]">
+      <ion-card-header>
+        <ion-card-subtitle>
+          Porudžbina #{{ order.id }} — {{ order.vendorName }}
+        </ion-card-subtitle>
+        <ion-badge [color]="getStatusColor(order.status)">
+          {{ getStatusLabel(order.status) }}
+        </ion-badge>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ order.items.length }} stavki</p>
+        <p class="total">{{ order.totalAmount | number:'1.0-0' }} din</p>
+        <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+        <ion-button *ngIf="order.status === 'Pending'" fill="outline" color="danger" size="small"
+                    (click)="cancelOrder(order); $event.stopPropagation()">
+          Otkaži
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <ion-infinite-scroll [disabled]="!hasMore" (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Učitavanje...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

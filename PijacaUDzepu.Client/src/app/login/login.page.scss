@@ -1,0 +1,21 @@
+.login-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 40px;
+  text-align: center;
+
+  .logo-icon {
+    font-size: 64px;
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    margin-bottom: 32px;
+    font-weight: 600;
+  }
+
+  ion-item {
+    margin-bottom: 12px;
+    --border-radius: 8px;
+  }
+}

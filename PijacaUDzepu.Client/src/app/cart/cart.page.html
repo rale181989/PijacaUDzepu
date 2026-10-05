@@ -1,0 +1,94 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Korpa</ion-title>
+    <ion-buttons slot="end" *ngIf="items.length > 0">
+      <ion-button (click)="clearCart()" color="danger">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
+        Isprazni
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div *ngIf="items.length === 0" class="empty-state">
+    <ion-icon name="cart-outline" size="large"></ion-icon>
+    <p>Korpa je prazna</p>
+    <ion-button routerLink="/home" fill="outline">Pregledaj proizvode</ion-button>
+  </div>
+
+  <ion-list *ngIf="items.length > 0">
+    <ion-item-sliding *ngFor="let item of items">
+      <ion-item>
+        <ion-thumbnail slot="start">
+          <img [src]="getImageUrl(item.product.imageUrl)" [alt]="item.product.name" />
+        </ion-thumbnail>
+        <ion-label>
+          <h3>{{ item.product.name }}</h3>
+          <p>{{ item.product.vendorName }}</p>
+          <p class="price">{{ item.product.price | number:'1.0-0' }} din/{{ getUnitLabel(item.product.unit) }}</p>
+        </ion-label>
+        <div class="quantity-controls" slot="end">
+          <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity - 1)">
+            <ion-icon name="remove-circle-outline"></ion-icon>
+          </ion-button>
+          <span class="quantity">{{ item.quantity }}</span>
+          <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity + 1)">
+            <ion-icon name="add-circle-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="removeItem(item.product.id)">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-list>
+
+  <div *ngIf="items.length > 0" class="order-section">
+    <!-- Guest checkout form -->
+    <div *ngIf="!authService.isLoggedIn" class="guest-form">
+      <div class="guest-form-header">
+        <ion-icon name="person-outline"></ion-icon>
+        <span>Podaci za porudžbinu</span>
+      </div>
+      <ion-item>
+        <ion-input label="Ime i prezime" labelPlacement="floating"
+                   [(ngModel)]="guestName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Telefon" labelPlacement="floating" type="tel"
+                   [(ngModel)]="guestPhone" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Adresa (opciono)" labelPlacement="floating"
+                   [(ngModel)]="guestAddress"></ion-input>
+      </ion-item>
+    </div>
+
+    <ion-item>
+      <ion-textarea label="Napomena (opciono)" labelPlacement="floating"
+                    [(ngModel)]="note" rows="2"></ion-textarea>
+    </ion-item>
+
+    <div class="total-row">
+      <span>Ukupno:</span>
+      <strong>{{ cartService.total | number:'1.0-0' }} din</strong>
+    </div>
+
+    <ion-button expand="block" size="large" (click)="submitOrder()"
+                [disabled]="submitting || (!authService.isLoggedIn && !canGuestOrder)">
+      <ion-spinner *ngIf="submitting" name="crescent" slot="start"></ion-spinner>
+      <ion-icon name="checkmark-circle-outline" slot="start" *ngIf="!submitting"></ion-icon>
+      Naruči
+    </ion-button>
+
+    <p *ngIf="!authService.isLoggedIn" class="guest-hint">
+      Već imate nalog? <a routerLink="/login">Prijavite se</a>
+    </p>
+  </div>
+</ion-content>

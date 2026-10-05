@@ -1,0 +1,113 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Pijaca u Džepu</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="filters-bar">
+    <!-- Market filter -->
+    <div class="filter-group">
+      <div class="filter-label">
+        <ion-icon name="storefront-outline"></ion-icon>
+        Pijaca
+      </div>
+      <ion-segment [value]="selectedMarketId?.toString() || 'all'" scrollable="true"
+                   (ionChange)="onMarketChange($event)">
+        <ion-segment-button value="all">
+          <ion-label>Sve</ion-label>
+        </ion-segment-button>
+        <ion-segment-button *ngFor="let market of markets" [value]="market.id.toString()">
+          <ion-label>{{ market.name.replace(' pijaca', '') }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <!-- Vendor filter -->
+    <div class="filter-group" *ngIf="filteredVendors.length > 0">
+      <div class="filter-label">
+        <ion-icon name="person-outline"></ion-icon>
+        Prodavac
+      </div>
+      <ion-segment [value]="selectedVendorId?.toString() || 'all'" scrollable="true"
+                   (ionChange)="onVendorChange($event)">
+        <ion-segment-button value="all">
+          <ion-label>Svi</ion-label>
+        </ion-segment-button>
+        <ion-segment-button *ngFor="let vendor of filteredVendors" [value]="vendor.id.toString()">
+          <ion-label>{{ vendor.name }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <!-- Search -->
+    <div class="filter-group">
+      <div class="filter-label">
+        <ion-icon name="search-outline"></ion-icon>
+        Pretraga
+      </div>
+      <ion-searchbar
+        [(ngModel)]="searchTerm"
+        (ionInput)="onSearch()"
+        placeholder="Pretraži po proizvodu ili prodavcu..."
+        debounce="300"
+        class="product-search">
+      </ion-searchbar>
+    </div>
+  </div>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && products.length === 0" class="empty-state">
+    <ion-icon name="leaf-outline" size="large"></ion-icon>
+    <p>Nema dostupnih proizvoda</p>
+  </div>
+
+  <ion-grid *ngIf="products.length > 0">
+    <ion-row>
+      <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of products">
+        <ion-card class="product-card">
+          <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img" />
+          <ion-card-content>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <p class="product-vendor">{{ product.vendorName }}</p>
+            <p class="product-location">{{ product.marketName }}<span *ngIf="product.stallLabel"> · Tezga {{ product.stallLabel }}</span></p>
+            <p class="product-price">{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}</p>
+            <div class="qty-controls">
+              <ion-button fill="outline" size="small" (click)="decreaseQty(product)">
+                <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+              <span class="qty-value">{{ getSelectedQty(product.id) }}</span>
+              <ion-button fill="outline" size="small" (click)="increaseQty(product)">
+                <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)">
+              <ion-icon name="cart-outline" slot="start"></ion-icon>
+              Dodaj
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-infinite-scroll [disabled]="!hasMore" (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Učitavanje...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+
+  <footer class="app-footer">
+    <img src="assets/footer-bg.jpg" alt="Pijaca u Džepu" class="footer-image" />
+    <div class="footer-overlay">
+      <p>Pijaca u Džepu &mdash; Sveži proizvodi, lokalni prodavci</p>
+    </div>
+  </footer>
+</ion-content>

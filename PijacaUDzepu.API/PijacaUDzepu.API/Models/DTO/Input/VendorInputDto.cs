@@ -1,0 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace PijacaUDzepu.API.Models.DTO.Input;
+
+public class VendorInputDto
+{
+    [Required]
+    public int MarketId { get; set; }
+
+    public int? StallId { get; set; }
+
+    [Required]
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Address { get; set; }
+    public string? Phone { get; set; }
+}

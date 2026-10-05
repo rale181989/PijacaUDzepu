@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Kreiraj nalog</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div *ngIf="!tokenValid" class="invalid-token">
+    <ion-icon name="alert-circle-outline" size="large" color="danger"></ion-icon>
+    <h2>Nevažeći link</h2>
+    <p>Ovaj link za registraciju nije validan ili je istekao.</p>
+    <ion-button routerLink="/login" expand="block">Idi na prijavu</ion-button>
+  </div>
+
+  <div *ngIf="tokenValid" class="setup-form">
+    <div class="setup-header">
+      <ion-icon name="leaf" color="primary"></ion-icon>
+      <h2>Pijaca u Džepu</h2>
+      <p>Kreirajte svoj nalog za upravljanje prodavnicom</p>
+    </div>
+
+    <form (ngSubmit)="submit()">
+      <ion-item>
+        <ion-input label="Ime" labelPlacement="floating"
+                   [(ngModel)]="firstName" name="firstName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Prezime" labelPlacement="floating"
+                   [(ngModel)]="lastName" name="lastName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Korisničko ime" labelPlacement="floating"
+                   [(ngModel)]="userName" name="userName" required minlength="3"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Lozinka" labelPlacement="floating" type="password"
+                   [(ngModel)]="password" name="password" required minlength="4"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Potvrdite lozinku" labelPlacement="floating" type="password"
+                   [(ngModel)]="confirmPassword" name="confirmPassword" required></ion-input>
+      </ion-item>
+
+      <p *ngIf="confirmPassword && !passwordsMatch" class="error-text">
+        Lozinke se ne poklapaju
+      </p>
+
+      <ion-button expand="block" type="submit" [disabled]="saving || !canSubmit" class="ion-margin-top">
+        <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+        Kreiraj nalog
+      </ion-button>
+    </form>
+  </div>
+</ion-content>

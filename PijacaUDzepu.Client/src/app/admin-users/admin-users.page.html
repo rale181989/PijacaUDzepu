@@ -1,0 +1,58 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Korisnici</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="selectedTab" (ionChange)="selectedTab = $any($event).detail.value">
+      <ion-segment-button value="Customer">
+        <ion-label>Kupci</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="VendorAdmin">
+        <ion-label>Prodavci</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="SuperAdmin">
+        <ion-label>Admini</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
+    <ion-icon name="people-outline" size="large"></ion-icon>
+    <p>Nema korisnika u ovoj kategoriji</p>
+  </div>
+
+  <ion-list *ngIf="!loading && filteredUsers.length > 0">
+    <ion-item *ngFor="let user of filteredUsers">
+      <ion-label>
+        <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+        <p>{{ user.userName }}</p>
+        <p *ngIf="user.email" class="user-detail">
+          <ion-icon name="mail-outline"></ion-icon> {{ user.email }}
+        </p>
+        <p *ngIf="user.phoneNumber" class="user-detail">
+          <ion-icon name="call-outline"></ion-icon> {{ user.phoneNumber }}
+        </p>
+        <p *ngIf="user.vendors.length > 0" class="vendor-info">
+          <ion-icon name="storefront-outline"></ion-icon>
+          <span *ngFor="let v of user.vendors; let last = last">
+            {{ v.name }}<span *ngIf="!last">, </span>
+          </span>
+        </p>
+      </ion-label>
+      <ion-toggle slot="end" [checked]="user.isActive"
+                  (ionChange)="toggleActive(user)">
+      </ion-toggle>
+    </ion-item>
+  </ion-list>
+</ion-content>

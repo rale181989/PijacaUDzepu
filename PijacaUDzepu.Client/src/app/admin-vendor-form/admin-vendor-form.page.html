@@ -1,0 +1,114 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin-vendors"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ isEdit ? 'Izmeni prodavca' : 'Novi prodavac' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <form *ngIf="!loading && !showAdminForm && !showCredentials" (ngSubmit)="save()">
+    <ion-item>
+      <ion-select label="Pijaca" labelPlacement="floating"
+                  [(ngModel)]="model.marketId" name="marketId" required
+                  (ionChange)="onMarketChange()" interface="popover">
+        <ion-select-option *ngFor="let market of markets" [value]="market.id">
+          {{ market.name }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select label="Tezga" labelPlacement="floating"
+                  [(ngModel)]="model.stallId" name="stallId"
+                  interface="popover"
+                  [disabled]="stalls.length === 0">
+        <ion-select-option [value]="null">-- Bez tezge --</ion-select-option>
+        <ion-select-option *ngFor="let stall of stalls" [value]="stall.id">
+          Tezga {{ stall.label }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Naziv" labelPlacement="floating"
+                 [(ngModel)]="model.name" name="name" required></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-textarea label="Opis" labelPlacement="floating"
+                    [(ngModel)]="model.description" name="description" rows="3"></ion-textarea>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Adresa" labelPlacement="floating"
+                 [(ngModel)]="model.address" name="address"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input label="Telefon" labelPlacement="floating" type="tel"
+                 [(ngModel)]="model.phone" name="phone"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" type="submit" [disabled]="saving" class="ion-margin-top">
+      <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+      {{ isEdit ? 'Sačuvaj' : 'Kreiraj prodavca' }}
+    </ion-button>
+  </form>
+
+  <div *ngIf="showAdminForm" class="admin-section">
+    <h3>Kreiraj nalog za prodavca</h3>
+    <p class="section-desc">Unesite podatke za nalog. Lozinka će biti automatski dodeljena.</p>
+    <form (ngSubmit)="createAdmin()">
+      <ion-item>
+        <ion-input label="Ime" labelPlacement="floating"
+                   [(ngModel)]="adminFirstName" name="adminFirstName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Prezime" labelPlacement="floating"
+                   [(ngModel)]="adminLastName" name="adminLastName" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Korisničko ime" labelPlacement="floating"
+                   [(ngModel)]="adminUserName" name="adminUserName" required></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" type="submit"
+                  [disabled]="saving || !adminFirstName || !adminLastName || !adminUserName"
+                  class="ion-margin-top">
+        <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+        Kreiraj nalog
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" routerLink="/admin-vendors" class="ion-margin-top">
+        Preskoči
+      </ion-button>
+    </form>
+  </div>
+
+  <div *ngIf="showCredentials" class="credentials-section">
+    <div class="credentials-card">
+      <ion-icon name="checkmark-circle" color="success" class="success-icon"></ion-icon>
+      <h3>Nalog kreiran!</h3>
+      <p>Prosledite ove podatke prodavcu:</p>
+
+      <div class="credential-row">
+        <span class="credential-label">Korisničko ime:</span>
+        <strong>{{ generatedUserName }}</strong>
+      </div>
+      <div class="credential-row">
+        <span class="credential-label">Lozinka:</span>
+        <strong>{{ generatedPassword }}</strong>
+      </div>
+
+      <p class="hint">Prodavac može promeniti lozinku nakon prijave.</p>
+
+      <ion-button expand="block" (click)="copyCredentials()" class="ion-margin-top">
+        <ion-icon name="copy-outline" slot="start"></ion-icon>
+        Kopiraj podatke
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" routerLink="/admin-vendors" class="ion-margin-top">
+        Završi
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

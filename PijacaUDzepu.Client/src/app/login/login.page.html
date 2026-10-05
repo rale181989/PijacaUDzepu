@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Prijava</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="login-container">
+    <ion-icon name="storefront" class="logo-icon" color="primary"></ion-icon>
+    <h2>Pijaca u Džepu</h2>
+
+    <form (ngSubmit)="login()">
+      <ion-item>
+        <ion-input label="Korisničko ime" labelPlacement="floating"
+                   [(ngModel)]="model.userName" name="userName" required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input label="Lozinka" labelPlacement="floating" type="password"
+                   [(ngModel)]="model.password" name="password" required></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" [disabled]="loading" class="ion-margin-top">
+        <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+        Prijavi se
+      </ion-button>
+    </form>
+
+    <p class="ion-text-center ion-margin-top">
+      Nemate nalog? <a routerLink="/register">Registrujte se</a>
+    </p>
+  </div>
+</ion-content>

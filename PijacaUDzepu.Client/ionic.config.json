@@ -1,0 +1,7 @@
+{
+  "name": "PijacaUDzepu.Client",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

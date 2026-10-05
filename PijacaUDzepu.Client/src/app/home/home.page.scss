@@ -1,0 +1,159 @@
+.center-spinner {
+  display: block;
+  margin: 40px auto;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+}
+
+.filters-bar {
+  background: var(--ion-color-light);
+  padding: 8px 12px 4px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+
+  .filter-group {
+    margin-bottom: 8px;
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ion-color-medium);
+      letter-spacing: 0.5px;
+      padding: 0 4px 2px;
+
+      ion-icon {
+        font-size: 14px;
+      }
+    }
+
+    ion-segment {
+      --background: transparent;
+    }
+
+    ion-segment-button {
+      --indicator-height: 2px;
+      min-width: auto;
+      font-size: 13px;
+      --padding-start: 8px;
+      --padding-end: 8px;
+    }
+  }
+
+  .product-search {
+    --border-radius: 8px;
+    --height: 36px;
+    padding: 0;
+    font-size: 14px;
+  }
+}
+
+.product-card {
+  margin: 4px;
+  border-radius: 12px;
+  overflow: hidden;
+
+  .product-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background: var(--ion-color-light);
+  }
+
+  ion-card-content {
+    padding: 8px;
+  }
+
+  .product-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-vendor {
+    font-size: 11px;
+    color: var(--ion-color-medium);
+    margin: 0 0 2px;
+  }
+
+  .product-location {
+    font-size: 10px;
+    color: var(--ion-color-medium);
+    margin: 0 0 4px;
+    font-style: italic;
+  }
+
+  .product-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+    margin: 0 0 8px;
+  }
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .qty-value {
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  ion-button {
+    --padding-start: 6px;
+    --padding-end: 6px;
+    --border-radius: 50%;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.app-footer {
+  position: relative;
+  margin-top: 32px;
+  overflow: hidden;
+
+  .footer-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .footer-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+    padding: 32px 16px 16px;
+
+    p {
+      margin: 0;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+  }
+}

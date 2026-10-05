@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.csproj.user
+.vs/
+
+# Node / Angular / Ionic
+node_modules/
+www/
+dist/
+.angular/
+.sass-cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+PijacaUDzepu.API/PijacaUDzepu.API/wwwroot/*
+!PijacaUDzepu.API/PijacaUDzepu.API/wwwroot/.gitkeep
+
+# Uploaded images
+PijacaUDzepu.API/PijacaUDzepu.API/Resources/Images/*
+
+# Environment / Secrets
+appsettings.Production.json
+appsettings.Development.json

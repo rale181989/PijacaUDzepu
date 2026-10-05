@@ -1,0 +1,41 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Prodavci</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/admin-vendor-form">
+        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <ion-list *ngIf="!loading">
+    <ion-item *ngFor="let vendor of vendors" [routerLink]="['/admin-vendor-form', vendor.id]">
+      <ion-label>
+        <h2>{{ vendor.name }}</h2>
+        <p>{{ vendor.address }}</p>
+        <p>{{ vendor.phone }}</p>
+      </ion-label>
+      <ion-toggle slot="end" [checked]="vendor.isActive"
+                  (ionChange)="toggleActive(vendor)"
+                  (click)="$event.stopPropagation()">
+      </ion-toggle>
+    </ion-item>
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button routerLink="/admin-vendor-form">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

@@ -1,0 +1,10 @@
+.register-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 20px;
+
+  ion-item {
+    margin-bottom: 12px;
+    --border-radius: 8px;
+  }
+}
