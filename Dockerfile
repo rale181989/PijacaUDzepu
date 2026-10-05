@@ -1,8 +1,8 @@
 # Stage 1: Build Angular frontend
-FROM node:20-alpine AS frontend-build
+FROM node:22-alpine AS frontend-build
 WORKDIR /app/client
 COPY PijacaUDzepu.Client/package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY PijacaUDzepu.Client/ ./
 RUN npx ng build --configuration production
 
