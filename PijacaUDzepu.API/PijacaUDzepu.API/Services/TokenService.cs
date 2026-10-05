@@ -16,7 +16,8 @@ public class TokenService : ITokenService
     public TokenService(UserManager<User> userManager, IConfiguration config)
     {
         _userManager = userManager;
-        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]!));
+        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            Environment.GetEnvironmentVariable("TOKEN_KEY") ?? config["TokenKey"]!));
     }
 
     public async Task<string> CreateToken(User user)

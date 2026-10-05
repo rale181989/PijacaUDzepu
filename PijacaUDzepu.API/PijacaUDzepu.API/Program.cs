@@ -44,11 +44,14 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddIdentityServices(builder.Configuration);
 
+var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',')
+    ?? new[] { "http://localhost:8100", "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:8100", "http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

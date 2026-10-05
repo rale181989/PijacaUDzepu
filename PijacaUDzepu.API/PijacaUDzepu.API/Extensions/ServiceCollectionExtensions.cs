@@ -14,8 +14,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
     {
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? config.GetConnectionString("DefaultConnection");
+
         services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(connectionString));
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
@@ -54,7 +57,7 @@ public static class ServiceCollectionExtensions
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(config["TokenKey"]!)),
+                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("TOKEN_KEY") ?? config["TokenKey"]!)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,
