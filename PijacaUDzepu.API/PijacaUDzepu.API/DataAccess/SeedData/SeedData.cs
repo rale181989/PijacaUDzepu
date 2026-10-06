@@ -10,11 +10,14 @@ public static class Seed
     public static async Task SeedData(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("SeedData");
         var context = scope.ServiceProvider.GetRequiredService<DataContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
+        logger.LogInformation("Starting database migration...");
         await context.Database.MigrateAsync();
+        logger.LogInformation("Migration complete.");
 
         var roles = new[] { "SuperAdmin", "VendorAdmin", "Customer" };
         foreach (var roleName in roles)
@@ -25,6 +28,7 @@ public static class Seed
 
         if (!await userManager.Users.AnyAsync(u => u.UserName == "admin"))
         {
+            logger.LogInformation("Creating admin user...");
             var admin = new User
             {
                 UserName = "admin",
@@ -34,7 +38,18 @@ public static class Seed
             };
             var result = await userManager.CreateAsync(admin, "admin1234");
             if (result.Succeeded)
+            {
                 await userManager.AddToRoleAsync(admin, "SuperAdmin");
+                logger.LogInformation("Admin user created successfully.");
+            }
+            else
+            {
+                logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+        }
+        else
+        {
+            logger.LogInformation("Admin user already exists.");
         }
 
         if (!await userManager.Users.AnyAsync(u => u.UserName == "kupac"))

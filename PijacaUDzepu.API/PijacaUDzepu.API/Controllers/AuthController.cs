@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.Extensions;
 using PijacaUDzepu.API.Models.DTO.Input;
@@ -112,5 +113,15 @@ public class AuthController : BaseApiController
         var userId = User.GetUserId();
         var result = await _authService.GetCurrentUser(userId);
         return Ok(result);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("health")]
+    public async Task<IActionResult> Health(
+        [FromServices] Microsoft.AspNetCore.Identity.UserManager<PijacaUDzepu.API.Models.User> userManager)
+    {
+        var adminExists = await userManager.Users.AnyAsync(u => u.UserName == "admin");
+        var totalUsers = await userManager.Users.CountAsync();
+        return Ok(new { adminExists, totalUsers, timestamp = DateTime.UtcNow });
     }
 }
