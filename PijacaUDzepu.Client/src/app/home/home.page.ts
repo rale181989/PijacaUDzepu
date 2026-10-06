@@ -45,6 +45,7 @@ export class HomePage implements OnInit {
   canOrderCache: Record<number, boolean> = {};
   vendorBadgeCache: Record<number, { reservations: boolean; delivery: boolean }> = {};
   cardClassCache: Record<number, string> = {};
+  vendorPhoneCache: Record<number, string> = {};
   filterDelivery = false;
   filterReservations = false;
   displayProducts: Product[] = [];
@@ -122,6 +123,7 @@ export class HomePage implements OnInit {
       this.canOrderCache = {};
       this.vendorBadgeCache = {};
       this.cardClassCache = {};
+      this.vendorPhoneCache = {};
     }
     this.loading = true;
     this.productService.getAll(
@@ -297,6 +299,7 @@ export class HomePage implements OnInit {
       if (this.serviceInfoCache[product.id]?.length) continue;
       this.canOrderCache[product.id] = !!(v.acceptsReservations || v.offersDelivery);
       this.vendorBadgeCache[product.id] = { reservations: v.acceptsReservations, delivery: v.offersDelivery };
+      this.vendorPhoneCache[product.id] = v.phone ?? '';
       if (v.acceptsReservations && v.offersDelivery) this.cardClassCache[product.id] = 'card-both';
       else if (v.acceptsReservations) this.cardClassCache[product.id] = 'card-reservation';
       else if (v.offersDelivery) this.cardClassCache[product.id] = 'card-delivery';

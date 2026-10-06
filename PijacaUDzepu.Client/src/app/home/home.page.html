@@ -221,6 +221,10 @@
             </div>
             <p class="product-vendor">{{ product.vendorName }}</p>
             <p class="product-location">{{ product.marketName }}<span *ngIf="product.stallLabel"> · Tezga {{ product.stallLabel }}</span></p>
+            <p *ngIf="vendorPhoneCache[product.id]" class="product-phone">
+              <ion-icon name="call-outline"></ion-icon>
+              {{ vendorPhoneCache[product.id] }}
+            </p>
             <p *ngIf="product.note" class="product-note">{{ product.note }}</p>
             <p class="product-price">{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}</p>
             <div class="service-info">
