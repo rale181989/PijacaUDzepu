@@ -47,7 +47,12 @@ public class VendorService : IVendorService
             Name = dto.Name,
             Description = dto.Description,
             Address = dto.Address,
-            Phone = dto.Phone
+            Phone = dto.Phone,
+            AcceptsReservations = dto.AcceptsReservations,
+            OffersDelivery = dto.OffersDelivery,
+            MinOrderAmount = dto.OffersDelivery ? dto.MinOrderAmount : null,
+            DeliveryRadiusKm = dto.OffersDelivery ? dto.DeliveryRadiusKm : null,
+            DeliverySchedule = dto.OffersDelivery ? dto.DeliverySchedule : null
         };
 
         _context.Vendors.Add(vendor);
@@ -71,6 +76,11 @@ public class VendorService : IVendorService
         vendor.Description = dto.Description;
         vendor.Address = dto.Address;
         vendor.Phone = dto.Phone;
+        vendor.AcceptsReservations = dto.AcceptsReservations;
+        vendor.OffersDelivery = dto.OffersDelivery;
+        vendor.MinOrderAmount = dto.OffersDelivery ? dto.MinOrderAmount : null;
+        vendor.DeliveryRadiusKm = dto.OffersDelivery ? dto.DeliveryRadiusKm : null;
+        vendor.DeliverySchedule = dto.OffersDelivery ? dto.DeliverySchedule : null;
         vendor.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -142,6 +152,11 @@ public class VendorService : IVendorService
         Phone = v.Phone,
         ImageUrl = v.ImageUrl,
         IsActive = v.IsActive,
+        AcceptsReservations = v.AcceptsReservations,
+        OffersDelivery = v.OffersDelivery,
+        MinOrderAmount = v.MinOrderAmount,
+        DeliveryRadiusKm = v.DeliveryRadiusKm,
+        DeliverySchedule = v.DeliverySchedule,
         CreatedAt = v.CreatedAt
     };
 }

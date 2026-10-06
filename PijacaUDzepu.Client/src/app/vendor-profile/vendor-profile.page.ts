@@ -4,7 +4,7 @@ import { VendorService } from '../services/vendor.service';
 import { AuthService } from '../services/auth.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
-import { VendorInput } from '../models/vendor.model';
+import { VendorInput, DeliveryScheduleEntry } from '../models/vendor.model';
 import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
 
@@ -25,8 +25,50 @@ export class VendorProfilePage implements OnInit {
   confirmPassword = '';
   changingPassword = false;
 
+  allDays = [
+    { value: 1, label: 'Ponedeljak' },
+    { value: 2, label: 'Utorak' },
+    { value: 3, label: 'Sreda' },
+    { value: 4, label: 'Četvrtak' },
+    { value: 5, label: 'Petak' },
+    { value: 6, label: 'Subota' },
+    { value: 7, label: 'Nedelja' },
+  ];
+
   get passwordsMatch(): boolean {
     return this.newPassword === this.confirmPassword;
+  }
+
+  isDayEnabled(day: number): boolean {
+    return !!(this.model.deliverySchedule ?? []).find(e => e.day === day);
+  }
+
+  getEntry(day: number): DeliveryScheduleEntry | undefined {
+    return (this.model.deliverySchedule ?? []).find(e => e.day === day);
+  }
+
+  toggleDay(day: number) {
+    if (!this.model.deliverySchedule) this.model.deliverySchedule = [];
+    const idx = this.model.deliverySchedule.findIndex(e => e.day === day);
+    if (idx >= 0) {
+      this.model.deliverySchedule.splice(idx, 1);
+    } else {
+      this.model.deliverySchedule.push({ day, from: '08:00', to: '18:00' });
+      this.model.deliverySchedule.sort((a, b) => a.day - b.day);
+    }
+  }
+
+  onTimeChange(day: number, field: 'from' | 'to', value: string) {
+    const entry = this.getEntry(day);
+    if (entry) entry[field] = value;
+  }
+
+  onDeliveryToggle() {
+    if (!this.model.offersDelivery) {
+      this.model.minOrderAmount = undefined;
+      this.model.deliveryRadiusKm = undefined;
+      this.model.deliverySchedule = [];
+    }
   }
 
   constructor(
@@ -47,7 +89,12 @@ export class VendorProfilePage implements OnInit {
           name: v.name,
           description: v.description,
           address: v.address,
-          phone: v.phone
+          phone: v.phone,
+          acceptsReservations: v.acceptsReservations,
+          offersDelivery: v.offersDelivery,
+          minOrderAmount: v.minOrderAmount,
+          deliveryRadiusKm: v.deliveryRadiusKm,
+          deliverySchedule: v.deliverySchedule ?? []
         };
         if (v.marketId) this.loadStalls(v.marketId);
         this.loading = false;

@@ -20,3 +20,88 @@
   padding: 4px 16px;
   margin: 0;
 }
+
+.services-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ion-color-light-shade);
+
+  h3 {
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+}
+
+.delivery-options {
+  padding-left: 8px;
+  border-left: 3px solid var(--ion-color-primary-tint);
+  margin: 8px 0;
+}
+
+.schedule-section {
+  padding: 8px 16px 16px;
+
+  .schedule-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ion-color-medium);
+    margin: 0 0 12px;
+  }
+}
+
+.schedule-day {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 10px;
+  background: #fff;
+
+  .schedule-day-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .day-name {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      transition: color 0.2s;
+
+      &.active {
+        color: var(--ion-text-color);
+        font-weight: 600;
+      }
+    }
+  }
+
+  .schedule-time-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    padding-left: 34px;
+
+    .time-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      label {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+      }
+
+      input[type="time"] {
+        border: 1px solid var(--ion-color-light-shade);
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-size: 14px;
+        background: var(--ion-color-light);
+        color: var(--ion-text-color);
+
+        &:focus {
+          outline: none;
+          border-color: var(--ion-color-primary);
+        }
+      }
+    }
+  }
+}

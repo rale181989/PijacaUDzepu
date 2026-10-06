@@ -13,86 +13,237 @@
   </ion-refresher>
 
   <div class="filters-bar">
-    <!-- Market filter -->
-    <div class="filter-group">
-      <div class="filter-label">
+    <div class="filter-row">
+      <button class="filter-btn" (click)="openFilterModal('market')">
         <ion-icon name="storefront-outline"></ion-icon>
-        Pijaca
-      </div>
-      <ion-segment [value]="selectedMarketId?.toString() || 'all'" scrollable="true"
-                   (ionChange)="onMarketChange($event)">
-        <ion-segment-button value="all">
-          <ion-label>Sve</ion-label>
-        </ion-segment-button>
-        <ion-segment-button *ngFor="let market of markets" [value]="market.id.toString()">
-          <ion-label>{{ market.name.replace(' pijaca', '') }}</ion-label>
-        </ion-segment-button>
-      </ion-segment>
-    </div>
+        <span class="filter-btn-text">{{ selectedMarketId ? getMarketName(selectedMarketId) : 'Sve pijace' }}</span>
+        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+      </button>
 
-    <!-- Vendor filter -->
-    <div class="filter-group" *ngIf="filteredVendors.length > 0">
-      <div class="filter-label">
+      <button class="filter-btn" (click)="openFilterModal('vendor')">
         <ion-icon name="person-outline"></ion-icon>
-        Prodavac
-      </div>
-      <ion-segment [value]="selectedVendorId?.toString() || 'all'" scrollable="true"
-                   (ionChange)="onVendorChange($event)">
-        <ion-segment-button value="all">
-          <ion-label>Svi</ion-label>
-        </ion-segment-button>
-        <ion-segment-button *ngFor="let vendor of filteredVendors" [value]="vendor.id.toString()">
-          <ion-label>{{ vendor.name }}</ion-label>
-        </ion-segment-button>
-      </ion-segment>
+        <span class="filter-btn-text">{{ selectedVendorId ? getVendorName(selectedVendorId) : 'Svi prodavci' }}</span>
+        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+      </button>
+
+      <button class="filter-btn" (click)="openFilterModal('stall')" *ngIf="selectedMarketId">
+        <ion-icon name="grid-outline"></ion-icon>
+        <span class="filter-btn-text">{{ selectedStallId ? 'Tezga ' + getStallLabel(selectedStallId) : 'Sve tezge' }}</span>
+        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+      </button>
+
+      <button class="filter-btn" (click)="openFilterModal('category')">
+        <ion-icon name="pricetag-outline"></ion-icon>
+        <span class="filter-btn-text">{{ selectedCategory ? getCategoryLabel(selectedCategory) : 'Sve grupe proizvoda' }}</span>
+        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+      </button>
     </div>
 
-    <!-- Search -->
-    <div class="filter-group">
-      <div class="filter-label">
-        <ion-icon name="search-outline"></ion-icon>
-        Pretraga
-      </div>
-      <ion-searchbar
-        [(ngModel)]="searchTerm"
-        (ionInput)="onSearch()"
-        placeholder="Pretraži po proizvodu ili prodavcu..."
-        debounce="300"
-        class="product-search">
-      </ion-searchbar>
+    <div class="service-chips">
+      <button class="service-chip" [class.active]="filterReservations" (click)="toggleServiceFilter('reservations')">
+        <ion-icon name="bag-check-outline"></ion-icon>
+        Prima porudžbine
+      </button>
+      <button class="service-chip delivery" [class.active]="filterDelivery" (click)="toggleServiceFilter('delivery')">
+        <ion-icon name="car-outline"></ion-icon>
+        Dovozi robu
+      </button>
     </div>
+
+    <ion-searchbar
+      [(ngModel)]="searchTerm"
+      (ionInput)="onSearch()"
+      placeholder="Pretraži sve (proizvod, prodavac, pijaca, grupa...)"
+      debounce="300"
+      class="product-search">
+    </ion-searchbar>
   </div>
+
+  <!-- Market filter modal -->
+  <ion-modal [isOpen]="showModal === 'market'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.75, 1]" [initialBreakpoint]="0.75">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Izaberi pijace</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="showModal = null">Zatvori</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+        <ion-toolbar>
+          <ion-searchbar [(ngModel)]="filterSearch.market" placeholder="Pretraži pijace..." debounce="0"></ion-searchbar>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item button (click)="selectMarket(null); showModal = null"
+                    [color]="!selectedMarketId ? 'light' : ''">
+            <ion-label>Sve pijace</ion-label>
+            <ion-icon *ngIf="!selectedMarketId" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+          <ion-item *ngFor="let market of searchedMarkets" button
+                    (click)="selectMarket(market.id); showModal = null"
+                    [color]="selectedMarketId === market.id ? 'light' : ''">
+            <ion-label>
+              <h2>{{ market.name }}</h2>
+              <p>{{ market.address }}</p>
+            </ion-label>
+            <ion-icon *ngIf="selectedMarketId === market.id" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Vendor filter modal -->
+  <ion-modal [isOpen]="showModal === 'vendor'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.75, 1]" [initialBreakpoint]="0.75">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Izaberi prodavca</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="showModal = null">Zatvori</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+        <ion-toolbar>
+          <ion-searchbar [(ngModel)]="filterSearch.vendor" placeholder="Pretraži prodavce..." debounce="0"></ion-searchbar>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item button (click)="selectVendor(null); showModal = null"
+                    [color]="!selectedVendorId ? 'light' : ''">
+            <ion-label>Svi prodavci</ion-label>
+            <ion-icon *ngIf="!selectedVendorId" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+          <ion-item *ngFor="let vendor of searchedVendors" button
+                    (click)="selectVendor(vendor.id); showModal = null"
+                    [color]="selectedVendorId === vendor.id ? 'light' : ''">
+            <ion-label>
+              <h2>{{ vendor.name }}</h2>
+              <p>{{ vendor.marketName }}<span *ngIf="vendor.stallLabel"> · Tezga {{ vendor.stallLabel }}</span></p>
+            </ion-label>
+            <ion-icon *ngIf="selectedVendorId === vendor.id" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Stall filter modal -->
+  <ion-modal [isOpen]="showModal === 'stall'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.75, 1]" [initialBreakpoint]="0.75">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Izaberi tezgu</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="showModal = null">Zatvori</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+        <ion-toolbar>
+          <ion-searchbar [(ngModel)]="filterSearch.stall" placeholder="Pretraži tezge..." debounce="0"></ion-searchbar>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item button (click)="selectStall(null); showModal = null"
+                    [color]="!selectedStallId ? 'light' : ''">
+            <ion-label>Sve tezge</ion-label>
+            <ion-icon *ngIf="!selectedStallId" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+          <ion-item *ngFor="let stall of searchedStalls" button
+                    (click)="selectStall(stall); showModal = null"
+                    [color]="selectedStallId === stall.id ? 'light' : ''">
+            <ion-label>
+              <h2>Tezga {{ stall.label }}</h2>
+              <p>{{ getVendorAtStall(stall.id) }}</p>
+            </ion-label>
+            <ion-icon *ngIf="selectedStallId === stall.id" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Category filter modal -->
+  <ion-modal [isOpen]="showModal === 'category'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.75, 1]" [initialBreakpoint]="0.75">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Izaberi grupu</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="showModal = null">Zatvori</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+        <ion-toolbar>
+          <ion-searchbar [(ngModel)]="filterSearch.category" placeholder="Pretraži grupe..." debounce="0"></ion-searchbar>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-item button (click)="selectCategory(null); showModal = null"
+                    [color]="!selectedCategory ? 'light' : ''">
+            <ion-label>Sve grupe</ion-label>
+            <ion-icon *ngIf="!selectedCategory" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+          <ion-item *ngFor="let cat of searchedCategories" button
+                    (click)="selectCategory(cat.value); showModal = null"
+                    [color]="selectedCategory === cat.value ? 'light' : ''">
+            <ion-label>
+              <h2>{{ cat.label }}</h2>
+            </ion-label>
+            <ion-icon *ngIf="selectedCategory === cat.value" name="checkmark" slot="end" color="primary"></ion-icon>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
   <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
 
-  <div *ngIf="!loading && products.length === 0" class="empty-state">
+  <div *ngIf="!loading && displayProducts.length === 0" class="empty-state">
     <ion-icon name="leaf-outline" size="large"></ion-icon>
     <p>Nema dostupnih proizvoda</p>
   </div>
 
-  <ion-grid *ngIf="products.length > 0">
+  <ion-grid *ngIf="displayProducts.length > 0">
     <ion-row>
-      <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of products">
+      <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of displayProducts">
         <ion-card class="product-card">
           <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img" />
           <ion-card-content>
-            <h3 class="product-name">{{ product.name }}</h3>
+            <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
+            <div class="product-name-row">
+              <h3 class="product-name">{{ product.name }}</h3>
+              <span class="vendor-badges">
+                <ion-icon *ngIf="vendorBadgeCache[product.id]?.reservations" name="bag-check-outline" class="vendor-badge reservation"></ion-icon>
+                <ion-icon *ngIf="vendorBadgeCache[product.id]?.delivery" name="car-outline" class="vendor-badge delivery"></ion-icon>
+              </span>
+            </div>
             <p class="product-vendor">{{ product.vendorName }}</p>
             <p class="product-location">{{ product.marketName }}<span *ngIf="product.stallLabel"> · Tezga {{ product.stallLabel }}</span></p>
+            <p *ngIf="product.note" class="product-note">{{ product.note }}</p>
             <p class="product-price">{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}</p>
-            <div class="qty-controls">
-              <ion-button fill="outline" size="small" (click)="decreaseQty(product)">
-                <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
-              </ion-button>
-              <span class="qty-value">{{ getSelectedQty(product.id) }}</span>
-              <ion-button fill="outline" size="small" (click)="increaseQty(product)">
-                <ion-icon name="add-outline" slot="icon-only"></ion-icon>
-              </ion-button>
+            <div class="service-info">
+              <div *ngFor="let info of serviceInfoCache[product.id]" class="service-msg" [attr.data-color]="info.color">
+                <ion-icon [name]="info.icon" [color]="info.color"></ion-icon>
+                <span>{{ info.text }}</span>
+              </div>
             </div>
-            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)">
-              <ion-icon name="cart-outline" slot="start"></ion-icon>
-              Dodaj
-            </ion-button>
+            <ng-container *ngIf="canOrderCache[product.id]">
+              <div class="qty-controls">
+                <ion-button fill="outline" size="small" (click)="decreaseQty(product)">
+                  <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+                <span class="qty-value">{{ getSelectedQty(product.id) }}</span>
+                <ion-button fill="outline" size="small" (click)="increaseQty(product)">
+                  <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </div>
+              <ion-button expand="block" size="small" (click)="addSelectedToCart(product)">
+                <ion-icon name="cart-outline" slot="start"></ion-icon>
+                Dodaj
+              </ion-button>
+            </ng-container>
           </ion-card-content>
         </ion-card>
       </ion-col>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.Extensions;
 using PijacaUDzepu.API.Models.DTO.Input;
+using PijacaUDzepu.API.Models.Enums;
 using PijacaUDzepu.API.Services.Interfaces;
 
 namespace PijacaUDzepu.API.Controllers;
@@ -20,9 +21,9 @@ public class ProductsController : BaseApiController
 
     [AllowAnonymous]
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? vendorId, [FromQuery] int? marketId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
+    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? vendorId, [FromQuery] int? marketId, [FromQuery] ProductCategory? category = null, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
-        var result = await _productService.GetAllProducts(search, vendorId, marketId, skip, take);
+        var result = await _productService.GetAllProducts(search, vendorId, marketId, category, skip, take);
         return Ok(result);
     }
 

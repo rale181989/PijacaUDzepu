@@ -11,6 +11,13 @@ public class Vendor
     public string? Phone { get; set; }
     public string? ImageUrl { get; set; }
     public bool IsActive { get; set; } = true;
+
+    public bool AcceptsReservations { get; set; }
+    public bool OffersDelivery { get; set; }
+    public decimal? MinOrderAmount { get; set; }
+    public int? DeliveryRadiusKm { get; set; }
+    public List<DeliveryScheduleEntry>? DeliverySchedule { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

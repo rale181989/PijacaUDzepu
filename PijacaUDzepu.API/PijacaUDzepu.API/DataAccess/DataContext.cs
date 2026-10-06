@@ -128,6 +128,9 @@ public class DataContext : IdentityDbContext<User, Role, int,
         {
             entity.HasIndex(v => v.Name);
 
+            entity.Property(v => v.DeliverySchedule)
+                .HasColumnType("jsonb");
+
             entity.HasOne(v => v.Market)
                 .WithMany(m => m.Vendors)
                 .HasForeignKey(v => v.MarketId)

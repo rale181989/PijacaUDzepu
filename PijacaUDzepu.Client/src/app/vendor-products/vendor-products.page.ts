@@ -33,7 +33,7 @@ export class VendorProductsPage implements OnInit {
   }
 
   async toggleAvailability(product: Product) {
-    const input = { name: product.name, price: product.price, unit: product.unit, isAvailable: !product.isAvailable };
+    const input = { name: product.name, price: product.price, unit: product.unit, category: product.category, note: product.note, isAvailable: !product.isAvailable };
     this.productService.update(product.id, input).subscribe({
       next: updated => {
         product.isAvailable = updated.isAvailable;
@@ -66,7 +66,7 @@ export class VendorProductsPage implements OnInit {
   }
 
   getUnitLabel(unit: string): string {
-    switch (unit) { case 'Kg': return 'kg'; case 'Komad': return 'kom'; case 'Veza': return 'veza'; default: return unit; }
+    switch (unit) { case 'Kg': return 'kg'; case 'Gram': return 'g'; case 'Komad': return 'kom'; case 'Veza': return 'veza'; case 'Litar': return 'l'; case 'Pakovanje': return 'pak'; case 'Kutija': return 'kut'; case 'Flasa': return 'flaša'; default: return unit; }
   }
 
   getImageUrl(imageUrl?: string): string {

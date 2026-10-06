@@ -10,6 +10,8 @@ public class Product
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public ProductUnit Unit { get; set; }
+    public ProductCategory Category { get; set; }
+    public string? Note { get; set; }
     public string? ImageUrl { get; set; }
     public bool IsAvailable { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

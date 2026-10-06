@@ -8,6 +8,8 @@ export interface Product {
   name: string;
   price: number;
   unit: ProductUnit;
+  category: ProductCategory;
+  note?: string;
   imageUrl?: string;
   isAvailable: boolean;
 }
@@ -16,7 +18,11 @@ export interface ProductInput {
   name: string;
   price: number;
   unit: ProductUnit;
+  category: ProductCategory;
+  note?: string;
   isAvailable: boolean;
 }
 
-export type ProductUnit = 'Kg' | 'Komad' | 'Veza';
+export type ProductUnit = 'Kg' | 'Komad' | 'Veza' | 'Litar' | 'Gram' | 'Pakovanje' | 'Kutija' | 'Flasa';
+
+export type ProductCategory = 'Voce' | 'Povrce' | 'MlecniProizvodi' | 'MesniProizvodi' | 'Konditori' | 'KucnaHemija' | 'Ostalo';

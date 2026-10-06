@@ -25,12 +25,37 @@
       <ion-select label="Jedinica mere" labelPlacement="floating"
                   [(ngModel)]="model.unit" name="unit" interface="popover">
         <ion-select-option value="Kg">Kilogram (kg)</ion-select-option>
+        <ion-select-option value="Gram">Gram (g)</ion-select-option>
         <ion-select-option value="Komad">Komad</ion-select-option>
         <ion-select-option value="Veza">Veza</ion-select-option>
+        <ion-select-option value="Litar">Litar (l)</ion-select-option>
+        <ion-select-option value="Pakovanje">Pakovanje</ion-select-option>
+        <ion-select-option value="Kutija">Kutija</ion-select-option>
+        <ion-select-option value="Flasa">Flaša</ion-select-option>
       </ion-select>
     </ion-item>
 
     <ion-item>
+      <ion-select label="Kategorija" labelPlacement="floating"
+                  [(ngModel)]="model.category" name="category" interface="popover">
+        <ion-select-option value="Voce">Voće</ion-select-option>
+        <ion-select-option value="Povrce">Povrće</ion-select-option>
+        <ion-select-option value="MlecniProizvodi">Mlečni proizvodi</ion-select-option>
+        <ion-select-option value="MesniProizvodi">Mesni proizvodi</ion-select-option>
+        <ion-select-option value="Konditori">Konditori</ion-select-option>
+        <ion-select-option value="KucnaHemija">Kućna hemija</ion-select-option>
+        <ion-select-option value="Ostalo">Ostalo</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-textarea label="Napomena" labelPlacement="floating"
+                    [(ngModel)]="model.note" name="note"
+                    maxlength="200" rows="2"
+                    placeholder="npr. Bez pesticida, domaće, akcija..."></ion-textarea>
+    </ion-item>
+
+    <ion-item *ngIf="isEdit">
       <ion-toggle [(ngModel)]="model.isAvailable" name="isAvailable">
         Dostupno
       </ion-toggle>

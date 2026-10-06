@@ -32,5 +32,6 @@ PijacaUDzepu.API/PijacaUDzepu.API/wwwroot/*
 PijacaUDzepu.API/PijacaUDzepu.API/Resources/Images/*
 
 # Environment / Secrets
+appsettings.json
 appsettings.Production.json
 appsettings.Development.json

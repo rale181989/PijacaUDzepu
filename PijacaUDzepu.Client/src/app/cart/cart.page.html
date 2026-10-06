@@ -30,6 +30,10 @@
           <h3>{{ item.product.name }}</h3>
           <p>{{ item.product.vendorName }}</p>
           <p class="price">{{ item.product.price | number:'1.0-0' }} din/{{ getUnitLabel(item.product.unit) }}</p>
+          <p *ngIf="vendorChecks[item.product.vendorId]?.serviceLabel as svc" class="service-label" [attr.data-color]="svc.color">
+            <ion-icon [name]="svc.icon" [color]="svc.color"></ion-icon>
+            {{ svc.text }}
+          </p>
         </ion-label>
         <div class="quantity-controls" slot="end">
           <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity - 1)">
@@ -49,7 +53,53 @@
     </ion-item-sliding>
   </ion-list>
 
+  <!-- Per-vendor delivery warnings -->
+  <div *ngFor="let entry of (vendorChecks | keyvalue)" class="vendor-warning-card">
+    <ng-container *ngIf="entry.value.deficit > 0 || entry.value.tooFar">
+      <div class="vendor-warning-header">
+        <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
+        <strong>{{ entry.value.vendorName }}</strong>
+      </div>
+
+      <div *ngIf="entry.value.deficit > 0" class="min-order-warning">
+        <p>Min. porudžbina za dostavu: <strong>{{ entry.value.minOrderAmount | number:'1.0-0' }} din</strong></p>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="(entry.value.subtotal / entry.value.minOrderAmount!) * 100"></div>
+        </div>
+        <p class="deficit-text">
+          Još <strong>{{ entry.value.deficit | number:'1.0-0' }} din</strong> do minimalne porudžbine
+          ({{ entry.value.subtotal | number:'1.0-0' }} / {{ entry.value.minOrderAmount | number:'1.0-0' }} din)
+        </p>
+      </div>
+
+      <div *ngIf="entry.value.tooFar" class="distance-warning">
+        <ion-icon name="location-outline" color="danger"></ion-icon>
+        <span>
+          Rastojanje {{ entry.value.distanceKm }} km &ndash; prodavac dostavlja do {{ entry.value.deliveryRadiusKm }} km
+        </span>
+      </div>
+    </ng-container>
+  </div>
+
   <div *ngIf="items.length > 0" class="order-section">
+    <!-- Delivery address for logged-in users -->
+    <div *ngIf="authService.isLoggedIn && hasDeliveryVendors" class="delivery-address-section">
+      <ion-item>
+        <ion-input label="Adresa za dostavu" labelPlacement="floating"
+                   [(ngModel)]="deliveryAddress"
+                   (ionBlur)="onAddressChange()"
+                   placeholder="npr. Bulevar Oslobođenja 10, Novi Sad"></ion-input>
+      </ion-item>
+      <p *ngIf="geoStatus === 'ok' && customerPos" class="geo-status success">
+        <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+        Lokacija prepoznata
+      </p>
+      <p *ngIf="geoStatus === 'denied' && !customerPos && !deliveryAddress" class="geo-status hint">
+        <ion-icon name="navigate-outline" color="medium"></ion-icon>
+        Unesite adresu za proveru udaljenosti dostave
+      </p>
+    </div>
+
     <!-- Guest checkout form -->
     <div *ngIf="!authService.isLoggedIn" class="guest-form">
       <div class="guest-form-header">
@@ -65,9 +115,15 @@
                    [(ngModel)]="guestPhone" required></ion-input>
       </ion-item>
       <ion-item>
-        <ion-input label="Adresa (opciono)" labelPlacement="floating"
-                   [(ngModel)]="guestAddress"></ion-input>
+        <ion-input label="Adresa" labelPlacement="floating"
+                   [(ngModel)]="guestAddress"
+                   (ionBlur)="onAddressChange()"
+                   [placeholder]="hasDeliveryVendors ? 'Potrebno za dostavu' : 'Opciono'"></ion-input>
       </ion-item>
+      <p *ngIf="hasDeliveryVendors && geoStatus === 'ok' && customerPos" class="geo-status success">
+        <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+        Lokacija prepoznata
+      </p>
     </div>
 
     <ion-item>
@@ -81,10 +137,10 @@
     </div>
 
     <ion-button expand="block" size="large" (click)="submitOrder()"
-                [disabled]="submitting || (!authService.isLoggedIn && !canGuestOrder)">
+                [disabled]="submitting || isBlocked || (!authService.isLoggedIn && !canGuestOrder)">
       <ion-spinner *ngIf="submitting" name="crescent" slot="start"></ion-spinner>
       <ion-icon name="checkmark-circle-outline" slot="start" *ngIf="!submitting"></ion-icon>
-      Naruči
+      {{ isBlocked ? 'Uslovi za dostavu nisu ispunjeni' : 'Naruči' }}
     </ion-button>
 
     <p *ngIf="!authService.isLoggedIn" class="guest-hint">

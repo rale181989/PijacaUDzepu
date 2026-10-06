@@ -48,6 +48,59 @@
                  [(ngModel)]="model.phone" name="phone"></ion-input>
     </ion-item>
 
+    <div class="services-section">
+      <h3>Usluge</h3>
+
+      <ion-item>
+        <ion-toggle [(ngModel)]="model.acceptsReservations" name="acceptsReservations">
+          Primam rezervacije robe
+        </ion-toggle>
+      </ion-item>
+
+      <ion-item>
+        <ion-toggle [(ngModel)]="model.offersDelivery" name="offersDelivery"
+                    (ionChange)="onDeliveryToggle()">
+          Dostavljam robu
+        </ion-toggle>
+      </ion-item>
+
+      <div *ngIf="model.offersDelivery" class="delivery-options">
+        <ion-item>
+          <ion-input label="Minimalna porudžbina (din)" labelPlacement="floating" type="number"
+                     [(ngModel)]="model.minOrderAmount" name="minOrderAmount" min="0"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input label="Radius dostave (km)" labelPlacement="floating" type="number"
+                     [(ngModel)]="model.deliveryRadiusKm" name="deliveryRadiusKm" min="1"></ion-input>
+        </ion-item>
+
+        <div class="schedule-section">
+          <p class="schedule-label">Raspored dostave:</p>
+          <div *ngFor="let day of allDays" class="schedule-day">
+            <div class="schedule-day-header">
+              <ion-checkbox [checked]="isDayEnabled(day.value)"
+                            (ionChange)="toggleDay(day.value)">
+              </ion-checkbox>
+              <span class="day-name" [class.active]="isDayEnabled(day.value)">{{ day.label }}</span>
+            </div>
+            <div *ngIf="isDayEnabled(day.value)" class="schedule-time-row">
+              <div class="time-field">
+                <label>Od</label>
+                <input type="time" [value]="getEntry(day.value)?.from"
+                       (change)="onTimeChange(day.value, 'from', $any($event.target).value)" />
+              </div>
+              <div class="time-field">
+                <label>Do</label>
+                <input type="time" [value]="getEntry(day.value)?.to"
+                       (change)="onTimeChange(day.value, 'to', $any($event.target).value)" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <ion-button expand="block" type="submit" [disabled]="saving" class="ion-margin-top">
       <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
       Sačuvaj

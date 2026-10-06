@@ -19,7 +19,7 @@ public class ProductService : IProductService
         _env = env;
     }
 
-    public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, int skip = 0, int take = 20)
+    public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, int skip = 0, int take = 20)
     {
         var query = _context.Products
             .Include(p => p.Vendor).ThenInclude(v => v.Market)
@@ -30,9 +30,13 @@ public class ProductService : IProductService
         if (!string.IsNullOrWhiteSpace(search))
         {
             var pattern = $"%{search}%";
+            var categoryMatch = MatchCategory(search);
             query = query.Where(p =>
                 EF.Functions.ILike(EF.Functions.Unaccent(p.Name), EF.Functions.Unaccent(pattern)) ||
-                EF.Functions.ILike(EF.Functions.Unaccent(p.Vendor.Name), EF.Functions.Unaccent(pattern)));
+                EF.Functions.ILike(EF.Functions.Unaccent(p.Vendor.Name), EF.Functions.Unaccent(pattern)) ||
+                EF.Functions.ILike(EF.Functions.Unaccent(p.Vendor.Market!.Name), EF.Functions.Unaccent(pattern)) ||
+                (p.Vendor.Stall != null && EF.Functions.ILike(p.Vendor.Stall.Label, pattern)) ||
+                (categoryMatch != null && p.Category == categoryMatch));
         }
 
         if (marketId.HasValue)
@@ -40,6 +44,9 @@ public class ProductService : IProductService
 
         if (vendorId.HasValue)
             query = query.Where(p => p.VendorId == vendorId.Value);
+
+        if (category.HasValue)
+            query = query.Where(p => p.Category == category.Value);
 
         var totalCount = await query.CountAsync();
 
@@ -90,6 +97,8 @@ public class ProductService : IProductService
             Name = dto.Name,
             Price = dto.Price,
             Unit = dto.Unit,
+            Category = dto.Category,
+            Note = dto.Note,
             IsAvailable = dto.IsAvailable
         };
 
@@ -110,6 +119,8 @@ public class ProductService : IProductService
         product.Name = dto.Name;
         product.Price = dto.Price;
         product.Unit = dto.Unit;
+        product.Category = dto.Category;
+        product.Note = dto.Note;
         product.IsAvailable = dto.IsAvailable;
         product.UpdatedAt = DateTime.UtcNow;
 
@@ -185,6 +196,33 @@ public class ProductService : IProductService
         if (File.Exists(oldPath)) File.Delete(oldPath);
     }
 
+    private static readonly Dictionary<string, Models.Enums.ProductCategory> CategoryLabels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["voce"] = Models.Enums.ProductCategory.Voce,
+        ["voće"] = Models.Enums.ProductCategory.Voce,
+        ["povrce"] = Models.Enums.ProductCategory.Povrce,
+        ["povrće"] = Models.Enums.ProductCategory.Povrce,
+        ["mlecni proizvodi"] = Models.Enums.ProductCategory.MlecniProizvodi,
+        ["mlečni proizvodi"] = Models.Enums.ProductCategory.MlecniProizvodi,
+        ["mesni proizvodi"] = Models.Enums.ProductCategory.MesniProizvodi,
+        ["konditori"] = Models.Enums.ProductCategory.Konditori,
+        ["kucna hemija"] = Models.Enums.ProductCategory.KucnaHemija,
+        ["kućna hemija"] = Models.Enums.ProductCategory.KucnaHemija,
+        ["ostalo"] = Models.Enums.ProductCategory.Ostalo,
+    };
+
+    private static Models.Enums.ProductCategory? MatchCategory(string search)
+    {
+        var s = search.Trim();
+        foreach (var kvp in CategoryLabels)
+        {
+            if (kvp.Key.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                s.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                return kvp.Value;
+        }
+        return null;
+    }
+
     private static ProductDto MapToDto(Product p) => new()
     {
         Id = p.Id,
@@ -196,6 +234,8 @@ public class ProductService : IProductService
         Name = p.Name,
         Price = p.Price,
         Unit = p.Unit,
+        Category = p.Category,
+        Note = p.Note,
         ImageUrl = p.ImageUrl,
         IsAvailable = p.IsAvailable
     };

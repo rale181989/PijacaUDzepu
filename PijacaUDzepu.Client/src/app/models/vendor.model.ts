@@ -10,6 +10,11 @@ export interface Vendor {
   phone?: string;
   imageUrl?: string;
   isActive: boolean;
+  acceptsReservations: boolean;
+  offersDelivery: boolean;
+  minOrderAmount?: number;
+  deliveryRadiusKm?: number;
+  deliverySchedule?: DeliveryScheduleEntry[];
   createdAt: string;
 }
 
@@ -20,4 +25,15 @@ export interface VendorInput {
   description?: string;
   address?: string;
   phone?: string;
+  acceptsReservations?: boolean;
+  offersDelivery?: boolean;
+  minOrderAmount?: number;
+  deliveryRadiusKm?: number;
+  deliverySchedule?: DeliveryScheduleEntry[];
+}
+
+export interface DeliveryScheduleEntry {
+  day: number;
+  from: string;
+  to: string;
 }

@@ -17,8 +17,12 @@ public static class ServiceCollectionExtensions
         var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? config.GetConnectionString("DefaultConnection");
 
+        var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(connectionString);
+        dataSourceBuilder.EnableDynamicJson();
+        var dataSource = dataSourceBuilder.Build();
+
         services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(dataSource));
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();

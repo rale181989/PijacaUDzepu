@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PijacaUDzepu.API.Models;
+using PijacaUDzepu.API.Models.Enums;
 
 namespace PijacaUDzepu.API.DataAccess.SeedData;
 
@@ -207,71 +208,71 @@ public static class Seed
             var products = new List<Product>
             {
                 // Marko Voće (Futoška)
-                new() { VendorId = vendors[0].Id, Name = "Jabuke Crveni Delišes", Price = 150, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[0].Id, Name = "Kruške Viljamovka", Price = 200, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[0].Id, Name = "Šljive Čačanka", Price = 120, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1568477070800-66719cd52be2?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[0].Id, Name = "Paradajz Domaći", Price = 200, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1582284540020-8acbe03f4924?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[0].Id, Name = "Paprike Babura", Price = 180, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[0].Id, Name = "Krompir Mladi", Price = 100, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[0].Id, Name = "Lubenica", Price = 50, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1589984662742-a13a59b2a237?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Jabuke Crveni Delišes", Price = 150, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Kruške Viljamovka", Price = 200, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Šljive Čačanka", Price = 120, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1568477070800-66719cd52be2?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Paradajz Domaći", Price = 200, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1582284540020-8acbe03f4924?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Paprike Babura", Price = 180, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Krompir Mladi", Price = 100, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[0].Id, Name = "Lubenica", Price = 50, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1589984662742-a13a59b2a237?w=400&h=300&fit=crop" },
 
                 // Jovana Organic (Futoška)
-                new() { VendorId = vendors[1].Id, Name = "Organski Paradajz", Price = 350, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1607305387299-a3d9611cd469?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[1].Id, Name = "Organske Tikvice", Price = 280, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[1].Id, Name = "Organski Krastavci", Price = 250, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1604977042946-1eecc30259b0?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[1].Id, Name = "Organska Rukola", Price = 150, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[1].Id, Name = "Bio Cvekla", Price = 180, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[1].Id, Name = "Organski Paradajz", Price = 350, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1607305387299-a3d9611cd469?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[1].Id, Name = "Organske Tikvice", Price = 280, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[1].Id, Name = "Organski Krastavci", Price = 250, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1604977042946-1eecc30259b0?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[1].Id, Name = "Organska Rukola", Price = 150, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[1].Id, Name = "Bio Cvekla", Price = 180, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=400&h=300&fit=crop" },
 
                 // Zeleni Raj (Futoška)
-                new() { VendorId = vendors[2].Id, Name = "Bosiljak Sveži", Price = 80, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1618164435735-413d3b066c9a?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[2].Id, Name = "Peršun", Price = 60, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1599629954294-16196fbd23e0?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[2].Id, Name = "Mirođija", Price = 60, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[2].Id, Name = "Zeleni Luk", Price = 50, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[2].Id, Name = "Nana Sveža", Price = 70, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[2].Id, Name = "Rotkvice", Price = 100, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1585502781079-d2e4c2a83e5e?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[2].Id, Name = "Bosiljak Sveži", Price = 80, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1618164435735-413d3b066c9a?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[2].Id, Name = "Peršun", Price = 60, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1599629954294-16196fbd23e0?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[2].Id, Name = "Mirođija", Price = 60, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[2].Id, Name = "Zeleni Luk", Price = 50, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[2].Id, Name = "Nana Sveža", Price = 70, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[2].Id, Name = "Rotkvice", Price = 100, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1585502781079-d2e4c2a83e5e?w=400&h=300&fit=crop" },
 
                 // Salaš Subotički (Riblja)
-                new() { VendorId = vendors[3].Id, Name = "Crvena Paprika Rog", Price = 220, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1601648764658-cf37e8c89b70?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[3].Id, Name = "Kupus Zimski", Price = 60, Unit = Models.Enums.ProductUnit.Komad, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[3].Id, Name = "Boranija", Price = 300, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1567375698348-5d9d5ae10c3a?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[3].Id, Name = "Dinja Medena", Price = 120, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[3].Id, Name = "Kukuruz Šećerac", Price = 40, Unit = Models.Enums.ProductUnit.Komad, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[3].Id, Name = "Breskve", Price = 250, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1595124216650-1f02fe30bfaa?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[3].Id, Name = "Crvena Paprika Rog", Price = 220, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1601648764658-cf37e8c89b70?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[3].Id, Name = "Kupus Zimski", Price = 60, Unit = ProductUnit.Komad, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[3].Id, Name = "Boranija", Price = 300, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1567375698348-5d9d5ae10c3a?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[3].Id, Name = "Dinja Medena", Price = 120, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[3].Id, Name = "Kukuruz Šećerac", Price = 40, Unit = ProductUnit.Komad, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[3].Id, Name = "Breskve", Price = 250, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1595124216650-1f02fe30bfaa?w=400&h=300&fit=crop" },
 
                 // Bašta Niš (Riblja)
-                new() { VendorId = vendors[4].Id, Name = "Ljuta Papričica", Price = 400, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1526470303-82c787d88682?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[4].Id, Name = "Patlidžan", Price = 200, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[4].Id, Name = "Praziluk", Price = 160, Unit = Models.Enums.ProductUnit.Veza, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1567539549213-cc1697632146?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[4].Id, Name = "Zelena Salata", Price = 80, Unit = Models.Enums.ProductUnit.Komad, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[4].Id, Name = "Spanać", Price = 200, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[4].Id, Name = "Ljuta Papričica", Price = 400, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1526470303-82c787d88682?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[4].Id, Name = "Patlidžan", Price = 200, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[4].Id, Name = "Praziluk", Price = 160, Unit = ProductUnit.Veza, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1567539549213-cc1697632146?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[4].Id, Name = "Zelena Salata", Price = 80, Unit = ProductUnit.Komad, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[4].Id, Name = "Spanać", Price = 200, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop" },
 
                 // Fruška Gora Bio (Limanska)
-                new() { VendorId = vendors[5].Id, Name = "Domaći Med Lipov", Price = 1200, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[5].Id, Name = "Trešnje", Price = 350, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1528821154947-1aa3d1b74941?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[5].Id, Name = "Višnje", Price = 300, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1551829142-d9b8cf2c9232?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[5].Id, Name = "Maline", Price = 500, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1577069861033-55d04cec4ef5?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[5].Id, Name = "Kupine", Price = 450, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[5].Id, Name = "Domaći Med Lipov", Price = 1200, Unit = ProductUnit.Kg, Category = ProductCategory.Ostalo, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[5].Id, Name = "Trešnje", Price = 350, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1528821154947-1aa3d1b74941?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[5].Id, Name = "Višnje", Price = 300, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1551829142-d9b8cf2c9232?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[5].Id, Name = "Maline", Price = 500, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1577069861033-55d04cec4ef5?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[5].Id, Name = "Kupine", Price = 450, Unit = ProductUnit.Kg, Category = ProductCategory.Voce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop" },
 
                 // Đurđev Salaš (Limanska)
-                new() { VendorId = vendors[6].Id, Name = "Paradajz Cherry", Price = 300, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1661811820259-2575b82101bf?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[6].Id, Name = "Paprike Šilje", Price = 200, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1526470303-82c787d88682?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[6].Id, Name = "Krastavci Kornišoni", Price = 180, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1604977042946-1eecc30259b0?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[6].Id, Name = "Tikvice", Price = 150, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[6].Id, Name = "Šargarepa", Price = 130, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[6].Id, Name = "Paradajz Cherry", Price = 300, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1661811820259-2575b82101bf?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[6].Id, Name = "Paprike Šilje", Price = 200, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1526470303-82c787d88682?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[6].Id, Name = "Krastavci Kornišoni", Price = 180, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1604977042946-1eecc30259b0?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[6].Id, Name = "Tikvice", Price = 150, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[6].Id, Name = "Šargarepa", Price = 130, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop" },
 
                 // Braća Marković (Najlon)
-                new() { VendorId = vendors[7].Id, Name = "Krompir Crveni", Price = 80, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[7].Id, Name = "Luk Crni", Price = 130, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[7].Id, Name = "Beli Luk", Price = 800, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1540148426945-6cf22a6b2571?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[7].Id, Name = "Grašak Svež", Price = 350, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[7].Id, Name = "Pasulj Tetovac", Price = 600, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[7].Id, Name = "Krompir Crveni", Price = 80, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[7].Id, Name = "Luk Crni", Price = 130, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[7].Id, Name = "Beli Luk", Price = 800, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1540148426945-6cf22a6b2571?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[7].Id, Name = "Grašak Svež", Price = 350, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[7].Id, Name = "Pasulj Tetovac", Price = 600, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&h=300&fit=crop" },
 
                 // Sremski Plodovi (Najlon)
-                new() { VendorId = vendors[8].Id, Name = "Paradajz Volovsko Srce", Price = 280, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1524593166156-312f362cada0?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[8].Id, Name = "Paprike Kalifornija", Price = 250, Unit = Models.Enums.ProductUnit.Kg, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[8].Id, Name = "Karfiol", Price = 180, Unit = Models.Enums.ProductUnit.Komad, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[8].Id, Name = "Brokoli", Price = 250, Unit = Models.Enums.ProductUnit.Komad, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop" },
-                new() { VendorId = vendors[8].Id, Name = "Kelj", Price = 100, Unit = Models.Enums.ProductUnit.Komad, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[8].Id, Name = "Paradajz Volovsko Srce", Price = 280, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1524593166156-312f362cada0?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[8].Id, Name = "Paprike Kalifornija", Price = 250, Unit = ProductUnit.Kg, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[8].Id, Name = "Karfiol", Price = 180, Unit = ProductUnit.Komad, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[8].Id, Name = "Brokoli", Price = 250, Unit = ProductUnit.Komad, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop" },
+                new() { VendorId = vendors[8].Id, Name = "Kelj", Price = 100, Unit = ProductUnit.Komad, Category = ProductCategory.Povrce, IsAvailable = true, ImageUrl = "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=400&h=300&fit=crop" },
             };
 
             context.Products.AddRange(products);

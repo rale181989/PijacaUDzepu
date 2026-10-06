@@ -15,5 +15,11 @@ public class ProductInputDto
     [Required]
     public ProductUnit Unit { get; set; }
 
+    [Required]
+    public ProductCategory Category { get; set; }
+
+    [MaxLength(200)]
+    public string? Note { get; set; }
+
     public bool IsAvailable { get; set; } = true;
 }

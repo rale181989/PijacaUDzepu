@@ -4,5 +4,10 @@ public enum ProductUnit
 {
     Kg,
     Komad,
-    Veza
+    Veza,
+    Litar,
+    Gram,
+    Pakovanje,
+    Kutija,
+    Flasa
 }

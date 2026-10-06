@@ -13,7 +13,7 @@ import { environment } from '../../environments/environment';
 })
 export class VendorProductFormPage implements OnInit {
   productId: number | null = null;
-  model: ProductInput = { name: '', price: 0, unit: 'Kg', isAvailable: true };
+  model: ProductInput = { name: '', price: 0, unit: 'Kg', category: 'Povrce', isAvailable: true };
   imageUrl: string | null = null;
   selectedFile: File | null = null;
   loading = false;
@@ -36,7 +36,7 @@ export class VendorProductFormPage implements OnInit {
       this.loading = true;
       this.productService.getById(this.productId).subscribe({
         next: p => {
-          this.model = { name: p.name, price: p.price, unit: p.unit, isAvailable: p.isAvailable };
+          this.model = { name: p.name, price: p.price, unit: p.unit, category: p.category, note: p.note, isAvailable: p.isAvailable };
           this.imageUrl = p.imageUrl || null;
           this.loading = false;
         },
