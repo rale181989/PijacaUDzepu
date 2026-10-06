@@ -11,6 +11,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS backend-build
 WORKDIR /app
 COPY PijacaUDzepu.API/PijacaUDzepu.API.sln PijacaUDzepu.API/
 COPY PijacaUDzepu.API/PijacaUDzepu.API/ PijacaUDzepu.API/PijacaUDzepu.API/
+RUN echo '{"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}}}' > PijacaUDzepu.API/PijacaUDzepu.API/appsettings.json
 RUN dotnet publish PijacaUDzepu.API/PijacaUDzepu.API/PijacaUDzepu.API.csproj -c Release -o /app/publish
 
 # Stage 3: Runtime

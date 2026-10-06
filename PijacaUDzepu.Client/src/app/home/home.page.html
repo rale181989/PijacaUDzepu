@@ -208,7 +208,7 @@
   <ion-grid *ngIf="displayProducts.length > 0">
     <ion-row>
       <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of displayProducts">
-        <ion-card class="product-card">
+        <ion-card class="product-card" [ngClass]="cardClassCache[product.id]">
           <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img" />
           <ion-card-content>
             <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
