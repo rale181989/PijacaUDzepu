@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular/lazy';
 import { RouterModule } from '@angular/router';
 import { CartPage } from './cart.page';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   imports: [
     CommonModule, FormsModule, IonicModule,
-    RouterModule.forChild([{ path: '', component: CartPage }])
+    RouterModule.forChild([{ path: '', component: CartPage }]),
+    SharedModule
   ],
   declarations: [CartPage]
 })

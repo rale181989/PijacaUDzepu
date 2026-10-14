@@ -10,6 +10,7 @@ import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
 import { ToastController } from '@ionic/angular/lazy';
 import { environment } from '../../environments/environment';
+import { TranslateService } from '../services/translate.service';
 
 @Component({
   selector: 'app-home',
@@ -94,8 +95,25 @@ export class HomePage implements OnInit {
     private vendorService: VendorService,
     private marketService: MarketService,
     private stallService: StallService,
-    private toastController: ToastController
-  ) {}
+    private toastController: ToastController,
+    public ts: TranslateService
+  ) {
+    this.ts.lang$.subscribe(() => this.rebuildCategories());
+  }
+
+  private rebuildCategories() {
+    this.categories = [
+      { value: 'Voce', label: this.ts.t('cat.Voce') },
+      { value: 'Povrce', label: this.ts.t('cat.Povrce') },
+      { value: 'MlecniProizvodi', label: this.ts.t('cat.MlecniProizvodi') },
+      { value: 'MesniProizvodi', label: this.ts.t('cat.MesniProizvodi') },
+      { value: 'Konditori', label: this.ts.t('cat.Konditori') },
+      { value: 'KucnaHemija', label: this.ts.t('cat.KucnaHemija') },
+      { value: 'Ostalo', label: this.ts.t('cat.Ostalo') },
+    ];
+    this.serviceInfoCache = {};
+    this.rebuildServiceCache();
+  }
 
   ngOnInit() {
     this.loadMarkets();
@@ -241,7 +259,7 @@ export class HomePage implements OnInit {
 
   getVendorAtStall(stallId: number): string {
     const vendor = this.vendors.find(v => v.stallId === stallId);
-    return vendor ? vendor.name : 'Slobodna';
+    return vendor ? vendor.name : this.ts.t('home.free');
   }
 
   getSelectedQty(productId: number): number {
@@ -264,7 +282,7 @@ export class HomePage implements OnInit {
     this.cartService.addToCart(product, qty);
     this.selectedQty[product.id] = 1;
     const toast = await this.toastController.create({
-      message: `${product.name} x${qty} dodato u korpu`,
+      message: `${product.name} x${qty} ${this.ts.t('cart.addedToCart')}`,
       duration: 1500,
       position: 'bottom',
       color: 'success'
@@ -307,18 +325,17 @@ export class HomePage implements OnInit {
       const msgs: { icon: string; text: string; color: string }[] = [];
 
       if (!v.acceptsReservations && !v.offersDelivery) {
-        msgs.push({ icon: 'eye-outline', text: 'Samo pregled – posetite prodavca na pijaci', color: 'medium' });
+        msgs.push({ icon: 'eye-outline', text: this.ts.t('svc.viewOnly'), color: 'medium' });
       } else {
         if (v.acceptsReservations) {
-          msgs.push({ icon: 'bag-check-outline', text: 'Poručite i dođite lično po robu', color: 'primary' });
+          msgs.push({ icon: 'bag-check-outline', text: this.ts.t('svc.pickUp'), color: 'primary' });
         }
         if (v.offersDelivery) {
-          let deliveryText = 'Prodavac dostavlja robu';
-          if (v.minOrderAmount) deliveryText += ` (min. ${v.minOrderAmount} din)`;
-          if (v.deliveryRadiusKm) deliveryText += `, do ${v.deliveryRadiusKm} km`;
+          let deliveryText = this.ts.t('svc.delivers');
+          if (v.minOrderAmount) deliveryText += ` (${this.ts.t('svc.min')} ${v.minOrderAmount} ${this.ts.t('din')})`;
+          if (v.deliveryRadiusKm) deliveryText += `, ${this.ts.t('svc.upTo')} ${v.deliveryRadiusKm} ${this.ts.t('km')}`;
           if (v.deliverySchedule && v.deliverySchedule.length > 0) {
-            const shortNames: Record<number, string> = { 1: 'pon', 2: 'uto', 3: 'sre', 4: 'čet', 5: 'pet', 6: 'sub', 7: 'ned' };
-            const days = v.deliverySchedule.map(d => (shortNames[d.day] ?? '') + ' ' + d.from + '-' + d.to).join(', ');
+            const days = v.deliverySchedule.map(d => (this.ts.t('day.' + d.day) ?? '') + ' ' + d.from + '-' + d.to).join(', ');
             deliveryText += ' – ' + days;
           }
           msgs.push({ icon: 'car-outline', text: deliveryText, color: 'success' });
@@ -329,17 +346,7 @@ export class HomePage implements OnInit {
   }
 
   getUnitLabel(unit: string): string {
-    switch (unit) {
-      case 'Kg': return 'kg';
-      case 'Gram': return 'g';
-      case 'Komad': return 'kom';
-      case 'Veza': return 'veza';
-      case 'Litar': return 'l';
-      case 'Pakovanje': return 'pak';
-      case 'Kutija': return 'kut';
-      case 'Flasa': return 'flaša';
-      default: return unit;
-    }
+    return this.ts.t('unit.' + unit) || unit;
   }
 
   getImageUrl(imageUrl?: string): string {

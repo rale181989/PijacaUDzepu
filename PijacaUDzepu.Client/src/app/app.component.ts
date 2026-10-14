@@ -3,6 +3,7 @@ import { MenuController } from '@ionic/angular/lazy';
 import { AuthService } from './services/auth.service';
 import { CartService } from './services/cart.service';
 import { NotificationService } from './services/notification.service';
+import { TranslateService, Lang } from './services/translate.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -18,12 +19,17 @@ export class AppComponent {
     public authService: AuthService,
     private cartService: CartService,
     public notificationService: NotificationService,
+    public ts: TranslateService,
     private menuController: MenuController,
     private router: Router
   ) {
     this.cartService.cart$.subscribe(items => {
       this.cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
     });
+  }
+
+  setLang(lang: Lang) {
+    this.ts.setLang(lang);
   }
 
   closeMenu() {

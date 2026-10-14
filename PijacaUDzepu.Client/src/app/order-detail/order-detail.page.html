@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/my-orders"></ion-back-button>
     </ion-buttons>
-    <ion-title>Porudžbina #{{ order?.id }}</ion-title>
+    <ion-title>{{ 'orders.order' | t }} #{{ order?.id }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -19,28 +19,28 @@
         </ion-badge>
       </ion-card-header>
       <ion-card-content>
-        <p>Datum: {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
-        <p *ngIf="order.note">Napomena: {{ order.note }}</p>
+        <p>{{ 'order.date' | t }}: {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+        <p *ngIf="order.note">{{ 'order.note' | t }}: {{ order.note }}</p>
       </ion-card-content>
     </ion-card>
 
     <ion-list>
       <ion-list-header>
-        <ion-label>Stavke</ion-label>
+        <ion-label>{{ 'order.items' | t }}</ion-label>
       </ion-list-header>
       <ion-item *ngFor="let item of order.items">
         <ion-label>
           <h3>{{ item.productName }}</h3>
-          <p>{{ item.quantity }} {{ getUnitLabel(item.unit) }} x {{ item.unitPrice | number:'1.0-0' }} din</p>
+          <p>{{ item.quantity }} {{ getUnitLabel(item.unit) }} x {{ item.unitPrice | number:'1.0-0' }} {{ 'din' | t }}</p>
         </ion-label>
         <ion-note slot="end" class="item-total">
-          {{ item.totalPrice | number:'1.0-0' }} din
+          {{ item.totalPrice | number:'1.0-0' }} {{ 'din' | t }}
         </ion-note>
       </ion-item>
     </ion-list>
 
     <div class="total-row">
-      <strong>Ukupno: {{ order.totalAmount | number:'1.0-0' }} din</strong>
+      <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
     </div>
   </ng-container>
 </ion-content>

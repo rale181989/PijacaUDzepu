@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
+import { TranslateService } from '../services/translate.service';
 import { RegisterDto } from '../models/user.model';
 
 @Component({
@@ -19,7 +20,8 @@ export class RegisterPage {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private ts: TranslateService
   ) {}
 
   async register() {
@@ -32,7 +34,7 @@ export class RegisterPage {
       error: async (err) => {
         this.loading = false;
         const toast = await this.toastController.create({
-          message: err.error?.message || 'Greška pri registraciji',
+          message: err.error?.message || this.ts.t('register.error'),
           duration: 3000,
           color: 'danger'
         });

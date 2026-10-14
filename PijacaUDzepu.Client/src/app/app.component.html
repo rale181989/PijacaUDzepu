@@ -5,7 +5,7 @@
       <ion-toolbar color="primary">
         <ion-title>
           <div class="menu-header-brand">
-            <img src="assets/logo.svg" alt="Pijaca u Džepu" class="menu-logo" />
+            <img src="assets/logo.svg" [alt]="'app.title' | t" class="menu-logo" />
           </div>
         </ion-title>
         <ion-buttons slot="end">
@@ -16,15 +16,20 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <div class="lang-switcher">
+        <button [class.active]="ts.lang === 'sr'" (click)="setLang('sr')">SR</button>
+        <button [class.active]="ts.lang === 'en'" (click)="setLang('en')">EN</button>
+        <button [class.active]="ts.lang === 'ru'" (click)="setLang('ru')">RU</button>
+      </div>
       <ion-list>
         <ion-item routerLink="/home" routerDirection="root" (click)="closeMenu()">
           <ion-icon name="storefront-outline" slot="start"></ion-icon>
-          <ion-label>Početna</ion-label>
+          <ion-label>{{ 'nav.home' | t }}</ion-label>
         </ion-item>
 
         <ion-item routerLink="/cart" routerDirection="root" (click)="closeMenu()">
           <ion-icon name="cart-outline" slot="start"></ion-icon>
-          <ion-label>Korpa</ion-label>
+          <ion-label>{{ 'nav.cart' | t }}</ion-label>
           <ion-badge *ngIf="cartCount > 0" color="danger" slot="end">{{ cartCount }}</ion-badge>
         </ion-item>
 
@@ -32,48 +37,48 @@
           <ion-item routerLink="/my-orders" routerDirection="root" (click)="closeMenu()"
                     *ngIf="authService.hasRole('Customer')">
             <ion-icon name="receipt-outline" slot="start"></ion-icon>
-            <ion-label>Moje porudžbine</ion-label>
+            <ion-label>{{ 'nav.myOrders' | t }}</ion-label>
           </ion-item>
         </ng-container>
 
         <ng-container *ngIf="authService.hasRole('VendorAdmin')">
           <ion-item-divider>
-            <ion-label>Administracija</ion-label>
+            <ion-label>{{ 'nav.admin' | t }}</ion-label>
           </ion-item-divider>
           <ion-item routerLink="/vendor-profile" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="settings-outline" slot="start"></ion-icon>
-            <ion-label>Moj profil</ion-label>
+            <ion-label>{{ 'nav.profile' | t }}</ion-label>
           </ion-item>
           <ion-item routerLink="/vendor-products" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="leaf-outline" slot="start"></ion-icon>
-            <ion-label>Moji proizvodi</ion-label>
+            <ion-label>{{ 'nav.myProducts' | t }}</ion-label>
           </ion-item>
           <ion-item routerLink="/vendor-product-form" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-            <ion-label>Dodaj proizvod</ion-label>
+            <ion-label>{{ 'nav.addProduct' | t }}</ion-label>
           </ion-item>
           <ion-item routerLink="/vendor-orders" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="list-outline" slot="start"></ion-icon>
-            <ion-label>Porudžbine</ion-label>
+            <ion-label>{{ 'nav.orders' | t }}</ion-label>
             <ion-badge *ngIf="notificationService.pendingCount > 0" color="danger" slot="end">{{ notificationService.pendingCount }}</ion-badge>
           </ion-item>
         </ng-container>
 
         <ng-container *ngIf="authService.hasRole('SuperAdmin')">
           <ion-item-divider>
-            <ion-label>Super Admin</ion-label>
+            <ion-label>{{ 'nav.superAdmin' | t }}</ion-label>
           </ion-item-divider>
           <ion-item routerLink="/admin-markets" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="storefront-outline" slot="start"></ion-icon>
-            <ion-label>Pijace</ion-label>
+            <ion-label>{{ 'nav.markets' | t }}</ion-label>
           </ion-item>
           <ion-item routerLink="/admin-vendors" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="business-outline" slot="start"></ion-icon>
-            <ion-label>Prodavci</ion-label>
+            <ion-label>{{ 'nav.vendors' | t }}</ion-label>
           </ion-item>
           <ion-item routerLink="/admin-users" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="people-outline" slot="start"></ion-icon>
-            <ion-label>Korisnici</ion-label>
+            <ion-label>{{ 'nav.users' | t }}</ion-label>
           </ion-item>
         </ng-container>
       </ion-list>
@@ -82,15 +87,15 @@
         <ion-item-divider></ion-item-divider>
         <ion-item *ngIf="!authService.isLoggedIn" routerLink="/login" routerDirection="root" (click)="closeMenu()">
           <ion-icon name="log-in-outline" slot="start"></ion-icon>
-          <ion-label>Prijava</ion-label>
+          <ion-label>{{ 'nav.login' | t }}</ion-label>
         </ion-item>
         <ion-item *ngIf="!authService.isLoggedIn" routerLink="/register" routerDirection="root" (click)="closeMenu()">
           <ion-icon name="person-add-outline" slot="start"></ion-icon>
-          <ion-label>Registracija</ion-label>
+          <ion-label>{{ 'nav.register' | t }}</ion-label>
         </ion-item>
         <ion-item *ngIf="authService.isLoggedIn" (click)="logout()" button>
           <ion-icon name="log-out-outline" slot="start"></ion-icon>
-          <ion-label>Odjava ({{ authService.currentUser?.userName }})</ion-label>
+          <ion-label>{{ 'nav.logout' | t }} ({{ authService.currentUser?.userName }})</ion-label>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -100,39 +105,39 @@
   <div class="desktop-nav">
     <div class="desktop-nav-inner">
       <a routerLink="/home" class="nav-brand">
-        <img src="assets/logo.svg" alt="Pijaca u Džepu" class="nav-logo" />
+        <img src="assets/logo.svg" [alt]="'app.title' | t" class="nav-logo" />
       </a>
 
       <nav class="nav-links">
         <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <ion-icon name="storefront-outline"></ion-icon>
-          <span>Početna</span>
+          <span>{{ 'nav.home' | t }}</span>
         </a>
 
         <a routerLink="/cart" routerLinkActive="active" class="cart-link">
           <ion-icon name="cart-outline"></ion-icon>
-          <span>Korpa</span>
+          <span>{{ 'nav.cart' | t }}</span>
           <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
         </a>
 
         <a *ngIf="authService.hasRole('Customer')" routerLink="/my-orders" routerLinkActive="active" class="notif-link">
           <ion-icon name="receipt-outline"></ion-icon>
-          <span>Porudžbine</span>
+          <span>{{ 'nav.orders' | t }}</span>
         </a>
 
         <ng-container *ngIf="authService.hasRole('VendorAdmin')">
           <span class="nav-divider"></span>
           <a routerLink="/vendor-profile" routerLinkActive="active">
             <ion-icon name="settings-outline"></ion-icon>
-            <span>Profil</span>
+            <span>{{ 'nav.profile.short' | t }}</span>
           </a>
           <a routerLink="/vendor-products" routerLinkActive="active">
             <ion-icon name="leaf-outline"></ion-icon>
-            <span>Proizvodi</span>
+            <span>{{ 'nav.products' | t }}</span>
           </a>
           <a routerLink="/vendor-orders" routerLinkActive="active" class="notif-link">
             <ion-icon name="list-outline"></ion-icon>
-            <span>Porudžbine</span>
+            <span>{{ 'nav.orders' | t }}</span>
             <span *ngIf="notificationService.pendingCount > 0" class="notif-badge">{{ notificationService.pendingCount }}</span>
           </a>
         </ng-container>
@@ -141,27 +146,32 @@
           <span class="nav-divider"></span>
           <a routerLink="/admin-markets" routerLinkActive="active">
             <ion-icon name="storefront-outline"></ion-icon>
-            <span>Pijace</span>
+            <span>{{ 'nav.markets' | t }}</span>
           </a>
           <a routerLink="/admin-vendors" routerLinkActive="active">
             <ion-icon name="business-outline"></ion-icon>
-            <span>Prodavci</span>
+            <span>{{ 'nav.vendors' | t }}</span>
           </a>
           <a routerLink="/admin-users" routerLinkActive="active">
             <ion-icon name="people-outline"></ion-icon>
-            <span>Korisnici</span>
+            <span>{{ 'nav.users' | t }}</span>
           </a>
         </ng-container>
       </nav>
 
       <div class="nav-auth">
+        <div class="lang-switcher-desktop">
+          <button [class.active]="ts.lang === 'sr'" (click)="setLang('sr')">SR</button>
+          <button [class.active]="ts.lang === 'en'" (click)="setLang('en')">EN</button>
+          <button [class.active]="ts.lang === 'ru'" (click)="setLang('ru')">RU</button>
+        </div>
         <ng-container *ngIf="!authService.isLoggedIn">
           <a routerLink="/login" routerLinkActive="active">
             <ion-icon name="log-in-outline"></ion-icon>
-            <span>Prijava</span>
+            <span>{{ 'nav.login' | t }}</span>
           </a>
           <a routerLink="/register" routerLinkActive="active" class="nav-register">
-            Registracija
+            {{ 'nav.register' | t }}
           </a>
         </ng-container>
         <ng-container *ngIf="authService.isLoggedIn">
@@ -171,7 +181,7 @@
           </span>
           <a (click)="logout()" class="nav-logout">
             <ion-icon name="log-out-outline"></ion-icon>
-            <span>Odjava</span>
+            <span>{{ 'nav.logout' | t }}</span>
           </a>
         </ng-container>
       </div>

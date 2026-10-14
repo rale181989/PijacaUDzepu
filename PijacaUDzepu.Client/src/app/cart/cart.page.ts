@@ -12,6 +12,7 @@ import { Vendor } from '../models/vendor.model';
 import { Market } from '../models/market.model';
 import { OrderInput, GuestOrderInput } from '../models/order.model';
 import { environment } from '../../environments/environment';
+import { TranslateService } from '../services/translate.service';
 
 interface VendorCheck {
   vendorName: string;
@@ -68,7 +69,8 @@ export class CartPage implements OnInit {
     private geoService: GeoService,
     private router: Router,
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private ts: TranslateService
   ) {}
 
   ngOnInit() {
@@ -123,7 +125,8 @@ export class CartPage implements OnInit {
       vendorSubtotals[vid] = (vendorSubtotals[vid] ?? 0) + item.product.price * item.quantity;
     }
 
-    const shortNames: Record<number, string> = { 1: 'pon', 2: 'uto', 3: 'sre', 4: 'čet', 5: 'pet', 6: 'sub', 7: 'ned' };
+    const shortNames: Record<number, string> = {};
+    for (let i = 1; i <= 7; i++) shortNames[i] = this.ts.t('day.' + i);
 
     for (const vid of Object.keys(vendorSubtotals).map(Number)) {
       const v = this.vendors.find(vn => vn.id === vid);
@@ -131,11 +134,11 @@ export class CartPage implements OnInit {
 
       let serviceLabel: VendorCheck['serviceLabel'] = null;
       if (v.acceptsReservations && v.offersDelivery) {
-        serviceLabel = { icon: 'bag-check-outline', text: 'Lično preuzimanje ili dostava', color: 'primary' };
+        serviceLabel = { icon: 'bag-check-outline', text: this.ts.t('cart.pickupOrDelivery'), color: 'primary' };
       } else if (v.acceptsReservations) {
-        serviceLabel = { icon: 'bag-check-outline', text: 'Lično preuzimanje', color: 'primary' };
+        serviceLabel = { icon: 'bag-check-outline', text: this.ts.t('cart.pickupOnly'), color: 'primary' };
       } else if (v.offersDelivery) {
-        let text = 'Dostava';
+        let text = this.ts.t('cart.deliveryOnly');
         if (v.deliverySchedule && v.deliverySchedule.length > 0) {
           const days = v.deliverySchedule.map(d => (shortNames[d.day] ?? '') + ' ' + d.from + '-' + d.to).join(', ');
           text += ': ' + days;
@@ -194,28 +197,18 @@ export class CartPage implements OnInit {
 
   async clearCart() {
     const alert = await this.alertController.create({
-      header: 'Isprazni korpu',
-      message: 'Da li ste sigurni da želite da ispraznite korpu?',
+      header: this.ts.t('cart.clear'),
+      message: this.ts.t('cart.clearConfirm'),
       buttons: [
-        { text: 'Otkaži', role: 'cancel' },
-        { text: 'Isprazni', role: 'destructive', handler: () => this.cartService.clearCart() }
+        { text: this.ts.t('cart.cancelBtn'), role: 'cancel' },
+        { text: this.ts.t('cart.clear'), role: 'destructive', handler: () => this.cartService.clearCart() }
       ]
     });
     await alert.present();
   }
 
   getUnitLabel(unit: string): string {
-    switch (unit) {
-      case 'Kg': return 'kg';
-      case 'Gram': return 'g';
-      case 'Komad': return 'kom';
-      case 'Veza': return 'veza';
-      case 'Litar': return 'l';
-      case 'Pakovanje': return 'pak';
-      case 'Kutija': return 'kut';
-      case 'Flasa': return 'flaša';
-      default: return unit;
-    }
+    return this.ts.t('unit.' + unit) || unit;
   }
 
   getImageUrl(imageUrl?: string): string {
@@ -234,12 +227,12 @@ export class CartPage implements OnInit {
     if (!this.authService.isLoggedIn && !this.canGuestOrder) return;
 
     const alert = await this.alertController.create({
-      header: 'Potvrda porudžbine',
-      message: `Ukupno: ${this.cartService.total.toFixed(0)} din. Da li želite da naručite?`,
+      header: this.ts.t('cart.confirmTitle'),
+      message: `${this.ts.t('cart.total')} ${this.cartService.total.toFixed(0)} ${this.ts.t('din')}. ${this.ts.t('cart.orderConfirm')}`,
       buttons: [
-        { text: 'Otkaži', role: 'cancel' },
+        { text: this.ts.t('cart.cancelBtn'), role: 'cancel' },
         {
-          text: 'Naruči',
+          text: this.ts.t('cart.order'),
           handler: () => this.placeOrder()
         }
       ]
@@ -278,7 +271,7 @@ export class CartPage implements OnInit {
         this.guestAddress = '';
         this.deliveryAddress = '';
         const toast = await this.toastController.create({
-          message: 'Porudžbina je uspešno kreirana!',
+          message: this.ts.t('cart.orderSuccess'),
           duration: 3000,
           color: 'success'
         });
@@ -292,7 +285,7 @@ export class CartPage implements OnInit {
       error: async (err) => {
         this.submitting = false;
         const toast = await this.toastController.create({
-          message: err.error?.message || 'Greška pri kreiranju porudžbine',
+          message: err.error?.message || this.ts.t('cart.orderError'),
           duration: 3000,
           color: 'danger'
         });

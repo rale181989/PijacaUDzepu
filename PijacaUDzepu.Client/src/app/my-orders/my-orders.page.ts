@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { Order } from '../models/order.model';
 import { ToastController } from '@ionic/angular/lazy';
+import { TranslateService } from '../services/translate.service';
 
 @Component({
   selector: 'app-my-orders',
@@ -17,7 +18,8 @@ export class MyOrdersPage implements OnInit {
 
   constructor(
     private orderService: OrderService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private ts: TranslateService
   ) {}
 
   ngOnInit() {
@@ -61,13 +63,13 @@ export class MyOrdersPage implements OnInit {
       next: async (updated) => {
         order.status = updated.status;
         const toast = await this.toastController.create({
-          message: 'Porudžbina je otkazana', duration: 2000, color: 'warning'
+          message: this.ts.t('order.cancelled'), duration: 2000, color: 'warning'
         });
         await toast.present();
       },
       error: async (err) => {
         const toast = await this.toastController.create({
-          message: err.error?.message || 'Greška', duration: 2000, color: 'danger'
+          message: err.error?.message || this.ts.t('order.error'), duration: 2000, color: 'danger'
         });
         await toast.present();
       }
@@ -75,15 +77,7 @@ export class MyOrdersPage implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const map: Record<string, string> = {
-      'Pending': 'Na čekanju',
-      'Confirmed': 'Potvrđena',
-      'Rejected': 'Odbijena',
-      'ReadyForPickup': 'Spremna za preuzimanje',
-      'Completed': 'Završena',
-      'Cancelled': 'Otkazana'
-    };
-    return map[status] || status;
+    return this.ts.t('status.' + status) || status;
   }
 
   getStatusColor(status: string): string {

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { OrderService } from '../services/order.service';
 import { Order } from '../models/order.model';
+import { TranslateService } from '../services/translate.service';
 
 @Component({
   selector: 'app-order-detail',
@@ -15,7 +16,8 @@ export class OrderDetailPage implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private orderService: OrderService
+    private orderService: OrderService,
+    private ts: TranslateService
   ) {}
 
   ngOnInit() {
@@ -30,11 +32,7 @@ export class OrderDetailPage implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const map: Record<string, string> = {
-      'Pending': 'Na čekanju', 'Confirmed': 'Potvrđena', 'Rejected': 'Odbijena',
-      'ReadyForPickup': 'Spremna za preuzimanje', 'Completed': 'Završena', 'Cancelled': 'Otkazana'
-    };
-    return map[status] || status;
+    return this.ts.t('status.' + status) || status;
   }
 
   getStatusColor(status: string): string {
@@ -46,6 +44,6 @@ export class OrderDetailPage implements OnInit {
   }
 
   getUnitLabel(unit: string): string {
-    switch (unit) { case 'Kg': return 'kg'; case 'Komad': return 'kom'; case 'Veza': return 'veza'; default: return unit; }
+    return this.ts.t('unit.' + unit) || unit;
   }
 }

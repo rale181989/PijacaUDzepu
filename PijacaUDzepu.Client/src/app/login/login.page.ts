@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
+import { TranslateService } from '../services/translate.service';
 import { LoginDto } from '../models/user.model';
 
 @Component({
@@ -17,7 +18,8 @@ export class LoginPage {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private ts: TranslateService
   ) {}
 
   async login() {
@@ -36,7 +38,7 @@ export class LoginPage {
       error: async (err) => {
         this.loading = false;
         const toast = await this.toastController.create({
-          message: err.error?.message || 'Greška pri prijavi',
+          message: err.error?.message || this.ts.t('login.error'),
           duration: 3000,
           color: 'danger'
         });
