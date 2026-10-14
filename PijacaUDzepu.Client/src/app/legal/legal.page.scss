@@ -1,0 +1,30 @@
+.legal-container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  line-height: 1.6;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+  }
+
+  .legal-updated {
+    margin: 0 0 24px;
+    font-size: 13px;
+    color: var(--ion-color-medium);
+  }
+
+  h2 {
+    margin: 24px 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 10px;
+    font-size: 15px;
+  }
+}

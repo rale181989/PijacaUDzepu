@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ content.title }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <article class="legal-container">
+    <h1>{{ content.title }}</h1>
+    <p class="legal-updated">{{ 'legal.updated' | t }}: {{ updated }}</p>
+
+    <section *ngFor="let section of content.sections">
+      <h2>{{ section.heading }}</h2>
+      <p *ngFor="let paragraph of section.paragraphs">{{ paragraph }}</p>
+    </section>
+  </article>
+
+  <app-footer></app-footer>
+</ion-content>

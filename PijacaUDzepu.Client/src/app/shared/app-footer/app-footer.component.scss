@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  margin-top: 32px;
+}
+
+.site-footer {
+  padding: 20px 16px;
+  background: #1b3d1d;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  font-size: 13px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  margin-bottom: 10px;
+
+  a {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover,
+    &.active {
+      text-decoration: underline;
+    }
+  }
+}
+
+.footer-copy {
+  margin: 0;
+}
