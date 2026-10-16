@@ -47,6 +47,12 @@ builder.Services.AddIdentityServices(builder.Configuration);
 var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',')
     ?? new[] { "http://localhost:8100", "http://localhost:4200" };
 
+// Capacitor mobilna aplikacija (Android: https://localhost, iOS: capacitor://localhost)
+allowedOrigins = allowedOrigins
+    .Concat(new[] { "https://localhost", "capacitor://localhost" })
+    .Distinct()
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
