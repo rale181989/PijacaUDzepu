@@ -57,7 +57,8 @@
         class="product-search">
       </ion-searchbar>
 
-      <button class="filter-btn sort-btn" (click)="openFilterModal('sort')">
+      <button class="filter-btn sort-btn" (click)="openFilterModal('sort')"
+              [attr.aria-label]="('home.sortBy' | t) + ': ' + getSortLabel(sortBy)" [title]="getSortLabel(sortBy)">
         <ion-icon name="swap-vertical-outline"></ion-icon>
         <span class="filter-btn-text">{{ getSortLabel(sortBy) }}</span>
         <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>

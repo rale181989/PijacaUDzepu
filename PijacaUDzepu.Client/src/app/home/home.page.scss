@@ -95,6 +95,20 @@
       flex: unset;
     }
   }
+
+  // Na uskim telefonima sortiranje je samo ikonica, da tekst pretrage stane ceo
+  .filters-bar .filter-btn.sort-btn {
+    padding: 8px 12px;
+
+    .filter-btn-text,
+    .chevron {
+      display: none;
+    }
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
 }
 
 .product-card {
