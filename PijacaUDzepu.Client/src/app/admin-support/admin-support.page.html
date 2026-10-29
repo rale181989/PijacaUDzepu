@@ -1,0 +1,63 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Podrška</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="tab" (ionChange)="setTab($any($event).detail.value)">
+      <ion-segment-button value="open">
+        <ion-label>Otvorena<span *ngIf="notificationService.supportOpenCount > 0"> ({{ notificationService.supportOpenCount }})</span></ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="resolved">
+        <ion-label>Rešena</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && requests.length === 0" class="empty-state">
+    <ion-icon name="chatbubbles-outline" size="large"></ion-icon>
+    <p>{{ tab === 'open' ? 'Nema otvorenih pitanja' : 'Nema rešenih pitanja' }}</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <ion-card *ngFor="let r of requests">
+      <ion-card-header>
+        <ion-card-subtitle>#{{ r.id }} · {{ r.createdAt | date:'dd.MM.yyyy HH:mm' }}</ion-card-subtitle>
+        <ion-badge [color]="r.category === 'Problem' ? 'danger' : 'primary'">{{ categoryLabels[r.category] || r.category }}</ion-badge>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="from">
+          <strong>{{ r.name }}</strong> · <a [href]="'mailto:' + r.email">{{ r.email }}</a>
+          <span class="muted">{{ r.userName ? ' · nalog: ' + r.userName : ' · gost' }}</span>
+        </p>
+        <p class="message">{{ r.message }}</p>
+        <p class="muted device" *ngIf="r.platform || r.userAgent">
+          <ion-icon name="phone-portrait-outline"></ion-icon> {{ r.platform }} · {{ r.userAgent }}
+        </p>
+        <p class="muted" *ngIf="r.resolvedAt">Rešeno: {{ r.resolvedAt | date:'dd.MM.yyyy HH:mm' }}</p>
+
+        <div class="actions">
+          <ion-button size="small" [href]="replyLink(r)">
+            <ion-icon name="mail-outline" slot="start"></ion-icon> Odgovori
+          </ion-button>
+          <ion-button *ngIf="!r.isResolved" size="small" color="success" fill="outline" (click)="setResolved(r, true)">
+            <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Rešeno
+          </ion-button>
+          <ion-button *ngIf="r.isResolved" size="small" color="medium" fill="outline" (click)="setResolved(r, false)">
+            Ponovo otvori
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+</ion-content>

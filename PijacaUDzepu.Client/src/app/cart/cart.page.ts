@@ -4,27 +4,11 @@ import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { CartService } from '../services/cart.service';
 import { OrderService } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
-import { VendorService } from '../services/vendor.service';
-import { MarketService } from '../services/market.service';
-import { GeoService } from '../services/geo.service';
 import { CartItem } from '../models/cart.model';
-import { Vendor } from '../models/vendor.model';
-import { Market } from '../models/market.model';
-import { OrderInput, GuestOrderInput } from '../models/order.model';
+import { FulfillmentType } from '../models/order.model';
 import { environment } from '../../environments/environment';
 import { TranslateService } from '../services/translate.service';
-
-interface VendorCheck {
-  vendorName: string;
-  serviceLabel: { icon: string; text: string; color: string } | null;
-  minOrderAmount?: number;
-  subtotal: number;
-  deficit: number;
-  deliveryRadiusKm?: number;
-  distanceKm?: number;
-  tooFar: boolean;
-  blocked: boolean;
-}
+import { GuestOrdersService } from '../services/guest-orders.service';
 
 @Component({
   selector: 'app-cart',
@@ -34,157 +18,31 @@ interface VendorCheck {
 })
 export class CartPage implements OnInit {
   items: CartItem[] = [];
-  vendors: Vendor[] = [];
-  markets: Market[] = [];
   note = '';
   submitting = false;
   apiUrl = environment.apiUrl.replace('/api', '');
 
   guestName = '';
-  guestPhone = '';
-  guestAddress = '';
-  deliveryAddress = '';
-
-  vendorChecks: Record<number, VendorCheck> = {};
-  customerPos: { lat: number; lng: number } | null = null;
-  geoStatus: 'pending' | 'ok' | 'denied' = 'pending';
-
-  get hasDeliveryVendors(): boolean {
-    return this.items.some(i => {
-      const v = this.vendors.find(vn => vn.id === i.product.vendorId);
-      return v?.offersDelivery;
-    });
-  }
-
-  get isBlocked(): boolean {
-    return Object.values(this.vendorChecks).some(c => c.blocked);
-  }
+  guestEmail = '';
+  phone = '';
+  address = '';
+  courierFee = 0;
 
   constructor(
     public cartService: CartService,
     public authService: AuthService,
     private orderService: OrderService,
-    private vendorService: VendorService,
-    private marketService: MarketService,
-    private geoService: GeoService,
     private router: Router,
     private alertController: AlertController,
     private toastController: ToastController,
-    private ts: TranslateService
+    private ts: TranslateService,
+    private guestOrders: GuestOrdersService
   ) {}
 
   ngOnInit() {
-    this.vendorService.getAll().subscribe(v => {
-      this.vendors = v;
-      this.rebuildChecks();
-    });
-    this.marketService.getAll().subscribe(m => {
-      this.markets = m;
-      this.rebuildChecks();
-    });
-    this.cartService.cart$.subscribe(items => {
-      this.items = items;
-      this.rebuildChecks();
-    });
-    this.requestGeolocation();
-  }
-
-  async requestGeolocation() {
-    this.geoStatus = 'pending';
-    const pos = await this.geoService.getCurrentPosition();
-    if (pos) {
-      this.customerPos = pos;
-      this.geoStatus = 'ok';
-    } else {
-      this.geoStatus = 'denied';
-    }
-    this.rebuildChecks();
-  }
-
-  async onAddressChange() {
-    const addr = this.authService.isLoggedIn ? this.deliveryAddress : this.guestAddress;
-    if (!addr || addr.trim().length < 5) {
-      this.customerPos = null;
-      this.rebuildChecks();
-      return;
-    }
-    const pos = await this.geoService.geocode(addr.trim());
-    if (pos) {
-      this.customerPos = pos;
-      this.geoStatus = 'ok';
-    }
-    this.rebuildChecks();
-  }
-
-  rebuildChecks() {
-    const checks: Record<number, VendorCheck> = {};
-    const vendorSubtotals: Record<number, number> = {};
-
-    for (const item of this.items) {
-      const vid = item.product.vendorId;
-      vendorSubtotals[vid] = (vendorSubtotals[vid] ?? 0) + item.product.price * item.quantity;
-    }
-
-    const shortNames: Record<number, string> = {};
-    for (let i = 1; i <= 7; i++) shortNames[i] = this.ts.t('day.' + i);
-
-    for (const vid of Object.keys(vendorSubtotals).map(Number)) {
-      const v = this.vendors.find(vn => vn.id === vid);
-      if (!v) continue;
-
-      let serviceLabel: VendorCheck['serviceLabel'] = null;
-      if (v.acceptsReservations && v.offersDelivery) {
-        serviceLabel = { icon: 'bag-check-outline', text: this.ts.t('cart.pickupOrDelivery'), color: 'primary' };
-      } else if (v.acceptsReservations) {
-        serviceLabel = { icon: 'bag-check-outline', text: this.ts.t('cart.pickupOnly'), color: 'primary' };
-      } else if (v.offersDelivery) {
-        let text = this.ts.t('cart.deliveryOnly');
-        if (v.deliverySchedule && v.deliverySchedule.length > 0) {
-          const days = v.deliverySchedule.map(d => (shortNames[d.day] ?? '') + ' ' + d.from + '-' + d.to).join(', ');
-          text += ': ' + days;
-        }
-        serviceLabel = { icon: 'car-outline', text, color: 'success' };
-      }
-
-      const subtotal = vendorSubtotals[vid];
-      const minOrder = v.offersDelivery ? (v.minOrderAmount ?? 0) : 0;
-      const deficit = Math.max(0, minOrder - subtotal);
-
-      let distanceKm: number | undefined;
-      let tooFar = false;
-
-      if (v.offersDelivery && v.deliveryRadiusKm && this.customerPos) {
-        const market = this.markets.find(m => m.id === v.marketId);
-        if (market?.address) {
-          const cached = this.geoService['geocodeCache']?.get(market.address.trim().toLowerCase());
-          if (cached) {
-            distanceKm = Math.round(this.geoService.distanceKm(
-              this.customerPos.lat, this.customerPos.lng, cached.lat, cached.lng
-            ) * 10) / 10;
-            tooFar = distanceKm > v.deliveryRadiusKm;
-          } else {
-            this.geoService.geocode(market.address).then(() => this.rebuildChecks());
-          }
-        }
-      }
-
-      const deliveryOnly = v.offersDelivery && !v.acceptsReservations;
-      const blocked = deliveryOnly && (deficit > 0 || tooFar);
-
-      checks[vid] = {
-        vendorName: v.name,
-        serviceLabel,
-        minOrderAmount: minOrder > 0 ? minOrder : undefined,
-        subtotal,
-        deficit,
-        deliveryRadiusKm: v.deliveryRadiusKm ?? undefined,
-        distanceKm,
-        tooFar,
-        blocked
-      };
-    }
-
-    this.vendorChecks = checks;
+    this.cartService.cart$.subscribe(items => this.items = items);
+    this.phone = this.authService.currentUser?.phoneNumber ?? '';
+    this.orderService.getDeliveryOptions().subscribe({ next: o => this.courierFee = o.courierFee, error: () => {} });
   }
 
   updateQuantity(productId: number, quantity: number) {
@@ -217,30 +75,53 @@ export class CartPage implements OnInit {
     return this.apiUrl + imageUrl;
   }
 
-  get canGuestOrder(): boolean {
-    return this.guestName.trim().length > 0 && this.guestPhone.trim().length > 0;
+  // Korpa se deli na porudžbinu po prodavcu, a kurir za svakog ide posebno
+  get vendorCount(): number {
+    return new Set(this.items.map(i => i.product.vendorId)).size;
   }
 
-  async submitOrder() {
-    if (this.items.length === 0 || this.isBlocked) return;
+  get totalCourierFee(): number {
+    return this.courierFee * this.vendorCount;
+  }
 
-    if (!this.authService.isLoggedIn && !this.canGuestOrder) return;
+  // E-mail nije obavezan, ali ako je unet mora biti ispravan
+  get emailValid(): boolean {
+    const email = this.guestEmail.trim();
+    return !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  get canReserve(): boolean {
+    const hasName = this.authService.isLoggedIn || this.guestName.trim().length > 0;
+    return this.items.length > 0 && hasName && this.phone.trim().length > 0 && this.emailValid;
+  }
+
+  get canCourier(): boolean {
+    return this.canReserve && this.address.trim().length >= 5;
+  }
+
+  async submitOrder(fulfillment: FulfillmentType) {
+    if (fulfillment === 'Pickup' ? !this.canReserve : !this.canCourier) return;
+
+    const goods = this.cartService.total;
+    const message = fulfillment === 'Pickup'
+      ? `${this.ts.t('cart.reserveConfirm')} ${this.ts.t('cart.total')} ${goods.toFixed(0)} ${this.ts.t('din')}.`
+      : `${this.ts.t('cart.goods')}: ${goods.toFixed(0)} ${this.ts.t('din')} + ${this.ts.t('cart.ecoCourier')}: ${this.totalCourierFee.toFixed(0)} ${this.ts.t('din')} = ${(goods + this.totalCourierFee).toFixed(0)} ${this.ts.t('din')}. ${this.ts.t('cart.orderConfirm')}`;
 
     const alert = await this.alertController.create({
-      header: this.ts.t('cart.confirmTitle'),
-      message: `${this.ts.t('cart.total')} ${this.cartService.total.toFixed(0)} ${this.ts.t('din')}. ${this.ts.t('cart.orderConfirm')}`,
+      header: fulfillment === 'Pickup' ? this.ts.t('cart.reserve') : this.ts.t('cart.confirmTitle'),
+      message,
       buttons: [
         { text: this.ts.t('cart.cancelBtn'), role: 'cancel' },
         {
-          text: this.ts.t('cart.order'),
-          handler: () => this.placeOrder()
+          text: fulfillment === 'Pickup' ? this.ts.t('cart.reserve') : this.ts.t('cart.order'),
+          handler: () => this.placeOrder(fulfillment)
         }
       ]
     });
     await alert.present();
   }
 
-  private placeOrder() {
+  private placeOrder(fulfillment: FulfillmentType) {
     this.submitting = true;
 
     const cartItems = this.items.map(i => ({
@@ -251,33 +132,40 @@ export class CartPage implements OnInit {
     const obs = this.authService.isLoggedIn
       ? this.orderService.createOrder({
           items: cartItems,
-          note: this.note || undefined
+          note: this.note || undefined,
+          fulfillment,
+          contactPhone: this.phone.trim(),
+          deliveryAddress: this.address.trim() || undefined
         })
       : this.orderService.createGuestOrder({
           items: cartItems,
           note: this.note || undefined,
           guestName: this.guestName.trim(),
-          guestPhone: this.guestPhone.trim(),
-          guestAddress: this.guestAddress.trim() || undefined
+          guestPhone: this.phone.trim(),
+          guestEmail: this.guestEmail.trim() || undefined,
+          guestAddress: this.address.trim() || undefined,
+          fulfillment
         });
 
     obs.subscribe({
-      next: async () => {
+      next: async orders => {
         this.submitting = false;
         this.cartService.clearCart();
         this.note = '';
         this.guestName = '';
-        this.guestPhone = '';
-        this.guestAddress = '';
-        this.deliveryAddress = '';
+        this.address = '';
         const toast = await this.toastController.create({
-          message: this.ts.t('cart.orderSuccess'),
+          message: fulfillment === 'Pickup' ? this.ts.t('cart.reserveSuccess') : this.ts.t('cart.orderSuccess'),
           duration: 3000,
           color: 'success'
         });
         await toast.present();
+        const trackingCode = orders[0]?.trackingCode;
         if (this.authService.isLoggedIn) {
           this.router.navigateByUrl('/my-orders');
+        } else if (trackingCode) {
+          this.guestOrders.add(trackingCode);
+          this.router.navigateByUrl('/prati/' + trackingCode);
         } else {
           this.router.navigateByUrl('/home');
         }

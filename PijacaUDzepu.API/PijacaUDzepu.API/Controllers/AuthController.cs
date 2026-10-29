@@ -63,6 +63,21 @@ public class AuthController : BaseApiController
     }
 
     [Authorize(Policy = "RequireSuperAdmin")]
+    [HttpPost("create-courier")]
+    public async Task<IActionResult> CreateCourier(CreateCourierDto dto)
+    {
+        try
+        {
+            var result = await _authService.CreateCourier(dto);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "RequireSuperAdmin")]
     [HttpPost("invite-vendor")]
     public async Task<IActionResult> InviteVendor(InviteVendorDto dto)
     {

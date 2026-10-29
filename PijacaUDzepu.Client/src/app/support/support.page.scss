@@ -1,0 +1,35 @@
+.support-container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.intro {
+  color: var(--ion-color-medium);
+  margin: 0 0 12px;
+}
+
+.sent {
+  text-align: center;
+  padding: 40px 16px;
+
+  ion-icon { font-size: 64px; }
+  p { color: var(--ion-color-medium); }
+}
+
+// Honeypot: van ekrana umesto display:none, jer neki botovi preskaču skrivena polja
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.direct {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+
+  a { color: var(--ion-color-primary); }
+}

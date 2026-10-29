@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'support.title' | t }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="support-container">
+    <div *ngIf="sent" class="sent">
+      <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+      <h2>{{ 'support.sentTitle' | t }}</h2>
+      <p>{{ 'support.sentText' | t }}</p>
+      <ion-button fill="outline" (click)="sent = false">{{ 'support.another' | t }}</ion-button>
+    </div>
+
+    <form *ngIf="!sent" (ngSubmit)="send()">
+      <p class="intro">{{ 'support.intro' | t }}</p>
+
+      <ion-item>
+        <ion-input [label]="'support.name' | t" labelPlacement="floating"
+                   [(ngModel)]="name" name="name" required maxlength="100"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input [label]="'support.email' | t" labelPlacement="floating" type="email"
+                   [(ngModel)]="email" name="email" required maxlength="200"
+                   [helperText]="'support.emailHint' | t"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-select [label]="'support.category' | t" labelPlacement="floating"
+                    [(ngModel)]="category" name="category" interface="popover">
+          <ion-select-option *ngFor="let c of categories" [value]="c">{{ 'support.cat.' + c | t }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-textarea [label]="'support.message' | t" labelPlacement="floating"
+                      [(ngModel)]="message" name="message" required rows="6" maxlength="2000" [counter]="true"
+                      [placeholder]="'support.messagePlaceholder' | t"></ion-textarea>
+      </ion-item>
+
+      <!-- Skriveno polje: ljudi ga ne vide, botovi ga popune -->
+      <input class="hp" type="text" name="website" [(ngModel)]="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <ion-button expand="block" type="submit" [disabled]="sending || !canSend" class="ion-margin-top">
+        <ion-spinner *ngIf="sending" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!sending" name="send-outline" slot="start"></ion-icon>
+        {{ 'support.send' | t }}
+      </ion-button>
+    </form>
+
+    <p class="direct">{{ 'support.direct' | t }} <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a></p>
+  </div>
+
+  <app-footer></app-footer>
+</ion-content>

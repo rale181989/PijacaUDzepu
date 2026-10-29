@@ -8,11 +8,26 @@ export interface Order {
   vendorName: string;
   status: OrderStatus;
   totalAmount: number;
+  fulfillment: FulfillmentType;
+  deliveryFee: number;
+  amountToPay: number;
+  vendorMessage?: string;
+  vendorMessageAt?: string;
   note?: string;
   createdAt: string;
   isGuestOrder: boolean;
-  guestPhone?: string;
-  guestAddress?: string;
+  trackingCode?: string;
+  contactPhone?: string;
+  deliveryAddress?: string;
+  marketName?: string;
+  stallLabel?: string;
+  vendorPhones: string[];
+  courierId?: number;
+  courierName?: string;
+  courierPhone?: string;
+  courierAssignedAt?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
   items: OrderItem[];
 }
 
@@ -29,6 +44,9 @@ export interface OrderItem {
 export interface OrderInput {
   items: OrderItemInput[];
   note?: string;
+  fulfillment: FulfillmentType;
+  contactPhone: string;
+  deliveryAddress?: string;
 }
 
 export interface GuestOrderInput {
@@ -36,7 +54,9 @@ export interface GuestOrderInput {
   note?: string;
   guestName: string;
   guestPhone: string;
+  guestEmail?: string;
   guestAddress?: string;
+  fulfillment: FulfillmentType;
 }
 
 export interface OrderItemInput {
@@ -44,4 +64,7 @@ export interface OrderItemInput {
   quantity: number;
 }
 
-export type OrderStatus = 'Pending' | 'Confirmed' | 'Rejected' | 'ReadyForPickup' | 'Completed' | 'Cancelled';
+// Pickup = rezervacija, kupac sam preuzima kod prodavca; Courier = dostava preko Eko kurira
+export type FulfillmentType = 'Pickup' | 'Courier';
+
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Rejected' | 'ReadyForPickup' | 'InDelivery' | 'Completed' | 'Cancelled';

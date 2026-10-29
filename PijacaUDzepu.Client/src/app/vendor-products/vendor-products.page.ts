@@ -33,7 +33,7 @@ export class VendorProductsPage implements OnInit {
   }
 
   async toggleAvailability(product: Product) {
-    const input = { name: product.name, price: product.price, unit: product.unit, category: product.category, note: product.note, isAvailable: !product.isAvailable };
+    const input = { name: product.name, price: product.price, unit: product.unit, category: product.category, productClass: product.productClass, note: product.note, isAvailable: !product.isAvailable };
     this.productService.update(product.id, input).subscribe({
       next: updated => {
         product.isAvailable = updated.isAvailable;

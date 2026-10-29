@@ -48,6 +48,41 @@ public class OrdersController : BaseApiController
         }
     }
 
+    [AllowAnonymous]
+    [HttpGet("delivery-options")]
+    public IActionResult GetDeliveryOptions()
+    {
+        return Ok(new { courierFee = _orderService.CourierFee });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("track/{code}")]
+    public async Task<IActionResult> Track(string code)
+    {
+        try
+        {
+            return Ok(await _orderService.GetTrackedOrders(code));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpPut("track/{code}/{id}/cancel")]
+    public async Task<IActionResult> CancelTracked(string code, int id)
+    {
+        try
+        {
+            return Ok(await _orderService.CancelTrackedOrder(code, id));
+        }
+        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("my-orders")]
     public async Task<IActionResult> GetMyOrders([FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
@@ -86,7 +121,7 @@ public class OrdersController : BaseApiController
             var order = await _orderService.GetOrderById(id);
             var userId = User.GetUserId();
 
-            if (order.CustomerId == null || order.CustomerId != userId)
+            if ((order.CustomerId == null || order.CustomerId != userId) && order.CourierId != userId)
             {
                 var vendorId = await GetCurrentVendorId();
                 if (vendorId == null || order.VendorId != vendorId.Value)
@@ -110,7 +145,7 @@ public class OrdersController : BaseApiController
 
         try
         {
-            var order = await _orderService.UpdateOrderStatus(id, vendorId.Value, dto.Status);
+            var order = await _orderService.UpdateOrderStatus(id, vendorId.Value, dto.Status, dto.Message);
             return Ok(order);
         }
         catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)

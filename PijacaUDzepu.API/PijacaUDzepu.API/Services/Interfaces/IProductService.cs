@@ -6,7 +6,7 @@ namespace PijacaUDzepu.API.Services.Interfaces;
 
 public interface IProductService
 {
-    Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, ProductCategory? category = null, int skip = 0, int take = 20);
+    Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, ProductCategory? category = null, ProductUnit? unit = null, ProductSort sort = ProductSort.NameAsc, int skip = 0, int take = 20);
     Task<List<ProductDto>> GetProductsByVendor(int vendorId);
     Task<ProductDto> GetProductById(int id);
     Task<ProductDto> CreateProduct(int vendorId, ProductInputDto dto);

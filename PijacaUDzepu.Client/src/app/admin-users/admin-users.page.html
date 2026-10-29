@@ -13,6 +13,9 @@
       <ion-segment-button value="VendorAdmin">
         <ion-label>Prodavci</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="Courier">
+        <ion-label>Kuriri</ion-label>
+      </ion-segment-button>
       <ion-segment-button value="SuperAdmin">
         <ion-label>Admini</ion-label>
       </ion-segment-button>
@@ -26,6 +29,13 @@
   </ion-refresher>
 
   <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && selectedTab === 'Courier'" class="ion-padding-horizontal ion-padding-top">
+    <ion-button expand="block" (click)="createCourier()">
+      <ion-icon name="person-add-outline" slot="start"></ion-icon>
+      Dodaj kurira
+    </ion-button>
+  </div>
 
   <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
     <ion-icon name="people-outline" size="large"></ion-icon>

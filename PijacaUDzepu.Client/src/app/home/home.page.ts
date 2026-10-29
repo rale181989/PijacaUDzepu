@@ -4,7 +4,7 @@ import { CartService } from '../services/cart.service';
 import { VendorService } from '../services/vendor.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
-import { Product, ProductCategory } from '../models/product.model';
+import { Product, ProductCategory, ProductSort, ProductUnit } from '../models/product.model';
 import { Vendor } from '../models/vendor.model';
 import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
@@ -28,6 +28,11 @@ export class HomePage implements OnInit {
   selectedVendorId: number | null = null;
   selectedStallId: number | null = null;
   selectedCategory: ProductCategory | null = null;
+  selectedUnit: ProductUnit | null = null;
+  // Gram se ne nudi posebno: filter Kg obuhvata i proizvode na gram
+  unitOptions: { value: ProductUnit; label: string }[] = [];
+  sortBy: ProductSort = 'NameAsc';
+  sortOptions: { value: ProductSort; label: string }[] = [];
   categories: { value: ProductCategory; label: string }[] = [
     { value: 'Voce', label: 'Voće' },
     { value: 'Povrce', label: 'Povrće' },
@@ -42,16 +47,9 @@ export class HomePage implements OnInit {
   private pageSize = 20;
   apiUrl = environment.apiUrl.replace('/api', '');
   selectedQty: Record<number, number> = {};
-  serviceInfoCache: Record<number, { icon: string; text: string; color: string }[]> = {};
-  canOrderCache: Record<number, boolean> = {};
-  vendorBadgeCache: Record<number, { reservations: boolean; delivery: boolean }> = {};
-  cardClassCache: Record<number, string> = {};
-  vendorPhoneCache: Record<number, string> = {};
-  filterDelivery = false;
-  filterReservations = false;
-  displayProducts: Product[] = [];
+  vendorPhoneCache: Record<number, string[]> = {};
 
-  showModal: 'market' | 'vendor' | 'stall' | 'category' | null = null;
+  showModal: 'market' | 'vendor' | 'stall' | 'category' | 'unit' | 'sort' | null = null;
   filterSearch = { market: '', vendor: '', stall: '', category: '' };
 
   get filteredVendors(): Vendor[] {
@@ -111,8 +109,15 @@ export class HomePage implements OnInit {
       { value: 'KucnaHemija', label: this.ts.t('cat.KucnaHemija') },
       { value: 'Ostalo', label: this.ts.t('cat.Ostalo') },
     ];
-    this.serviceInfoCache = {};
-    this.rebuildServiceCache();
+    this.unitOptions = (['Kg', 'Komad', 'Veza', 'Litar', 'Pakovanje', 'Kutija', 'Flasa'] as ProductUnit[])
+      .map(value => ({ value, label: this.ts.t('unitFilter.' + value) }));
+    this.sortOptions = [
+      { value: 'NameAsc', label: this.ts.t('sort.NameAsc') },
+      { value: 'NameDesc', label: this.ts.t('sort.NameDesc') },
+      { value: 'PriceAsc', label: this.ts.t('sort.PriceAsc') },
+      { value: 'PriceDesc', label: this.ts.t('sort.PriceDesc') },
+      { value: 'Newest', label: this.ts.t('sort.Newest') },
+    ];
   }
 
   ngOnInit() {
@@ -128,8 +133,7 @@ export class HomePage implements OnInit {
   loadVendors() {
     this.vendorService.getAll().subscribe(v => {
       this.vendors = v;
-      this.rebuildServiceCache();
-      this.rebuildDisplay();
+      this.rebuildPhoneCache();
     });
   }
 
@@ -137,10 +141,6 @@ export class HomePage implements OnInit {
     if (reset) {
       this.products = [];
       this.hasMore = true;
-      this.serviceInfoCache = {};
-      this.canOrderCache = {};
-      this.vendorBadgeCache = {};
-      this.cardClassCache = {};
       this.vendorPhoneCache = {};
     }
     this.loading = true;
@@ -149,6 +149,8 @@ export class HomePage implements OnInit {
       this.selectedVendorId || undefined,
       this.selectedMarketId || undefined,
       this.selectedCategory || undefined,
+      this.selectedUnit || undefined,
+      this.sortBy,
       this.products.length,
       this.pageSize
     ).subscribe({
@@ -156,8 +158,7 @@ export class HomePage implements OnInit {
         this.products = [...this.products, ...result.items];
         this.hasMore = result.hasMore;
         this.loading = false;
-        this.rebuildServiceCache();
-        this.rebuildDisplay();
+        this.rebuildPhoneCache();
       },
       error: () => this.loading = false
     });
@@ -169,14 +170,15 @@ export class HomePage implements OnInit {
       this.selectedVendorId || undefined,
       this.selectedMarketId || undefined,
       this.selectedCategory || undefined,
+      this.selectedUnit || undefined,
+      this.sortBy,
       this.products.length,
       this.pageSize
     ).subscribe({
       next: result => {
         this.products = [...this.products, ...result.items];
         this.hasMore = result.hasMore;
-        this.rebuildServiceCache();
-        this.rebuildDisplay();
+        this.rebuildPhoneCache();
         event.target.complete();
         if (!result.hasMore) event.target.disabled = true;
       },
@@ -194,7 +196,7 @@ export class HomePage implements OnInit {
     return this.categories.filter(c => this.normalize(c.label).includes(term));
   }
 
-  openFilterModal(type: 'market' | 'vendor' | 'stall' | 'category') {
+  openFilterModal(type: 'market' | 'vendor' | 'stall' | 'category' | 'unit' | 'sort') {
     this.filterSearch = { market: '', vendor: '', stall: '', category: '' };
     this.showModal = type;
   }
@@ -241,6 +243,30 @@ export class HomePage implements OnInit {
     this.loadProducts();
   }
 
+  selectUnit(unit: ProductUnit | null) {
+    this.selectedUnit = unit;
+    this.loadProducts();
+  }
+
+  getUnitFilterLabel(value: ProductUnit): string {
+    return this.unitOptions.find(u => u.value === value)?.label ?? value;
+  }
+
+  // Za proizvode na gram prikazuje se i preračunata cena po kg
+  getPricePerKg(product: Product): number | null {
+    return product.unit === 'Gram' ? product.price * 1000 : null;
+  }
+
+  selectSort(sort: ProductSort) {
+    if (this.sortBy === sort) return;
+    this.sortBy = sort;
+    this.loadProducts();
+  }
+
+  getSortLabel(value: ProductSort): string {
+    return this.sortOptions.find(s => s.value === value)?.label ?? value;
+  }
+
   getCategoryLabel(value: ProductCategory): string {
     return this.categories.find(c => c.value === value)?.label ?? value;
   }
@@ -263,7 +289,7 @@ export class HomePage implements OnInit {
   }
 
   getSelectedQty(productId: number): number {
-    return this.selectedQty[productId] ?? 1;
+    return this.selectedQty[productId] ?? 0;
   }
 
   increaseQty(product: Product) {
@@ -272,15 +298,16 @@ export class HomePage implements OnInit {
 
   decreaseQty(product: Product) {
     const current = this.getSelectedQty(product.id);
-    if (current > 1) {
+    if (current > 0) {
       this.selectedQty[product.id] = current - 1;
     }
   }
 
   async addSelectedToCart(product: Product) {
     const qty = this.getSelectedQty(product.id);
+    if (qty <= 0) return;
     this.cartService.addToCart(product, qty);
-    this.selectedQty[product.id] = 1;
+    this.selectedQty[product.id] = 0;
     const toast = await this.toastController.create({
       message: `${product.name} x${qty} ${this.ts.t('cart.addedToCart')}`,
       duration: 1500,
@@ -290,58 +317,10 @@ export class HomePage implements OnInit {
     await toast.present();
   }
 
-  toggleServiceFilter(type: 'delivery' | 'reservations') {
-    if (type === 'delivery') this.filterDelivery = !this.filterDelivery;
-    else this.filterReservations = !this.filterReservations;
-    this.rebuildDisplay();
-  }
-
-  private rebuildDisplay() {
-    let items = this.products;
-    if (this.filterDelivery || this.filterReservations) {
-      items = items.filter(p => {
-        const v = this.vendors.find(vn => vn.id === p.vendorId);
-        if (!v) return false;
-        if (this.filterDelivery && !v.offersDelivery) return false;
-        if (this.filterReservations && !v.acceptsReservations) return false;
-        return true;
-      });
-    }
-    this.displayProducts = items;
-  }
-
-  private rebuildServiceCache() {
+  private rebuildPhoneCache() {
     for (const product of this.products) {
       const v = this.vendors.find(vn => vn.id === product.vendorId);
-      if (!v) continue;
-      if (this.serviceInfoCache[product.id]?.length) continue;
-      this.canOrderCache[product.id] = !!(v.acceptsReservations || v.offersDelivery);
-      this.vendorBadgeCache[product.id] = { reservations: v.acceptsReservations, delivery: v.offersDelivery };
-      this.vendorPhoneCache[product.id] = v.phone ?? '';
-      if (v.acceptsReservations && v.offersDelivery) this.cardClassCache[product.id] = 'card-both';
-      else if (v.acceptsReservations) this.cardClassCache[product.id] = 'card-reservation';
-      else if (v.offersDelivery) this.cardClassCache[product.id] = 'card-delivery';
-      else this.cardClassCache[product.id] = '';
-      const msgs: { icon: string; text: string; color: string }[] = [];
-
-      if (!v.acceptsReservations && !v.offersDelivery) {
-        msgs.push({ icon: 'eye-outline', text: this.ts.t('svc.viewOnly'), color: 'medium' });
-      } else {
-        if (v.acceptsReservations) {
-          msgs.push({ icon: 'bag-check-outline', text: this.ts.t('svc.pickUp'), color: 'primary' });
-        }
-        if (v.offersDelivery) {
-          let deliveryText = this.ts.t('svc.delivers');
-          if (v.minOrderAmount) deliveryText += ` (${this.ts.t('svc.min')} ${v.minOrderAmount} ${this.ts.t('din')})`;
-          if (v.deliveryRadiusKm) deliveryText += `, ${this.ts.t('svc.upTo')} ${v.deliveryRadiusKm} ${this.ts.t('km')}`;
-          if (v.deliverySchedule && v.deliverySchedule.length > 0) {
-            const days = v.deliverySchedule.map(d => (this.ts.t('day.' + d.day) ?? '') + ' ' + d.from + '-' + d.to).join(', ');
-            deliveryText += ' – ' + days;
-          }
-          msgs.push({ icon: 'car-outline', text: deliveryText, color: 'success' });
-        }
-      }
-      this.serviceInfoCache[product.id] = msgs;
+      if (v) this.vendorPhoneCache[product.id] = v.phones ?? [];
     }
   }
 

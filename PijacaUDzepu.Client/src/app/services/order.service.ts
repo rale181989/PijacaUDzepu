@@ -18,6 +18,18 @@ export class OrderService {
     return this.http.post<Order[]>(`${this.baseUrl}/guest`, dto);
   }
 
+  track(code: string) {
+    return this.http.get<Order[]>(`${this.baseUrl}/track/${encodeURIComponent(code)}`);
+  }
+
+  cancelTracked(code: string, id: number) {
+    return this.http.put<Order>(`${this.baseUrl}/track/${encodeURIComponent(code)}/${id}/cancel`, {});
+  }
+
+  getDeliveryOptions() {
+    return this.http.get<{ courierFee: number }>(`${this.baseUrl}/delivery-options`);
+  }
+
   getMyOrders(skip = 0, take = 20) {
     const params = new HttpParams().set('skip', skip.toString()).set('take', take.toString());
     return this.http.get<PagedResult<Order>>(`${this.baseUrl}/my-orders`, { params });
@@ -36,8 +48,8 @@ export class OrderService {
     return this.http.get<Order>(`${this.baseUrl}/${id}`);
   }
 
-  updateStatus(id: number, status: OrderStatus) {
-    return this.http.put<Order>(`${this.baseUrl}/${id}/status`, { status });
+  updateStatus(id: number, status: OrderStatus, message?: string) {
+    return this.http.put<Order>(`${this.baseUrl}/${id}/status`, { status, message });
   }
 
   cancelOrder(id: number) {

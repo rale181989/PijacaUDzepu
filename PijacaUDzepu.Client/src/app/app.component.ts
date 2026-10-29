@@ -3,6 +3,8 @@ import { MenuController } from '@ionic/angular/lazy';
 import { AuthService } from './services/auth.service';
 import { CartService } from './services/cart.service';
 import { NotificationService } from './services/notification.service';
+import { PushService } from './services/push.service';
+import { GuestOrdersService } from './services/guest-orders.service';
 import { TranslateService, Lang } from './services/translate.service';
 import { Router } from '@angular/router';
 
@@ -19,6 +21,8 @@ export class AppComponent {
     public authService: AuthService,
     private cartService: CartService,
     public notificationService: NotificationService,
+    private pushService: PushService,
+    public guestOrders: GuestOrdersService,
     public ts: TranslateService,
     private menuController: MenuController,
     private router: Router
@@ -36,7 +40,8 @@ export class AppComponent {
     this.menuController.close();
   }
 
-  logout() {
+  async logout() {
+    await this.pushService.unregister();
     this.authService.logout();
     this.closeMenu();
     this.router.navigateByUrl('/home');

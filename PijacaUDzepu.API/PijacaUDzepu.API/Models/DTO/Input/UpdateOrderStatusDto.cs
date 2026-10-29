@@ -7,4 +7,8 @@ public class UpdateOrderStatusDto
 {
     [Required]
     public OrderStatus Status { get; set; }
+
+    // Opcioni odgovor kupcu uz promenu statusa
+    [MaxLength(300)]
+    public string? Message { get; set; }
 }

@@ -13,7 +13,8 @@ public class VendorInputDto
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? Address { get; set; }
-    public string? Phone { get; set; }
+    [MaxLength(5)]
+    public List<string>? Phones { get; set; }
 
     public bool AcceptsReservations { get; set; }
     public bool OffersDelivery { get; set; }

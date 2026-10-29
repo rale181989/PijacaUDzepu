@@ -30,10 +30,6 @@
           <h3>{{ item.product.name }}</h3>
           <p>{{ item.product.vendorName }}</p>
           <p class="price">{{ item.product.price | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel(item.product.unit) }}</p>
-          <p *ngIf="vendorChecks[item.product.vendorId]?.serviceLabel as svc" class="service-label" [attr.data-color]="svc.color">
-            <ion-icon [name]="svc.icon" [color]="svc.color"></ion-icon>
-            {{ svc.text }}
-          </p>
         </ion-label>
         <div class="quantity-controls" slot="end">
           <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity - 1)">
@@ -53,77 +49,32 @@
     </ion-item-sliding>
   </ion-list>
 
-  <!-- Per-vendor delivery warnings -->
-  <div *ngFor="let entry of (vendorChecks | keyvalue)" class="vendor-warning-card">
-    <ng-container *ngIf="entry.value.deficit > 0 || entry.value.tooFar">
-      <div class="vendor-warning-header">
-        <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
-        <strong>{{ entry.value.vendorName }}</strong>
-      </div>
-
-      <div *ngIf="entry.value.deficit > 0" class="min-order-warning">
-        <p>{{ 'cart.minOrder' | t }} <strong>{{ entry.value.minOrderAmount | number:'1.0-0' }} {{ 'din' | t }}</strong></p>
-        <div class="progress-bar">
-          <div class="progress-fill" [style.width.%]="(entry.value.subtotal / entry.value.minOrderAmount!) * 100"></div>
-        </div>
-        <p class="deficit-text">
-          {{ 'cart.moreNeeded' | t }} <strong>{{ entry.value.deficit | number:'1.0-0' }} {{ 'din' | t }}</strong> {{ 'cart.toMinOrder' | t }}
-          ({{ entry.value.subtotal | number:'1.0-0' }} / {{ entry.value.minOrderAmount | number:'1.0-0' }} {{ 'din' | t }})
-        </p>
-      </div>
-
-      <div *ngIf="entry.value.tooFar" class="distance-warning">
-        <ion-icon name="location-outline" color="danger"></ion-icon>
-        <span>
-          {{ 'cart.distance' | t }} {{ entry.value.distanceKm }} {{ 'km' | t }} &ndash; {{ 'cart.vendorDelivers' | t }} {{ entry.value.deliveryRadiusKm }} {{ 'km' | t }}
-        </span>
-      </div>
-    </ng-container>
-  </div>
-
   <div *ngIf="items.length > 0" class="order-section">
-    <!-- Delivery address for logged-in users -->
-    <div *ngIf="authService.isLoggedIn && hasDeliveryVendors" class="delivery-address-section">
-      <ion-item>
-        <ion-input [label]="'cart.deliveryAddress' | t" labelPlacement="floating"
-                   [(ngModel)]="deliveryAddress"
-                   (ionBlur)="onAddressChange()"
-                   [placeholder]="'cart.addressPlaceholder' | t"></ion-input>
-      </ion-item>
-      <p *ngIf="geoStatus === 'ok' && customerPos" class="geo-status success">
-        <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
-        {{ 'cart.locationOk' | t }}
-      </p>
-      <p *ngIf="geoStatus === 'denied' && !customerPos && !deliveryAddress" class="geo-status hint">
-        <ion-icon name="navigate-outline" color="medium"></ion-icon>
-        {{ 'cart.enterAddress' | t }}
-      </p>
-    </div>
-
-    <!-- Guest checkout form -->
-    <div *ngIf="!authService.isLoggedIn" class="guest-form">
+    <!-- Podaci za dostavu: kurir ih dobija kada prihvati porudžbinu -->
+    <div class="guest-form">
       <div class="guest-form-header">
         <ion-icon name="person-outline"></ion-icon>
         <span>{{ 'cart.orderData' | t }}</span>
       </div>
-      <ion-item>
+      <ion-item *ngIf="!authService.isLoggedIn">
         <ion-input [label]="'cart.fullName' | t" labelPlacement="floating"
                    [(ngModel)]="guestName" required></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'cart.phone' | t" labelPlacement="floating" type="tel"
-                   [(ngModel)]="guestPhone" required></ion-input>
+                   [(ngModel)]="phone" required></ion-input>
+      </ion-item>
+      <ion-item *ngIf="!authService.isLoggedIn">
+        <ion-input [label]="'cart.email' | t" labelPlacement="floating" type="email"
+                   [(ngModel)]="guestEmail" [helperText]="'cart.emailHint' | t"
+                   [errorText]="'cart.emailInvalid' | t"
+                   [class.ion-invalid]="!emailValid" [class.ion-touched]="!emailValid"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-input [label]="'cart.address' | t" labelPlacement="floating"
-                   [(ngModel)]="guestAddress"
-                   (ionBlur)="onAddressChange()"
-                   [placeholder]="hasDeliveryVendors ? ('cart.requiredForDelivery' | t) : ('cart.optional' | t)"></ion-input>
+        <ion-input [label]="'cart.deliveryAddressCourier' | t" labelPlacement="floating"
+                   [(ngModel)]="address"
+                   [placeholder]="'cart.addressPlaceholder' | t"></ion-input>
       </ion-item>
-      <p *ngIf="hasDeliveryVendors && geoStatus === 'ok' && customerPos" class="geo-status success">
-        <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
-        {{ 'cart.locationOk' | t }}
-      </p>
     </div>
 
     <ion-item>
@@ -136,12 +87,31 @@
       <strong>{{ cartService.total | number:'1.0-0' }} {{ 'din' | t }}</strong>
     </div>
 
-    <ion-button expand="block" size="large" (click)="submitOrder()"
-                [disabled]="submitting || isBlocked || (!authService.isLoggedIn && !canGuestOrder)">
-      <ion-spinner *ngIf="submitting" name="crescent" slot="start"></ion-spinner>
-      <ion-icon name="checkmark-circle-outline" slot="start" *ngIf="!submitting"></ion-icon>
-      {{ isBlocked ? ('cart.blocked' | t) : ('cart.order' | t) }}
-    </ion-button>
+    <!-- Dva načina: rezervacija (kupac sam preuzima) ili dostava preko Eko kurira -->
+    <div class="checkout-options">
+      <div class="checkout-option">
+        <ion-button expand="block" size="large" fill="outline" (click)="submitOrder('Pickup')"
+                    [disabled]="submitting || !canReserve">
+          <ion-icon name="bag-check-outline" slot="start"></ion-icon>
+          {{ 'cart.reserve' | t }}
+        </ion-button>
+        <p class="option-hint">{{ 'cart.reserveHint' | t }}</p>
+      </div>
+
+      <div class="checkout-option">
+        <ion-button expand="block" size="large" (click)="submitOrder('Courier')"
+                    [disabled]="submitting || !canCourier">
+          <ion-spinner *ngIf="submitting" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!submitting" name="bicycle-outline" slot="start"></ion-icon>
+          {{ 'cart.orderCourier' | t }} (+{{ totalCourierFee | number:'1.0-0' }} {{ 'din' | t }})
+        </ion-button>
+        <p class="option-hint">
+          {{ 'cart.courierHint' | t }}
+          <span *ngIf="vendorCount > 1"> {{ 'cart.perVendor' | t }}: {{ vendorCount }} × {{ courierFee | number:'1.0-0' }} {{ 'din' | t }}.</span>
+        </p>
+        <p *ngIf="canReserve && !canCourier" class="option-hint warn">{{ 'cart.addressNeeded' | t }}</p>
+      </div>
+    </div>
 
     <p *ngIf="!authService.isLoggedIn" class="guest-hint">
       {{ 'cart.hasAccount' | t }} <a routerLink="/login">{{ 'cart.login' | t }}</a>

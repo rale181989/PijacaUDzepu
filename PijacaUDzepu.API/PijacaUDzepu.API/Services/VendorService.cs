@@ -47,7 +47,7 @@ public class VendorService : IVendorService
             Name = dto.Name,
             Description = dto.Description,
             Address = dto.Address,
-            Phone = dto.Phone,
+            Phones = NormalizePhones(dto.Phones),
             AcceptsReservations = dto.AcceptsReservations,
             OffersDelivery = dto.OffersDelivery,
             MinOrderAmount = dto.OffersDelivery ? dto.MinOrderAmount : null,
@@ -75,7 +75,7 @@ public class VendorService : IVendorService
         vendor.Name = dto.Name;
         vendor.Description = dto.Description;
         vendor.Address = dto.Address;
-        vendor.Phone = dto.Phone;
+        vendor.Phones = NormalizePhones(dto.Phones);
         vendor.AcceptsReservations = dto.AcceptsReservations;
         vendor.OffersDelivery = dto.OffersDelivery;
         vendor.MinOrderAmount = dto.OffersDelivery ? dto.MinOrderAmount : null;
@@ -139,6 +139,13 @@ public class VendorService : IVendorService
         return vendor.ImageUrl;
     }
 
+    private static List<string> NormalizePhones(List<string>? phones) =>
+        (phones ?? new())
+            .Select(p => p.Trim())
+            .Where(p => p.Length > 0)
+            .Distinct()
+            .ToList();
+
     private static VendorDto MapToDto(Vendor v) => new()
     {
         Id = v.Id,
@@ -149,7 +156,7 @@ public class VendorService : IVendorService
         Name = v.Name,
         Description = v.Description,
         Address = v.Address,
-        Phone = v.Phone,
+        Phones = v.Phones,
         ImageUrl = v.ImageUrl,
         IsActive = v.IsActive,
         AcceptsReservations = v.AcceptsReservations,

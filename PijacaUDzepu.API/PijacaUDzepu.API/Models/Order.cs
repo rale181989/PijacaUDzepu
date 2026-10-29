@@ -16,8 +16,29 @@ public class Order
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public string? GuestName { get; set; }
-    public string? GuestPhone { get; set; }
-    public string? GuestAddress { get; set; }
+    public string? GuestEmail { get; set; }
+
+    // Tajni kod iz linka za praćenje (/prati/{kod}); isti za sve porudžbine jedne gostujuće kupovine
+    public string? TrackingCode { get; set; }
+
+    // Kontakt i adresa za dostavu, i za goste i za prijavljene kupce
+    public string? ContactPhone { get; set; }
+    public string? DeliveryAddress { get; set; }
+
+    public FulfillmentType Fulfillment { get; set; } = FulfillmentType.Courier;
+
+    // Cena usluge kurira; kod rezervacije je 0. TotalAmount je samo vrednost robe.
+    public decimal DeliveryFee { get; set; }
+
+    // Odgovor prodavca kupcu (npr. "Spremno posle 10h")
+    public string? VendorMessage { get; set; }
+    public DateTime? VendorMessageAt { get; set; }
+
+    public int? CourierId { get; set; }
+    public User? Courier { get; set; }
+    public DateTime? CourierAssignedAt { get; set; }
+    public DateTime? PickedUpAt { get; set; }
+    public DateTime? DeliveredAt { get; set; }
 
     public bool IsGuestOrder => CustomerId == null;
 

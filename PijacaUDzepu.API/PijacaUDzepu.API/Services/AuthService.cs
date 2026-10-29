@@ -106,6 +106,29 @@ public class AuthService : IAuthService
         return await MapToUserDto(user);
     }
 
+    public async Task<UserDto> CreateCourier(CreateCourierDto dto)
+    {
+        if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
+            throw new InvalidOperationException("Korisničko ime je zauzeto.");
+
+        var user = new User
+        {
+            UserName = dto.UserName,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            PhoneNumber = dto.PhoneNumber,
+            CourierProfile = new CourierProfile()
+        };
+
+        var result = await _userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded)
+            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+        await _userManager.AddToRoleAsync(user, "Courier");
+
+        return await MapToUserDto(user);
+    }
+
     public async Task InviteVendor(InviteVendorDto dto)
     {
         var vendor = await _context.Vendors.FindAsync(dto.VendorId)

@@ -9,6 +9,7 @@ export interface Product {
   price: number;
   unit: ProductUnit;
   category: ProductCategory;
+  productClass?: ProductClass | null;
   note?: string;
   imageUrl?: string;
   isAvailable: boolean;
@@ -19,6 +20,7 @@ export interface ProductInput {
   price: number;
   unit: ProductUnit;
   category: ProductCategory;
+  productClass?: ProductClass | null;
   note?: string;
   isAvailable: boolean;
 }
@@ -26,3 +28,7 @@ export interface ProductInput {
 export type ProductUnit = 'Kg' | 'Komad' | 'Veza' | 'Litar' | 'Gram' | 'Pakovanje' | 'Kutija' | 'Flasa';
 
 export type ProductCategory = 'Voce' | 'Povrce' | 'MlecniProizvodi' | 'MesniProizvodi' | 'Konditori' | 'KucnaHemija' | 'Ostalo';
+
+export type ProductClass = 'Prva' | 'Druga' | 'Treca';
+
+export type ProductSort = 'NameAsc' | 'NameDesc' | 'PriceAsc' | 'PriceDesc' | 'Newest';

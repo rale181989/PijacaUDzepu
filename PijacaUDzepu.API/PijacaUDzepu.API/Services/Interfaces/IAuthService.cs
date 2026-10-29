@@ -8,6 +8,7 @@ public interface IAuthService
     Task<AuthResponseDto> Login(LoginDto dto);
     Task<AuthResponseDto> Register(RegisterDto dto);
     Task<UserDto> CreateVendorAdmin(CreateVendorAdminDto dto);
+    Task<UserDto> CreateCourier(CreateCourierDto dto);
     Task<UserDto> GetCurrentUser(int userId);
     Task InviteVendor(InviteVendorDto dto);
     Task<AuthResponseDto> AcceptInvitation(AcceptInvitationDto dto);

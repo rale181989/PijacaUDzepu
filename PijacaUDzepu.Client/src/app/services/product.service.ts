@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Product, ProductCategory, ProductInput } from '../models/product.model';
+import { Product, ProductCategory, ProductInput, ProductSort, ProductUnit } from '../models/product.model';
 import { PagedResult } from '../models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
@@ -10,7 +10,7 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(search?: string, vendorId?: number, marketId?: number, category?: ProductCategory, skip = 0, take = 20) {
+  getAll(search?: string, vendorId?: number, marketId?: number, category?: ProductCategory, unit?: ProductUnit, sort?: ProductSort, skip = 0, take = 20) {
     let params = new HttpParams()
       .set('skip', skip.toString())
       .set('take', take.toString());
@@ -18,6 +18,8 @@ export class ProductService {
     if (vendorId) params = params.set('vendorId', vendorId.toString());
     if (marketId) params = params.set('marketId', marketId.toString());
     if (category) params = params.set('category', category);
+    if (unit) params = params.set('unit', unit);
+    if (sort) params = params.set('sort', sort);
     return this.http.get<PagedResult<Product>>(this.baseUrl, { params });
   }
 

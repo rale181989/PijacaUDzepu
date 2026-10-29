@@ -1,0 +1,108 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ code ? ('track.title' | t) : ('orders.title' | t) }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="load(); $any($event).target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && notFound" class="empty-state">
+    <ion-icon name="link-outline" size="large"></ion-icon>
+    <p>{{ 'track.notFound' | t }}</p>
+    <ion-button routerLink="/home" fill="outline">{{ 'cart.browse' | t }}</ion-button>
+  </div>
+
+  <div *ngIf="!loading && !notFound && groups.length === 0" class="empty-state">
+    <ion-icon name="receipt-outline" size="large"></ion-icon>
+    <p>{{ 'orders.empty' | t }}</p>
+    <ion-button routerLink="/home" fill="outline">{{ 'cart.browse' | t }}</ion-button>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <section *ngFor="let group of groups" class="purchase">
+      <!-- Link za praćenje: gost ga čuva ili šalje sebi -->
+      <div class="link-box">
+        <p>{{ 'track.linkHint' | t }}</p>
+        <code>{{ trackingUrl(group.code) }}</code>
+        <div class="link-actions">
+          <ion-button size="small" fill="outline" (click)="share(group.code)">
+            <ion-icon name="share-social-outline" slot="start"></ion-icon>
+            {{ 'track.share' | t }}
+          </ion-button>
+          <ion-button size="small" fill="clear" color="medium" (click)="forget(group.code)">
+            <ion-icon name="trash-outline" slot="start"></ion-icon>
+            {{ 'track.forget' | t }}
+          </ion-button>
+        </div>
+      </div>
+
+      <ion-card *ngFor="let order of group.orders">
+        <ion-card-header>
+          <ion-card-subtitle>{{ 'orders.order' | t }} #{{ order.id }} — {{ order.vendorName }}</ion-card-subtitle>
+          <div class="badges">
+            <ion-badge [color]="order.fulfillment === 'Pickup' ? 'warning' : 'tertiary'">
+              {{ order.fulfillment === 'Pickup' ? ('order.pickup' | t) : ('order.deliveryFee' | t) }}
+            </ion-badge>
+            <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
+          </div>
+        </ion-card-header>
+
+        <ion-card-content>
+          <p class="muted">{{ order.marketName }}<span *ngIf="order.stallLabel"> · {{ 'home.stall' | t }} {{ order.stallLabel }}</span></p>
+          <p *ngFor="let phone of order.vendorPhones" class="muted">
+            <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + phone">{{ phone }}</a>
+          </p>
+
+          <div *ngIf="order.vendorMessage" class="vendor-message">
+            <strong><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ 'order.vendorMessage' | t }}</strong>
+            <p>{{ order.vendorMessage }}</p>
+          </div>
+
+          <div *ngIf="order.fulfillment === 'Courier' && order.status !== 'Rejected' && order.status !== 'Cancelled'" class="courier">
+            <ion-icon name="bicycle-outline" color="primary"></ion-icon>
+            <div>
+              <ng-container *ngIf="order.courierName">
+                <strong>{{ 'order.courier' | t }}: {{ order.courierName }}</strong>
+                <p *ngIf="order.courierPhone"><a [href]="'tel:' + order.courierPhone">{{ order.courierPhone }}</a></p>
+                <p *ngIf="order.status === 'InDelivery'">{{ 'order.onTheWay' | t }}</p>
+              </ng-container>
+              <strong *ngIf="!order.courierName">{{ 'order.courierPending' | t }}</strong>
+              <p *ngIf="order.deliveryAddress" class="muted">{{ 'order.deliveryAddress' | t }}: {{ order.deliveryAddress }}</p>
+            </div>
+          </div>
+
+          <ion-list lines="none" class="items">
+            <ion-item *ngFor="let item of order.items">
+              <ion-label><p>{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p></ion-label>
+              <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} {{ 'din' | t }}</ion-note>
+            </ion-item>
+          </ion-list>
+
+          <p class="total">
+            {{ 'order.amountToPay' | t }}: <strong>{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</strong>
+            <span *ngIf="order.deliveryFee > 0" class="muted">({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span>
+          </p>
+          <p class="muted">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+
+          <ion-button *ngIf="order.status === 'Pending'" fill="outline" color="danger" size="small" (click)="cancel(group.code, order)">
+            {{ 'orders.cancel' | t }}
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </section>
+
+    <p *ngIf="groups.length > 0" class="account-hint">
+      {{ 'track.accountHint' | t }} <a routerLink="/register">{{ 'nav.register' | t }}</a>
+    </p>
+  </ng-container>
+
+  <app-footer></app-footer>
+</ion-content>

@@ -56,3 +56,11 @@ export interface AcceptInvitationDto {
   firstName: string;
   lastName: string;
 }
+
+export interface CreateCourierDto {
+  userName: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}

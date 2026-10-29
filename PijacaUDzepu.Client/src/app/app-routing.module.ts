@@ -26,6 +26,24 @@ const routes: Routes = [
     loadChildren: () => import('./legal/legal.module').then(m => m.LegalPageModule)
   },
   {
+    path: 'podrska',
+    loadChildren: () => import('./support/support.module').then(m => m.SupportPageModule)
+  },
+  {
+    path: 'admin-support',
+    loadChildren: () => import('./admin-support/admin-support.module').then(m => m.AdminSupportPageModule),
+    canActivate: [RoleGuard],
+    data: { roles: ['SuperAdmin'] }
+  },
+  {
+    path: 'prati',
+    loadChildren: () => import('./track-order/track-order.module').then(m => m.TrackOrderPageModule)
+  },
+  {
+    path: 'prati/:code',
+    loadChildren: () => import('./track-order/track-order.module').then(m => m.TrackOrderPageModule)
+  },
+  {
     path: 'my-orders',
     loadChildren: () => import('./my-orders/my-orders.module').then(m => m.MyOrdersPageModule),
     canActivate: [AuthGuard]
@@ -34,6 +52,18 @@ const routes: Routes = [
     path: 'order-detail/:id',
     loadChildren: () => import('./order-detail/order-detail.module').then(m => m.OrderDetailPageModule),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'courier-orders',
+    loadChildren: () => import('./courier-orders/courier-orders.module').then(m => m.CourierOrdersPageModule),
+    canActivate: [RoleGuard],
+    data: { roles: ['Courier'] }
+  },
+  {
+    path: 'courier-profile',
+    loadChildren: () => import('./courier-profile/courier-profile.module').then(m => m.CourierProfilePageModule),
+    canActivate: [RoleGuard],
+    data: { roles: ['Courier'] }
   },
   {
     path: 'vendor-profile',

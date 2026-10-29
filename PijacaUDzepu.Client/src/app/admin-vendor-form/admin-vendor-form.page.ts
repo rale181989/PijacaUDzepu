@@ -17,7 +17,7 @@ import { Stall } from '../models/stall.model';
 })
 export class AdminVendorFormPage implements OnInit {
   vendorId: number | null = null;
-  model: VendorInput = { marketId: 0, name: '', description: '', address: '', phone: '' };
+  model: VendorInput = { marketId: 0, name: '', description: '', address: '', phones: [''] };
   markets: Market[] = [];
   stalls: Stall[] = [];
   adminFirstName = '';
@@ -31,6 +31,20 @@ export class AdminVendorFormPage implements OnInit {
   saving = false;
 
   get isEdit(): boolean { return this.vendorId !== null; }
+
+  readonly maxPhones = 5;
+
+  addPhone() {
+    this.model.phones.push('');
+  }
+
+  removePhone(index: number) {
+    this.model.phones.splice(index, 1);
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -51,7 +65,7 @@ export class AdminVendorFormPage implements OnInit {
       this.loading = true;
       this.vendorService.getById(this.vendorId).subscribe({
         next: v => {
-          this.model = { marketId: v.marketId, stallId: v.stallId, name: v.name, description: v.description, address: v.address, phone: v.phone };
+          this.model = { marketId: v.marketId, stallId: v.stallId, name: v.name, description: v.description, address: v.address, phones: v.phones?.length ? [...v.phones] : [''] };
           if (v.marketId) this.loadStalls(v.marketId);
           this.loading = false;
         },

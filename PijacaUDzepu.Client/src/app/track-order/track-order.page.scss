@@ -1,0 +1,83 @@
+.center-spinner { display: block; margin: 40px auto; }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+
+  ion-icon { font-size: 64px; margin-bottom: 16px; }
+}
+
+.purchase { margin-bottom: 24px; }
+
+.link-box {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--ion-color-light);
+  border: 1px dashed var(--ion-color-medium-tint);
+
+  p { margin: 0 0 6px; font-size: 13px; color: var(--ion-color-medium); }
+
+  .link-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  code {
+    display: block;
+    font-size: 12px;
+    word-break: break-all;
+    margin-bottom: 8px;
+    color: var(--ion-text-color);
+  }
+}
+
+ion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.muted {
+  color: var(--ion-color-medium);
+  font-size: 13px;
+  margin: 2px 0;
+
+  a { color: var(--ion-color-primary); text-decoration: none; }
+}
+
+.vendor-message {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border-left: 4px solid var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb, 46, 125, 50), 0.06);
+
+  strong { display: flex; align-items: center; gap: 6px; color: var(--ion-color-primary); }
+  p { margin: 4px 0 0; color: var(--ion-text-color); }
+}
+
+.courier {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+
+  > ion-icon { font-size: 24px; flex-shrink: 0; }
+  p { margin: 2px 0; }
+  a { color: var(--ion-color-primary); font-weight: 500; text-decoration: none; }
+}
+
+.items ion-item {
+  --min-height: 28px;
+  --padding-start: 0;
+}
+
+.total { margin: 8px 0 4px; color: var(--ion-text-color); }
+
+.account-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+
+  a { color: var(--ion-color-primary); font-weight: 600; text-decoration: none; }
+}

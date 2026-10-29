@@ -49,6 +49,16 @@
     </ion-item>
 
     <ion-item>
+      <ion-select label="Klasa" labelPlacement="floating"
+                  [(ngModel)]="model.productClass" name="productClass" interface="popover">
+        <ion-select-option [value]="null">Bez klase</ion-select-option>
+        <ion-select-option value="Prva">I klasa</ion-select-option>
+        <ion-select-option value="Druga">II klasa</ion-select-option>
+        <ion-select-option value="Treca">III klasa</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
       <ion-textarea label="Napomena" labelPlacement="floating"
                     [(ngModel)]="model.note" name="note"
                     maxlength="200" rows="2"

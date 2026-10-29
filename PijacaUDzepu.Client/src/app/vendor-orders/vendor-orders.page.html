@@ -25,9 +25,14 @@
         <ion-card-subtitle>
           #{{ order.id }} — {{ order.customerName }}
         </ion-card-subtitle>
-        <ion-badge [color]="getStatusColor(order.status)">
-          {{ getStatusLabel(order.status) }}
-        </ion-badge>
+        <div class="badges">
+          <ion-badge [color]="order.fulfillment === 'Pickup' ? 'warning' : 'tertiary'">
+            {{ order.fulfillment === 'Pickup' ? 'Rezervacija – lično preuzimanje' : 'Eko kurir' }}
+          </ion-badge>
+          <ion-badge [color]="getStatusColor(order.status)">
+            {{ getStatusLabel(order.status) }}
+          </ion-badge>
+        </div>
       </ion-card-header>
 
       <ion-card-content>
@@ -44,32 +49,42 @@
           <strong>Ukupno: {{ order.totalAmount | number:'1.0-0' }} din</strong>
         </div>
 
-        <div *ngIf="order.isGuestOrder" class="guest-info">
+        <div class="guest-info">
           <ion-icon name="person-outline"></ion-icon>
           <span>{{ order.customerName }}</span>
-          <span *ngIf="order.guestPhone"> · {{ order.guestPhone }}</span>
-          <span *ngIf="order.guestAddress"> · {{ order.guestAddress }}</span>
+          <span *ngIf="order.contactPhone"> · {{ order.contactPhone }}</span>
+          <span *ngIf="order.deliveryAddress"> · {{ order.deliveryAddress }}</span>
         </div>
+
+        <div *ngIf="order.fulfillment === 'Courier'" class="guest-info">
+          <ion-icon name="bicycle-outline"></ion-icon>
+          <span *ngIf="order.courierName">Kurir: {{ order.courierName }}<span *ngIf="order.courierPhone"> · {{ order.courierPhone }}</span></span>
+          <span *ngIf="!order.courierName">Čeka se kurir</span>
+        </div>
+
+        <p *ngIf="order.vendorMessage" class="vendor-message">
+          <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Vaš odgovor: {{ order.vendorMessage }}
+        </p>
 
         <p *ngIf="order.note" class="note">Napomena: {{ order.note }}</p>
         <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
 
         <div class="action-buttons">
           <ion-button *ngIf="order.status === 'Pending'" size="small" color="success"
-                      (click)="updateStatus(order, 'Confirmed')">
+                      (click)="respond(order, 'Confirmed')">
             <ion-icon name="checkmark-outline" slot="start"></ion-icon> Potvrdi
           </ion-button>
           <ion-button *ngIf="order.status === 'Pending'" size="small" color="danger" fill="outline"
-                      (click)="confirmReject(order)">
+                      (click)="respond(order, 'Rejected')">
             <ion-icon name="close-outline" slot="start"></ion-icon> Odbij
           </ion-button>
           <ion-button *ngIf="order.status === 'Confirmed'" size="small" color="success"
-                      (click)="updateStatus(order, 'ReadyForPickup')">
+                      (click)="respond(order, 'ReadyForPickup')">
             <ion-icon name="bag-check-outline" slot="start"></ion-icon> Spremno
           </ion-button>
-          <ion-button *ngIf="order.status === 'ReadyForPickup'" size="small" color="primary"
+          <ion-button *ngIf="order.status === 'ReadyForPickup' && order.fulfillment === 'Pickup'" size="small" color="primary"
                       (click)="updateStatus(order, 'Completed')">
-            <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Završeno
+            <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Kupac preuzeo
           </ion-button>
         </div>
       </ion-card-content>

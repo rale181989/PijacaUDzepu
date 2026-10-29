@@ -7,7 +7,7 @@ export interface Vendor {
   name: string;
   description?: string;
   address?: string;
-  phone?: string;
+  phones: string[];
   imageUrl?: string;
   isActive: boolean;
   acceptsReservations: boolean;
@@ -24,7 +24,7 @@ export interface VendorInput {
   name: string;
   description?: string;
   address?: string;
-  phone?: string;
+  phones: string[];
   acceptsReservations?: boolean;
   offersDelivery?: boolean;
   minOrderAmount?: number;

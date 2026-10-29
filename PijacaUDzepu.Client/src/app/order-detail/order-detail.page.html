@@ -21,6 +21,32 @@
       <ion-card-content>
         <p>{{ 'order.date' | t }}: {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
         <p *ngIf="order.note">{{ 'order.note' | t }}: {{ order.note }}</p>
+        <p *ngIf="order.fulfillment === 'Courier' && order.deliveryAddress">{{ 'order.deliveryAddress' | t }}: {{ order.deliveryAddress }}</p>
+        <p *ngIf="order.fulfillment === 'Pickup'"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="order.vendorMessage" class="vendor-message-card">
+      <ion-card-content>
+        <strong><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ 'order.vendorMessage' | t }}</strong>
+        <p>{{ order.vendorMessage }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="order.fulfillment === 'Courier' && order.status !== 'Rejected' && order.status !== 'Cancelled'" class="courier-card">
+      <ion-card-content>
+        <div class="courier-row">
+          <ion-icon name="bicycle-outline" color="primary"></ion-icon>
+          <div *ngIf="order.courierName">
+            <strong>{{ 'order.courier' | t }}: {{ order.courierName }}</strong>
+            <p *ngIf="order.courierPhone"><a [href]="'tel:' + order.courierPhone">{{ order.courierPhone }}</a></p>
+            <p *ngIf="order.status === 'InDelivery'">{{ 'order.onTheWay' | t }}</p>
+            <p *ngIf="order.deliveredAt">{{ 'order.deliveredAt' | t }}: {{ order.deliveredAt | date:'dd.MM.yyyy HH:mm' }}</p>
+          </div>
+          <div *ngIf="!order.courierName">
+            <strong>{{ 'order.courierPending' | t }}</strong>
+          </div>
+        </div>
       </ion-card-content>
     </ion-card>
 
@@ -41,6 +67,10 @@
 
     <div class="total-row">
       <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
+      <ng-container *ngIf="order.deliveryFee > 0">
+        <p>{{ 'order.deliveryFee' | t }}: {{ order.deliveryFee | number:'1.0-0' }} {{ 'din' | t }}</p>
+        <strong>{{ 'order.amountToPay' | t }}: {{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</strong>
+      </ng-container>
     </div>
   </ng-container>
 

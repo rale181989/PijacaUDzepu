@@ -19,7 +19,7 @@ public static class Seed
         await context.Database.MigrateAsync();
         logger.LogInformation("Migration complete.");
 
-        var roles = new[] { "SuperAdmin", "VendorAdmin", "Customer" };
+        var roles = new[] { "SuperAdmin", "VendorAdmin", "Customer", "Courier" };
         foreach (var roleName in roles)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
@@ -64,6 +64,28 @@ public static class Seed
             var result = await userManager.CreateAsync(customer, "kupac1234");
             if (result.Succeeded)
                 await userManager.AddToRoleAsync(customer, "Customer");
+        }
+
+        var couriers = new[]
+        {
+            new { UserName = "kurir1", FirstName = "Stefan", LastName = "Popović", Phone = "064 100 2001" },
+            new { UserName = "kurir2", FirstName = "Milica", LastName = "Ilić", Phone = "064 100 2002" },
+        };
+        foreach (var c in couriers)
+        {
+            if (await userManager.Users.AnyAsync(u => u.UserName == c.UserName)) continue;
+
+            var courier = new User
+            {
+                UserName = c.UserName,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                PhoneNumber = c.Phone,
+                CourierProfile = new CourierProfile { Vehicle = CourierVehicle.Skuter, IsOnShift = true }
+            };
+            var result = await userManager.CreateAsync(courier, "kurir1234");
+            if (result.Succeeded)
+                await userManager.AddToRoleAsync(courier, "Courier");
         }
 
         if (!await context.Markets.AnyAsync())
@@ -172,21 +194,21 @@ public static class Seed
             var vendors = new List<Vendor>
             {
                 // Futoška pijaca
-                new() { MarketId = markets[0].Id, StallId = findStall(0, "12").Id, Name = "Marko Voće", Description = "Svežo voće i povrće pravo sa njive iz Šumadije.", Phone = "064 123 4567" },
-                new() { MarketId = markets[0].Id, StallId = findStall(0, "5").Id, Name = "Jovana Organic", Description = "Sertifikovana organska proizvodnja bez pesticida.", Phone = "065 987 6543" },
-                new() { MarketId = markets[0].Id, StallId = findStall(0, "18").Id, Name = "Zeleni Raj", Description = "Začinsko bilje, zeleniš i sezonsko povrće.", Phone = "063 222 3456" },
+                new() { MarketId = markets[0].Id, StallId = findStall(0, "12").Id, Name = "Marko Voće", Description = "Svežo voće i povrće pravo sa njive iz Šumadije.", Phones = new() { "064 123 4567" } },
+                new() { MarketId = markets[0].Id, StallId = findStall(0, "5").Id, Name = "Jovana Organic", Description = "Sertifikovana organska proizvodnja bez pesticida.", Phones = new() { "065 987 6543" } },
+                new() { MarketId = markets[0].Id, StallId = findStall(0, "18").Id, Name = "Zeleni Raj", Description = "Začinsko bilje, zeleniš i sezonsko povrće.", Phones = new() { "063 222 3456" } },
 
                 // Riblja pijaca
-                new() { MarketId = markets[1].Id, StallId = findStall(1, "7").Id, Name = "Salaš Subotički", Description = "Vojvođanski salaš sa tradicijom dugom 50 godina.", Phone = "069 555 1234" },
-                new() { MarketId = markets[1].Id, StallId = findStall(1, "3").Id, Name = "Bašta Niš", Description = "Južnjačko voće i povrće po najpovoljnijim cenama.", Phone = "062 444 7890" },
+                new() { MarketId = markets[1].Id, StallId = findStall(1, "7").Id, Name = "Salaš Subotički", Description = "Vojvođanski salaš sa tradicijom dugom 50 godina.", Phones = new() { "069 555 1234" } },
+                new() { MarketId = markets[1].Id, StallId = findStall(1, "3").Id, Name = "Bašta Niš", Description = "Južnjačko voće i povrće po najpovoljnijim cenama.", Phones = new() { "062 444 7890" } },
 
                 // Limanska pijaca
-                new() { MarketId = markets[2].Id, StallId = findStall(2, "9").Id, Name = "Fruška Gora Bio", Description = "Domaći proizvodi sa Fruške Gore - med, voće, povrće.", Phone = "066 333 2211" },
-                new() { MarketId = markets[2].Id, StallId = findStall(2, "2").Id, Name = "Đurđev Salaš", Description = "Svežo povrće od plastenika do vaše trpeze.", Phone = "064 777 8899" },
+                new() { MarketId = markets[2].Id, StallId = findStall(2, "9").Id, Name = "Fruška Gora Bio", Description = "Domaći proizvodi sa Fruške Gore - med, voće, povrće.", Phones = new() { "066 333 2211" } },
+                new() { MarketId = markets[2].Id, StallId = findStall(2, "2").Id, Name = "Đurđev Salaš", Description = "Svežo povrće od plastenika do vaše trpeze.", Phones = new() { "064 777 8899" } },
 
                 // Najlon pijaca
-                new() { MarketId = markets[3].Id, StallId = findStall(3, "14").Id, Name = "Braća Marković", Description = "Porodična tradicija prodaje voća i povrća od 1985.", Phone = "065 111 4455" },
-                new() { MarketId = markets[3].Id, StallId = findStall(3, "22").Id, Name = "Sremski Plodovi", Description = "Kvalitetno povrće iz srca Srema.", Phone = "069 888 3322" },
+                new() { MarketId = markets[3].Id, StallId = findStall(3, "14").Id, Name = "Braća Marković", Description = "Porodična tradicija prodaje voća i povrća od 1985.", Phones = new() { "065 111 4455" } },
+                new() { MarketId = markets[3].Id, StallId = findStall(3, "22").Id, Name = "Sremski Plodovi", Description = "Kvalitetno povrće iz srca Srema.", Phones = new() { "069 888 3322" } },
             };
 
             context.Vendors.AddRange(vendors);

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
-import { ToastController } from '@ionic/angular/lazy';
+import { AlertController, ToastController } from '@ionic/angular/lazy';
 
 @Component({
   selector: 'app-admin-users',
@@ -12,7 +12,7 @@ import { ToastController } from '@ionic/angular/lazy';
 export class AdminUsersPage implements OnInit {
   users: User[] = [];
   loading = false;
-  selectedTab: 'Customer' | 'VendorAdmin' | 'SuperAdmin' = 'Customer';
+  selectedTab: 'Customer' | 'VendorAdmin' | 'Courier' | 'SuperAdmin' = 'Customer';
 
   get filteredUsers(): User[] {
     return this.users.filter(u => u.roles.includes(this.selectedTab));
@@ -20,6 +20,7 @@ export class AdminUsersPage implements OnInit {
 
   constructor(
     private userService: UserService,
+    private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
@@ -45,6 +46,52 @@ export class AdminUsersPage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  // Admin otvara nalog, a kurir posle sam dopunjuje podatke u "Moji podaci"
+  async createCourier() {
+    const alert = await this.alertController.create({
+      header: 'Novi kurir',
+      inputs: [
+        { name: 'firstName', placeholder: 'Ime' },
+        { name: 'lastName', placeholder: 'Prezime' },
+        { name: 'phoneNumber', placeholder: 'Telefon', type: 'tel' },
+        { name: 'userName', placeholder: 'Korisničko ime' },
+        { name: 'password', placeholder: 'Lozinka (min. 4 znaka)', type: 'password' },
+      ],
+      buttons: [
+        { text: 'Otkaži', role: 'cancel' },
+        {
+          text: 'Napravi nalog',
+          handler: data => {
+            if (!data.firstName?.trim() || !data.lastName?.trim() || !data.userName?.trim() || (data.password ?? '').length < 4) {
+              this.showToast('Popunite ime, prezime, korisničko ime i lozinku', 'warning');
+              return false;
+            }
+            this.userService.createCourier({
+              userName: data.userName.trim(),
+              password: data.password,
+              firstName: data.firstName.trim(),
+              lastName: data.lastName.trim(),
+              phoneNumber: data.phoneNumber?.trim() || undefined
+            }).subscribe({
+              next: () => {
+                this.showToast(`Kurir ${data.userName.trim()} je napravljen`, 'success');
+                this.loadUsers();
+              },
+              error: err => this.showToast(err.error?.message || 'Greška pri pravljenju naloga', 'danger')
+            });
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async showToast(message: string, color: string) {
+    const toast = await this.toastController.create({ message, duration: 2500, color });
+    await toast.present();
   }
 
   doRefresh(event: any) {

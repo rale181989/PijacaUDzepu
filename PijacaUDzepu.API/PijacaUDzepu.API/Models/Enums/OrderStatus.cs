@@ -7,5 +7,7 @@ public enum OrderStatus
     Rejected,
     ReadyForPickup,
     Completed,
-    Cancelled
+    Cancelled,
+    // Kurir je preuzeo robu i nosi je kupcu (dodato na kraj da ne menja postojeće vrednosti u bazi)
+    InDelivery
 }

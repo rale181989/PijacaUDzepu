@@ -19,6 +19,9 @@ public class DataContext : IdentityDbContext<User, Role, int,
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<VendorInvitation> VendorInvitations => Set<VendorInvitation>();
+    public DbSet<CourierProfile> CourierProfiles => Set<CourierProfile>();
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -65,9 +68,41 @@ public class DataContext : IdentityDbContext<User, Role, int,
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        builder.Entity<SupportRequest>(entity =>
+        {
+            entity.HasIndex(r => new { r.IsResolved, r.CreatedAt });
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+        });
+
+        builder.Entity<DeviceToken>(entity =>
+        {
+            entity.HasIndex(d => d.Token).IsUnique();
+
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.DeviceTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CourierProfile>(entity =>
+        {
+            entity.HasIndex(c => c.UserId).IsUnique();
+
+            entity.HasOne(c => c.User)
+                .WithOne(u => u.CourierProfile)
+                .HasForeignKey<CourierProfile>(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<Order>(entity =>
         {
             entity.Property(o => o.TotalAmount).HasPrecision(10, 2);
+            entity.Property(o => o.DeliveryFee).HasPrecision(10, 2);
             entity.Ignore(o => o.IsGuestOrder);
 
             entity.HasOne(o => o.Customer)
@@ -75,6 +110,15 @@ public class DataContext : IdentityDbContext<User, Role, int,
                 .HasForeignKey(o => o.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+
+            entity.HasOne(o => o.Courier)
+                .WithMany()
+                .HasForeignKey(o => o.CourierId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            entity.HasIndex(o => o.CourierId);
+            entity.HasIndex(o => o.TrackingCode);
 
             entity.HasOne(o => o.Vendor)
                 .WithMany(v => v.Orders)

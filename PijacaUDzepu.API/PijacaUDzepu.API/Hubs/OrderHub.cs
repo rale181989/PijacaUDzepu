@@ -27,6 +27,18 @@ public class OrderHub : Hub
             await Groups.AddToGroupAsync(Context.ConnectionId, $"vendor_{vendorId.Value}");
         }
 
+        // SuperAdmin dobija obaveštenje o novim pitanjima za podršku
+        if (Context.User!.IsInRole("SuperAdmin"))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "admins");
+        }
+
+        // Svi kuriri dobijaju obaveštenje o novoj porudžbini
+        if (Context.User!.IsInRole("Courier"))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "couriers");
+        }
+
         await base.OnConnectedAsync();
     }
 }

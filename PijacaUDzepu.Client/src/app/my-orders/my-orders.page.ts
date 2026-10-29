@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { Order } from '../models/order.model';
 import { ToastController } from '@ionic/angular/lazy';
 import { TranslateService } from '../services/translate.service';
+import { NotificationService } from '../services/notification.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-my-orders',
@@ -10,8 +12,10 @@ import { TranslateService } from '../services/translate.service';
   styleUrls: ['./my-orders.page.scss'],
   standalone: false,
 })
-export class MyOrdersPage implements OnInit {
+export class MyOrdersPage implements OnInit, OnDestroy {
   orders: Order[] = [];
+  private sub?: Subscription;
+  private loadSub?: Subscription;
   loading = false;
   hasMore = true;
   private pageSize = 20;
@@ -19,26 +23,35 @@ export class MyOrdersPage implements OnInit {
   constructor(
     private orderService: OrderService,
     private toastController: ToastController,
-    private ts: TranslateService
+    private ts: TranslateService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
     this.loadOrders();
+    this.sub = this.notificationService.orderUpdated$.subscribe(orderId => {
+      if (this.orders.some(o => o.id === orderId)) this.loadOrders();
+    });
+  }
+
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
+    this.loadSub?.unsubscribe();
   }
 
   ionViewWillEnter() {
     this.loadOrders();
   }
 
-  loadOrders(reset = true) {
-    if (reset) {
-      this.orders = [];
-      this.hasMore = true;
-    }
+  loadOrders() {
+    // Novo učitavanje prekida prethodno i zamenjuje listu; inače se dva istovremena
+    // učitavanja (ulazak na stranicu + obaveštenje) spoje i porudžbine se prikažu duplo
+    this.loadSub?.unsubscribe();
+    this.hasMore = true;
     this.loading = true;
-    this.orderService.getMyOrders(this.orders.length, this.pageSize).subscribe({
+    this.loadSub = this.orderService.getMyOrders(0, this.pageSize).subscribe({
       next: result => {
-        this.orders = [...this.orders, ...result.items];
+        this.orders = result.items;
         this.hasMore = result.hasMore;
         this.loading = false;
       },
@@ -86,6 +99,7 @@ export class MyOrdersPage implements OnInit {
       'Confirmed': 'primary',
       'Rejected': 'danger',
       'ReadyForPickup': 'success',
+      'InDelivery': 'tertiary',
       'Completed': 'medium',
       'Cancelled': 'medium'
     };
@@ -93,7 +107,7 @@ export class MyOrdersPage implements OnInit {
   }
 
   doRefresh(event: any) {
-    this.loadOrders(true);
+    this.loadOrders();
     setTimeout(() => event.target.complete(), 500);
   }
 }

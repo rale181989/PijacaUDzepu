@@ -18,6 +18,8 @@ public class ProductInputDto
     [Required]
     public ProductCategory Category { get; set; }
 
+    public ProductClass? ProductClass { get; set; }
+
     [MaxLength(200)]
     public string? Note { get; set; }
 

@@ -21,9 +21,9 @@ public class ProductsController : BaseApiController
 
     [AllowAnonymous]
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? vendorId, [FromQuery] int? marketId, [FromQuery] ProductCategory? category = null, [FromQuery] int skip = 0, [FromQuery] int take = 20)
+    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? vendorId, [FromQuery] int? marketId, [FromQuery] ProductCategory? category = null, [FromQuery] ProductUnit? unit = null, [FromQuery] ProductSort sort = ProductSort.NameAsc, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
-        var result = await _productService.GetAllProducts(search, vendorId, marketId, category, skip, take);
+        var result = await _productService.GetAllProducts(search, vendorId, marketId, category, unit, sort, skip, take);
         return Ok(result);
     }
 

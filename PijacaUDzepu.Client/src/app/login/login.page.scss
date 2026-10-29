@@ -19,3 +19,15 @@
     --border-radius: 8px;
   }
 }
+
+.server-setting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+
+  a { color: var(--ion-color-primary); cursor: pointer; }
+}

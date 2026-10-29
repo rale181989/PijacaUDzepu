@@ -19,7 +19,7 @@ namespace PijacaUDzepu.API.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.31")
+                .HasAnnotation("ProductVersion", "8.0.33")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
@@ -113,6 +113,74 @@ namespace PijacaUDzepu.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.CourierProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsOnShift")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LicensePlate")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Vehicle")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CourierProfiles");
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.DeviceToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Platform")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DeviceTokens");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.Market", b =>
                 {
                     b.Property<int>("Id")
@@ -155,23 +223,45 @@ namespace PijacaUDzepu.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ContactPhone")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CourierAssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CourierId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("GuestAddress")
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryAddress")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("DeliveryFee")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<int>("Fulfillment")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GuestEmail")
                         .HasColumnType("text");
 
                     b.Property<string>("GuestName")
                         .HasColumnType("text");
 
-                    b.Property<string>("GuestPhone")
-                        .HasColumnType("text");
-
                     b.Property<string>("Note")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("PickedUpAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -180,15 +270,28 @@ namespace PijacaUDzepu.API.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<string>("TrackingCode")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("VendorId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("VendorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("VendorMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("CourierId");
+
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("TrackingCode");
 
                     b.HasIndex("VendorId");
 
@@ -268,6 +371,9 @@ namespace PijacaUDzepu.API.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<int?>("ProductClass")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Unit")
                         .HasColumnType("integer");
 
@@ -339,6 +445,57 @@ namespace PijacaUDzepu.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Stalls");
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.SupportRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsResolved")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Platform")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("IsResolved", "CreatedAt");
+
+                    b.ToTable("SupportRequests");
                 });
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.User", b =>
@@ -479,8 +636,9 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<bool>("OffersDelivery")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("text");
+                    b.Property<List<string>>("Phones")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<int?>("StallId")
                         .HasColumnType("integer");
@@ -597,8 +755,35 @@ namespace PijacaUDzepu.API.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.CourierProfile", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.User", "User")
+                        .WithOne("CourierProfile")
+                        .HasForeignKey("PijacaUDzepu.API.Models.CourierProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.DeviceToken", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.User", "User")
+                        .WithMany("DeviceTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.Order", b =>
                 {
+                    b.HasOne("PijacaUDzepu.API.Models.User", "Courier")
+                        .WithMany()
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PijacaUDzepu.API.Models.User", "Customer")
                         .WithMany("Orders")
                         .HasForeignKey("CustomerId")
@@ -609,6 +794,8 @@ namespace PijacaUDzepu.API.Migrations
                         .HasForeignKey("VendorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Courier");
 
                     b.Navigation("Customer");
 
@@ -653,6 +840,16 @@ namespace PijacaUDzepu.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Market");
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.SupportRequest", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.UserRole", b =>
@@ -746,6 +943,10 @@ namespace PijacaUDzepu.API.Migrations
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.User", b =>
                 {
+                    b.Navigation("CourierProfile");
+
+                    b.Navigation("DeviceTokens");
+
                     b.Navigation("Orders");
 
                     b.Navigation("UserRoles");

@@ -5,5 +5,8 @@
     <a routerLink="/legal/cookies" routerLinkActive="active">{{ 'footer.cookies' | t }}</a>
     <a routerLink="/legal/about" routerLinkActive="active">{{ 'footer.about' | t }}</a>
   </nav>
+  <p class="footer-support">
+    {{ 'footer.support' | t }}: <a routerLink="/podrska">{{ 'footer.askQuestion' | t }}</a> · <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+  </p>
   <p class="footer-copy">&copy; {{ year }} {{ 'app.title' | t }}. {{ 'footer.rights' | t }}</p>
 </footer>

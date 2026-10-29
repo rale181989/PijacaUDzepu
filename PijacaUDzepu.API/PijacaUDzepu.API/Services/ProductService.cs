@@ -19,7 +19,7 @@ public class ProductService : IProductService
         _env = env;
     }
 
-    public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, int skip = 0, int take = 20)
+    public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, Models.Enums.ProductUnit? unit = null, Models.Enums.ProductSort sort = Models.Enums.ProductSort.NameAsc, int skip = 0, int take = 20)
     {
         var query = _context.Products
             .Include(p => p.Vendor).ThenInclude(v => v.Market)
@@ -27,16 +27,11 @@ public class ProductService : IProductService
             .Where(p => p.IsAvailable && p.Vendor.IsActive)
             .AsQueryable();
 
+        // Pretraga je samo po nazivu proizvoda; pijaca, prodavac, tezga i grupa imaju svoje filtere
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{search}%";
-            var categoryMatch = MatchCategory(search);
-            query = query.Where(p =>
-                EF.Functions.ILike(EF.Functions.Unaccent(p.Name), EF.Functions.Unaccent(pattern)) ||
-                EF.Functions.ILike(EF.Functions.Unaccent(p.Vendor.Name), EF.Functions.Unaccent(pattern)) ||
-                EF.Functions.ILike(EF.Functions.Unaccent(p.Vendor.Market!.Name), EF.Functions.Unaccent(pattern)) ||
-                (p.Vendor.Stall != null && EF.Functions.ILike(p.Vendor.Stall.Label, pattern)) ||
-                (categoryMatch != null && p.Category == categoryMatch));
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(p => EF.Functions.ILike(EF.Functions.Unaccent(p.Name), EF.Functions.Unaccent(pattern)));
         }
 
         if (marketId.HasValue)
@@ -48,10 +43,26 @@ public class ProductService : IProductService
         if (category.HasValue)
             query = query.Where(p => p.Category == category.Value);
 
+        // Filter "Kg" obuhvata i proizvode na gram, jer se cene mogu porediti po kilogramu
+        if (unit == Models.Enums.ProductUnit.Kg || unit == Models.Enums.ProductUnit.Gram)
+            query = query.Where(p => p.Unit == Models.Enums.ProductUnit.Kg || p.Unit == Models.Enums.ProductUnit.Gram);
+        else if (unit.HasValue)
+            query = query.Where(p => p.Unit == unit.Value);
+
         var totalCount = await query.CountAsync();
 
-        var items = await query
-            .OrderBy(p => p.Name)
+        // Id kao drugi ključ da bi straničenje bilo stabilno kada više proizvoda ima istu cenu/naziv
+        IOrderedQueryable<Product> ordered = sort switch
+        {
+            Models.Enums.ProductSort.NameDesc => query.OrderByDescending(p => p.Name),
+            Models.Enums.ProductSort.PriceAsc => query.OrderBy(PricePerComparableUnit).ThenBy(p => p.Name),
+            Models.Enums.ProductSort.PriceDesc => query.OrderByDescending(PricePerComparableUnit).ThenBy(p => p.Name),
+            Models.Enums.ProductSort.Newest => query.OrderByDescending(p => p.CreatedAt),
+            _ => query.OrderBy(p => p.Name)
+        };
+
+        var items = await ordered
+            .ThenBy(p => p.Id)
             .Skip(skip)
             .Take(take)
             .Select(p => MapToDto(p))
@@ -98,6 +109,7 @@ public class ProductService : IProductService
             Price = dto.Price,
             Unit = dto.Unit,
             Category = dto.Category,
+            ProductClass = dto.ProductClass,
             Note = dto.Note,
             IsAvailable = dto.IsAvailable
         };
@@ -120,6 +132,7 @@ public class ProductService : IProductService
         product.Price = dto.Price;
         product.Unit = dto.Unit;
         product.Category = dto.Category;
+        product.ProductClass = dto.ProductClass;
         product.Note = dto.Note;
         product.IsAvailable = dto.IsAvailable;
         product.UpdatedAt = DateTime.UtcNow;
@@ -196,32 +209,9 @@ public class ProductService : IProductService
         if (File.Exists(oldPath)) File.Delete(oldPath);
     }
 
-    private static readonly Dictionary<string, Models.Enums.ProductCategory> CategoryLabels = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["voce"] = Models.Enums.ProductCategory.Voce,
-        ["voće"] = Models.Enums.ProductCategory.Voce,
-        ["povrce"] = Models.Enums.ProductCategory.Povrce,
-        ["povrće"] = Models.Enums.ProductCategory.Povrce,
-        ["mlecni proizvodi"] = Models.Enums.ProductCategory.MlecniProizvodi,
-        ["mlečni proizvodi"] = Models.Enums.ProductCategory.MlecniProizvodi,
-        ["mesni proizvodi"] = Models.Enums.ProductCategory.MesniProizvodi,
-        ["konditori"] = Models.Enums.ProductCategory.Konditori,
-        ["kucna hemija"] = Models.Enums.ProductCategory.KucnaHemija,
-        ["kućna hemija"] = Models.Enums.ProductCategory.KucnaHemija,
-        ["ostalo"] = Models.Enums.ProductCategory.Ostalo,
-    };
-
-    private static Models.Enums.ProductCategory? MatchCategory(string search)
-    {
-        var s = search.Trim();
-        foreach (var kvp in CategoryLabels)
-        {
-            if (kvp.Key.Contains(s, StringComparison.OrdinalIgnoreCase) ||
-                s.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
-                return kvp.Value;
-        }
-        return null;
-    }
+    // Cena na gram se preračunava u cenu po kg da bi se pri sortiranju poredila sa proizvodima na kg
+    private static readonly System.Linq.Expressions.Expression<Func<Product, decimal>> PricePerComparableUnit =
+        p => p.Unit == Models.Enums.ProductUnit.Gram ? p.Price * 1000 : p.Price;
 
     private static ProductDto MapToDto(Product p) => new()
     {
@@ -235,6 +225,7 @@ public class ProductService : IProductService
         Price = p.Price,
         Unit = p.Unit,
         Category = p.Category,
+        ProductClass = p.ProductClass,
         Note = p.Note,
         ImageUrl = p.ImageUrl,
         IsAvailable = p.IsAvailable

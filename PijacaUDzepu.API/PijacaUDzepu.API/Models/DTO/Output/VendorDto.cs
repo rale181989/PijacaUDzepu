@@ -10,7 +10,7 @@ public class VendorDto
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? Address { get; set; }
-    public string? Phone { get; set; }
+    public List<string> Phones { get; set; } = new();
     public string? ImageUrl { get; set; }
     public bool IsActive { get; set; }
     public bool AcceptsReservations { get; set; }

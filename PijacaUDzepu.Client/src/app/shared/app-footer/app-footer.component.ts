@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { LEGAL_INFO } from '../../legal/legal-content';
 
 @Component({
   selector: 'app-footer',
@@ -8,4 +9,5 @@ import { Component } from '@angular/core';
 })
 export class AppFooterComponent {
   year = new Date().getFullYear();
+  supportEmail = LEGAL_INFO.supportEmail;
 }

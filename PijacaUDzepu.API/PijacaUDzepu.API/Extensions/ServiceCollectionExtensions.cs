@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PijacaUDzepu.API.DataAccess;
+using PijacaUDzepu.API.Helpers;
 using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Services;
 using PijacaUDzepu.API.Services.Interfaces;
@@ -31,8 +32,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVendorService, VendorService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<FrontendUrlResolver>();
         services.AddScoped<IEmailService, EmailService>();
-        services.AddSignalR();
+        services.AddScoped<ICourierService, CourierService>();
+        services.AddScoped<IPushService, PushService>();
+        services.AddScoped<ISupportService, SupportService>();
+        // Enumi kao stringovi i u SignalR porukama, kao u REST API-ju (inače klijent dobija brojeve)
+        services.AddSignalR().AddJsonProtocol(options =>
+            options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
         return services;
     }
@@ -86,7 +94,8 @@ public static class ServiceCollectionExtensions
         services.AddAuthorizationBuilder()
             .AddPolicy("RequireSuperAdmin", policy => policy.RequireRole("SuperAdmin"))
             .AddPolicy("RequireVendorAdmin", policy => policy.RequireRole("VendorAdmin", "SuperAdmin"))
-            .AddPolicy("RequireCustomer", policy => policy.RequireRole("Customer", "SuperAdmin"));
+            .AddPolicy("RequireCustomer", policy => policy.RequireRole("Customer", "SuperAdmin"))
+            .AddPolicy("RequireCourier", policy => policy.RequireRole("Courier", "SuperAdmin"));
 
         return services;
     }

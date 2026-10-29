@@ -11,4 +11,6 @@ public class User : IdentityUser<int>
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<VendorUser> VendorUsers { get; set; } = new List<VendorUser>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
+    public CourierProfile? CourierProfile { get; set; }
+    public ICollection<DeviceToken> DeviceTokens { get; set; } = new List<DeviceToken>();
 }

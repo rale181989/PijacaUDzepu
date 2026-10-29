@@ -43,10 +43,20 @@
       <ion-input label="Adresa" labelPlacement="floating"
                  [(ngModel)]="model.address" name="address"></ion-input>
     </ion-item>
-    <ion-item>
-      <ion-input label="Telefon" labelPlacement="floating" type="tel"
-                 [(ngModel)]="model.phone" name="phone"></ion-input>
-    </ion-item>
+    <div class="phones-section">
+      <ion-item *ngFor="let phone of model.phones; let i = index; let last = last; trackBy: trackByIndex">
+        <ion-input [label]="i === 0 ? 'Telefon' : 'Telefon ' + (i + 1)" labelPlacement="floating" type="tel"
+                   [(ngModel)]="model.phones[i]" [name]="'phone' + i"></ion-input>
+        <ion-button *ngIf="model.phones.length > 1" slot="end" fill="clear" color="danger"
+                    (click)="removePhone(i)" aria-label="Ukloni telefon">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button *ngIf="last && model.phones.length < maxPhones" slot="end" fill="clear"
+                    (click)="addPhone()" aria-label="Dodaj još jedan telefon">
+          <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </div>
 
     <ion-button expand="block" type="submit" [disabled]="saving" class="ion-margin-top">
       <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>

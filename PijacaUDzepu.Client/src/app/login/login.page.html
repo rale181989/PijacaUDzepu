@@ -32,6 +32,12 @@
     <p class="ion-text-center ion-margin-top">
       {{ 'login.noAccount' | t }} <a routerLink="/register">{{ 'login.register' | t }}</a>
     </p>
+
+    <p *ngIf="serverSelectable" class="server-setting">
+      <ion-icon name="server-outline"></ion-icon>
+      Server: {{ isDefaultServer ? 'Render' : apiServer }}
+      <a (click)="chooseServer()">Promeni</a>
+    </p>
   </div>
 
   <app-footer></app-footer>

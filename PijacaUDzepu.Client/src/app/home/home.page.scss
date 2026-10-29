@@ -66,49 +66,24 @@
     }
   }
 
+  .search-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .product-search {
     --border-radius: 8px;
     --height: 36px;
     padding: 0;
     font-size: 14px;
+    flex: 1;
+    min-width: 0;
   }
 
-  .service-chips {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .service-chip {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    border: 1.5px solid var(--ion-color-warning);
-    background: #fff;
-    color: var(--ion-color-warning-shade, #e0ac08);
-    cursor: pointer;
-    transition: all 0.2s;
-
-    ion-icon { font-size: 15px; }
-
-    &.delivery {
-      border-color: var(--ion-color-success);
-      color: var(--ion-color-success-shade, #2dd36f);
-
-      &.active {
-        background: var(--ion-color-success);
-        color: #fff;
-      }
-    }
-
-    &.active {
-      background: var(--ion-color-warning);
-      color: #fff;
-    }
+  .filter-btn.sort-btn {
+    flex: 0 0 auto;
+    max-width: 45%;
   }
 }
 
@@ -127,18 +102,6 @@
   border-radius: 12px;
   overflow: hidden;
   transition: border-color 0.2s;
-
-  &.card-reservation {
-    background: rgba(255, 196, 9, 0.18);
-  }
-
-  &.card-delivery {
-    background: rgba(45, 211, 111, 0.18);
-  }
-
-  &.card-both {
-    background: linear-gradient(to right, rgba(255, 196, 9, 0.22) 0%, rgba(255, 196, 9, 0.22) 50%, rgba(45, 211, 111, 0.22) 50%, rgba(45, 211, 111, 0.22) 100%);
-  }
 
   .product-img {
     width: 100%;
@@ -178,19 +141,6 @@
     text-overflow: ellipsis;
     flex: 1;
     min-width: 0;
-  }
-
-  .vendor-badges {
-    display: flex;
-    gap: 3px;
-    flex-shrink: 0;
-
-    .vendor-badge {
-      font-size: 20px;
-
-      &.reservation { color: var(--ion-color-warning-shade, #e0ac08); }
-      &.delivery { color: var(--ion-color-success-shade, #2dd36f); }
-    }
   }
 
   .product-vendor {
@@ -240,31 +190,12 @@
     margin: 0 0 4px;
   }
 
-  .service-info {
-    margin-bottom: 8px;
-
-    .service-msg {
-      display: flex;
-      align-items: flex-start;
-      gap: 4px;
-      margin-bottom: 3px;
-
-      ion-icon {
-        font-size: 12px;
-        margin-top: 1px;
-        flex-shrink: 0;
-      }
-
-      span {
-        font-size: 10px;
-        line-height: 1.3;
-      }
-
-      &[data-color="medium"] span { color: var(--ion-color-medium); }
-      &[data-color="primary"] span { color: var(--ion-color-primary); }
-      &[data-color="success"] span { color: var(--ion-color-success-shade, #2dd36f); }
-    }
+  .product-unit-price {
+    font-size: 12px;
+    color: var(--ion-color-medium);
+    margin: -2px 0 4px;
   }
+
 }
 
 .qty-controls {
