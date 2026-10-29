@@ -3,6 +3,9 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
+    <ion-buttons slot="end">
+      <app-cart-button></app-cart-button>
+    </ion-buttons>
     <ion-title>{{ 'login.title' | t }}</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -37,6 +40,7 @@
       <ion-icon name="server-outline"></ion-icon>
       Server: {{ isDefaultServer ? 'Render' : apiServer }}
       <a (click)="chooseServer()">Promeni</a>
+      <span *ngIf="appVersion">· v{{ appVersion }}</span>
     </p>
   </div>
 

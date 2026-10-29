@@ -1,0 +1,32 @@
+:host {
+  display: inline-block;
+}
+
+ion-button {
+  position: relative;
+  overflow: visible;
+}
+
+.cart-count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--ion-color-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  pointer-events: none;
+}
+
+// Na računaru je korpa već u gornjem meniju
+@media (min-width: 768px) {
+  :host {
+    display: none;
+  }
+}

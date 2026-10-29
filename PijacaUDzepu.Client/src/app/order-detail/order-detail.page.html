@@ -3,6 +3,9 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/my-orders"></ion-back-button>
     </ion-buttons>
+    <ion-buttons slot="end">
+      <app-cart-button></app-cart-button>
+    </ion-buttons>
     <ion-title>{{ 'orders.order' | t }} #{{ order?.id }}</ion-title>
   </ion-toolbar>
 </ion-header>

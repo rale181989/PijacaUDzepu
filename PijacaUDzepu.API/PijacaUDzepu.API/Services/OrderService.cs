@@ -118,7 +118,8 @@ public class OrderService : IOrderService
     private static string? ValidateAddress(FulfillmentType fulfillment, string? address)
     {
         var trimmed = address?.Trim();
-        if (fulfillment == FulfillmentType.Courier && (trimmed == null || trimmed.Length < 5))
+        // Oblik adrese se ne proverava (postoje i kratki nazivi ulica, brojevi sa slovom, "bb"...)
+        if (fulfillment == FulfillmentType.Courier && string.IsNullOrEmpty(trimmed))
             throw new InvalidOperationException("Za dostavu kurirom unesite adresu.");
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }

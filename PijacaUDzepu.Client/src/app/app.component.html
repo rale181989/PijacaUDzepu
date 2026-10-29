@@ -27,12 +27,6 @@
           <ion-label>{{ 'nav.home' | t }}</ion-label>
         </ion-item>
 
-        <ion-item routerLink="/cart" routerDirection="root" (click)="closeMenu()">
-          <ion-icon name="cart-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.cart' | t }}</ion-label>
-          <ion-badge *ngIf="cartCount > 0" color="danger" slot="end">{{ cartCount }}</ion-badge>
-        </ion-item>
-
         <ion-item *ngIf="!authService.isLoggedIn && guestOrders.codes.length > 0"
                   routerLink="/prati" routerDirection="root" (click)="closeMenu()">
           <ion-icon name="receipt-outline" slot="start"></ion-icon>

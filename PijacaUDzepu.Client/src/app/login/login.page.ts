@@ -6,6 +6,9 @@ import { TranslateService } from '../services/translate.service';
 import { LoginDto } from '../models/user.model';
 import { environment } from '../../environments/environment';
 import { DEFAULT_API_SERVER, getApiServer, normalizeApiServer, setApiServer } from '../services/api-server';
+import { describeConnectionError, isConnectionError } from '../services/connection-error';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +23,7 @@ export class LoginPage {
   serverSelectable = environment.serverSelectable;
   apiServer = getApiServer();
   isDefaultServer = this.apiServer === DEFAULT_API_SERVER;
+  appVersion = '';
 
   constructor(
     private authService: AuthService,
@@ -28,6 +32,15 @@ export class LoginPage {
     private alertController: AlertController,
     private ts: TranslateService
   ) {}
+
+  // Verzija instalirane aplikacije, da se vidi da li je novi APK zaista instaliran
+  async ionViewWillEnter() {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const info = await App.getInfo();
+      this.appVersion = `${info.version} (${info.build})`;
+    } catch {}
+  }
 
   async chooseServer() {
     const alert = await this.alertController.create({
@@ -72,9 +85,12 @@ export class LoginPage {
       },
       error: async (err) => {
         this.loading = false;
+        const message = isConnectionError(err)
+          ? `${this.ts.t('home.noConnection')}: ${describeConnectionError(err)}`
+          : err.error?.message || this.ts.t('login.error');
         const toast = await this.toastController.create({
-          message: err.error?.message || this.ts.t('login.error'),
-          duration: 3000,
+          message,
+          duration: 6000,
           color: 'danger'
         });
         await toast.present();

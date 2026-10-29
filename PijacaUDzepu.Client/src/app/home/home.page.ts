@@ -11,6 +11,7 @@ import { Stall } from '../models/stall.model';
 import { ToastController } from '@ionic/angular/lazy';
 import { environment } from '../../environments/environment';
 import { TranslateService } from '../services/translate.service';
+import { describeConnectionError } from '../services/connection-error';
 
 @Component({
   selector: 'app-home',
@@ -48,6 +49,7 @@ export class HomePage implements OnInit {
   apiUrl = environment.apiUrl.replace('/api', '');
   selectedQty: Record<number, number> = {};
   vendorPhoneCache: Record<number, string[]> = {};
+  connectionError: string | null = null;
 
   showModal: 'market' | 'vendor' | 'stall' | 'category' | 'unit' | 'sort' | null = null;
   filterSearch = { market: '', vendor: '', stall: '', category: '' };
@@ -158,9 +160,13 @@ export class HomePage implements OnInit {
         this.products = [...this.products, ...result.items];
         this.hasMore = result.hasMore;
         this.loading = false;
+        this.connectionError = null;
         this.rebuildPhoneCache();
       },
-      error: () => this.loading = false
+      error: err => {
+        this.loading = false;
+        this.connectionError = describeConnectionError(err);
+      }
     });
   }
 
@@ -326,6 +332,12 @@ export class HomePage implements OnInit {
 
   getUnitLabel(unit: string): string {
     return this.ts.t('unit.' + unit) || unit;
+  }
+
+  // Neispravna ili nedostupna slika se menja zamenskom, umesto da se prikaže tekst
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (!img.src.endsWith('assets/placeholder.svg')) img.src = 'assets/placeholder.svg';
   }
 
   getImageUrl(imageUrl?: string): string {

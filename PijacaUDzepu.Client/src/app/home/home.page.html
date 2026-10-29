@@ -3,6 +3,9 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
+    <ion-buttons slot="end">
+      <app-cart-button></app-cart-button>
+    </ion-buttons>
     <ion-title>{{ 'app.title' | t }}</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -256,7 +259,14 @@
 
   <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
 
-  <div *ngIf="!loading && products.length === 0" class="empty-state">
+  <div *ngIf="!loading && connectionError" class="empty-state connection-error">
+    <ion-icon name="cloud-offline-outline" size="large" color="danger"></ion-icon>
+    <p><strong>{{ 'home.noConnection' | t }}</strong></p>
+    <p class="error-detail">{{ connectionError }}</p>
+    <ion-button fill="outline" (click)="loadProducts()">{{ 'home.retry' | t }}</ion-button>
+  </div>
+
+  <div *ngIf="!loading && !connectionError && products.length === 0" class="empty-state">
     <ion-icon name="leaf-outline" size="large"></ion-icon>
     <p>{{ 'home.noProducts' | t }}</p>
   </div>
@@ -265,7 +275,10 @@
     <ion-row>
       <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of products">
         <ion-card class="product-card">
-          <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img" />
+          <div class="product-img-wrap">
+            <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img"
+                 loading="lazy" (error)="onImageError($event)" />
+          </div>
           <ion-card-content>
             <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
             <div class="product-name-row">

@@ -96,7 +96,8 @@ export class CartPage implements OnInit {
   }
 
   get canCourier(): boolean {
-    return this.canReserve && this.address.trim().length >= 5;
+    // Adresa mora samo da bude upisana; oblik se ne proverava
+    return this.canReserve && this.address.trim().length > 0;
   }
 
   async submitOrder(fulfillment: FulfillmentType) {
