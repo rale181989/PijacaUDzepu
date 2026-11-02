@@ -281,6 +281,7 @@ public class OrderService : IOrderService
             .ToList();
 
         var orders = new List<Order>();
+        var checkoutId = Guid.NewGuid();
 
         foreach (var group in groupedByVendor)
         {
@@ -288,6 +289,7 @@ public class OrderService : IOrderService
             {
                 VendorId = group.Key,
                 Vendor = products.First(p => p.VendorId == group.Key).Vendor,
+                CheckoutId = checkoutId,
                 Note = note,
                 Status = OrderStatus.Pending,
                 Fulfillment = fulfillment,
@@ -633,6 +635,70 @@ public class OrderService : IOrderService
         await _pushService.CancelAlarm(new[] { courierId }, CourierAlarmTag(order.Id));
     }
 
+    // "Prihvati sve": sve slobodne porudžbine iste korpe (isti kupac i adresa, više tezgi).
+    // Svaka se prihvata posebno, pa ako je neku u međuvremenu uzeo drugi kurir, ostale se ipak prihvataju.
+    public async Task<List<OrderDto>> AcceptCourierCheckout(Guid checkoutId, int courierId)
+    {
+        var ids = await _context.Orders
+            .Where(o => o.CheckoutId == checkoutId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && ActiveStatuses.Contains(o.Status))
+            .Where(o => !_context.CourierDeclines.Any(d => d.OrderId == o.Id && d.CourierId == courierId))
+            .Select(o => o.Id)
+            .ToListAsync();
+        if (ids.Count == 0)
+            throw new InvalidOperationException("Ove porudžbine su već preuzete ili više nisu dostupne.");
+
+        var accepted = new List<OrderDto>();
+        foreach (var id in ids)
+        {
+            try { accepted.Add(await AcceptCourierOrder(id, courierId)); }
+            catch (InvalidOperationException) { }
+        }
+        if (accepted.Count == 0)
+            throw new InvalidOperationException("Ove porudžbine su već preuzete ili više nisu dostupne.");
+        return accepted;
+    }
+
+    // Dnevni obračun kurira za lokalni datum: porudžbine isporučene tog dana
+    public async Task<CourierSettlementDto> GetCourierSettlement(int courierId, DateOnly date)
+    {
+        var fromUtc = LocalTime.ToUtc(date.ToDateTime(TimeOnly.MinValue));
+        var toUtc = LocalTime.ToUtc(date.AddDays(1).ToDateTime(TimeOnly.MinValue));
+
+        var delivered = await _context.Orders
+            .Where(o => o.CourierId == courierId && o.Status == OrderStatus.Completed && o.DeliveredAt >= fromUtc && o.DeliveredAt < toUtc)
+            .OrderBy(o => o.DeliveredAt)
+            .Select(o => new
+            {
+                o.Id, o.VendorId, VendorName = o.Vendor.Name, MarketName = o.Vendor.Market.Name,
+                o.DeliveryAddress, o.TotalAmount, o.DeliveryFee, DeliveredAt = o.DeliveredAt!.Value
+            })
+            .ToListAsync();
+
+        return new CourierSettlementDto
+        {
+            Date = date,
+            Delivered = delivered.Count,
+            InProgress = await _context.Orders.CountAsync(o => o.CourierId == courierId && ActiveStatuses.Contains(o.Status)),
+            Collected = delivered.Sum(d => d.TotalAmount + d.DeliveryFee),
+            OwedToVendors = delivered.Sum(d => d.TotalAmount),
+            Earned = delivered.Sum(d => d.DeliveryFee),
+            Vendors = delivered
+                .GroupBy(d => new { d.VendorId, d.VendorName, d.MarketName })
+                .Select(g => new VendorSettlementDto
+                {
+                    VendorId = g.Key.VendorId, VendorName = g.Key.VendorName, MarketName = g.Key.MarketName,
+                    Orders = g.Count(), Amount = g.Sum(d => d.TotalAmount)
+                })
+                .OrderByDescending(v => v.Amount)
+                .ToList(),
+            Deliveries = delivered.Select(d => new SettlementDeliveryDto
+            {
+                OrderId = d.Id, DeliveredAt = d.DeliveredAt, VendorName = d.VendorName,
+                DeliveryAddress = d.DeliveryAddress, Goods = d.TotalAmount, Fee = d.DeliveryFee
+            }).ToList()
+        };
+    }
+
     public async Task<OrderDto> MarkPickedUp(int orderId, int courierId)
     {
         var order = await LoadCourierOrder(orderId, courierId);
@@ -835,6 +901,8 @@ public class OrderService : IOrderService
         ContactPhone = o.ContactPhone,
         DeliveryAddress = o.DeliveryAddress,
         MarketName = o.Vendor.Market?.Name,
+        MarketAddress = o.Vendor.Market?.Address,
+        CheckoutId = o.CheckoutId,
         StallLabel = o.Vendor.Stall?.Label,
         VendorPhones = o.Vendor.Phones,
         CourierId = o.CourierId,

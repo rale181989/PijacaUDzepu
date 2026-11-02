@@ -126,6 +126,9 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - Accepting is a single conditional `ExecuteUpdateAsync` (`CourierId IS NULL` and the order still active), so only the first courier wins and the rest get 409. Accepting, rejecting, or cancelling sends `CourierOrderUnavailable`, and the vendor and customer get `CourierAssigned`.
   - Before accepting, couriers see the pickup point and delivery address but not the customer's name or phone (`MapToCourierPreview`).
   - Every order stores `ContactPhone` and `DeliveryAddress`, for guests and logged-in customers alike.
+  - **Multi-stall checkouts:** every order of one cart shares `Order.CheckoutId`, set in `BuildOrders`. The courier's "Nove" tab groups available orders by it, and "Prihvati sve" calls `POST /api/couriers/checkouts/{id}/accept`, which accepts each order separately, so one taken by another courier doesn't block the rest. "Moje" shows a route (stalls, then the customer) with a Google Maps directions link built from `OrderDto.MarketAddress` waypoints.
+  - **Daily settlement:** `GET /api/couriers/settlement?date=` (the "Obračun" tab) covers orders delivered that local day: collected (goods + fee), owed to vendors (goods, per vendor) and earned (fees).
+  - Gotcha: the courier page's `availableGroups`/`routes` getters are memoized. Returning new arrays on every change-detection pass made `*ngFor` recreate the Ionic cards in a loop and froze the page.
   - Only couriers with `CourierProfile.IsOnShift` get new-order notifications and can accept orders.
   - Delivery flow: the courier sets Confirmed/ReadyForPickup → `InDelivery` (picked-up), then `InDelivery` → `Completed` (delivered). A vendor cannot complete an order that has a courier.
   - `OrderStatus.InDelivery` was added at the end of the enum, because statuses are stored as integers.

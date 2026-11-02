@@ -287,6 +287,9 @@ namespace PijacaUDzepu.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<Guid?>("CheckoutId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ContactPhone")
                         .HasColumnType("text");
 
@@ -350,6 +353,8 @@ namespace PijacaUDzepu.API.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CheckoutId");
 
                     b.HasIndex("CourierId");
 

@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { Observable, Subscription } from 'rxjs';
-import { CourierService } from '../services/courier.service';
+import { CourierService, CourierSettlement } from '../services/courier.service';
 import { NotificationService } from '../services/notification.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, OrderStatus } from '../models/order.model';
@@ -14,7 +14,10 @@ import { PagerComponent } from '../shared/pager/pager.component';
   standalone: false,
 })
 export class CourierOrdersPage implements OnInit, OnDestroy {
-  tab: 'available' | 'mine' = 'available';
+  tab: 'available' | 'mine' | 'settlement' = 'available';
+  settlement: CourierSettlement | null = null;
+  settlementDate = '';
+  acceptingGroup: string | null = null;
   available: Order[] = [];
   mine: Order[] = [];
   loading = false;
@@ -153,6 +156,82 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
         }
         await this.toast(err.error?.message || 'Greška pri prihvatanju', 'warning');
       }
+    });
+  }
+
+  // Slobodne porudžbine grupisane po korpi: ista adresa, više tezgi -> "Prihvati sve"
+  // Getteri vraćaju zapamćen rezultat dok se podaci ne promene: novi niz pri svakoj proveri promena bi naterao
+  // *ngFor da stalno ponovo pravi Ionic kartice, što pokreće novu proveru - stranica bi se zaglavila
+  private groupsCache?: { source: Order[]; value: { key: string; orders: Order[] }[] };
+  private routesCache?: { key: string; value: { key: string; orders: Order[]; address?: string; mapsUrl: string }[] };
+
+  get availableGroups(): { key: string; orders: Order[] }[] {
+    if (this.groupsCache?.source === this.available) return this.groupsCache.value;
+    const groups: { key: string; orders: Order[] }[] = [];
+    for (const order of this.available) {
+      const key = order.checkoutId ?? `order-${order.id}`;
+      const group = groups.find(g => g.key === key);
+      if (group) group.orders.push(order); else groups.push({ key, orders: [order] });
+    }
+    this.groupsCache = { source: this.available, value: groups };
+    return groups;
+  }
+
+  acceptGroup(group: { key: string; orders: Order[] }) {
+    this.acceptingGroup = group.key;
+    this.courierService.acceptCheckout(group.key).subscribe({
+      next: async accepted => {
+        this.acceptingGroup = null;
+        const ids = accepted.map(o => o.id);
+        this.available = this.available.filter(o => !ids.includes(o.id));
+        this.mine = [...accepted, ...this.mine.filter(o => !ids.includes(o.id))];
+        this.tab = 'mine';
+        this.notificationService.loadCourierAvailableCount();
+        await this.toast(`Prihvaćeno: ${ids.map(id => '#' + id).join(', ')}`, 'success');
+      },
+      error: async err => {
+        this.acceptingGroup = null;
+        this.load();
+        await this.toast(err.error?.message || 'Greška pri prihvatanju', 'warning');
+      }
+    });
+  }
+
+  // Aktivne dostave iste korpe (više tezgi) - ruta: tezge redom, pa kupac
+  get routes(): { key: string; orders: Order[]; address?: string; mapsUrl: string }[] {
+    const cacheKey = this.mine.map(o => `${o.id}:${o.status}`).join(',');
+    if (this.routesCache?.key === cacheKey) return this.routesCache.value;
+    const groups: { key: string; orders: Order[] }[] = [];
+    for (const order of this.activeMine) {
+      if (!order.checkoutId) continue;
+      const group = groups.find(g => g.key === order.checkoutId);
+      if (group) group.orders.push(order); else groups.push({ key: order.checkoutId, orders: [order] });
+    }
+    const routes = groups.filter(g => g.orders.length > 1).map(g => {
+      const address = g.orders[0].deliveryAddress ?? undefined;
+      const stops = [...new Set(g.orders.map(o => o.marketAddress || `${o.marketName}, Novi Sad`))];
+      const url = 'https://www.google.com/maps/dir/?api=1&travelmode=driving'
+        + `&destination=${encodeURIComponent(address ?? '')}`
+        + `&waypoints=${encodeURIComponent(stops.join('|'))}`;
+      return { ...g, address, mapsUrl: url };
+    });
+    this.routesCache = { key: cacheKey, value: routes };
+    return routes;
+  }
+
+  trackByKey(_: number, item: { key: string }) {
+    return item.key;
+  }
+
+  selectTab(tab: 'available' | 'mine' | 'settlement') {
+    this.tab = tab;
+    if (tab === 'settlement') this.loadSettlement();
+  }
+
+  loadSettlement() {
+    this.courierService.getSettlement(this.settlementDate || undefined).subscribe({
+      next: s => { this.settlement = s; this.settlementDate = s.date; },
+      error: async () => this.toast('Obračun nije učitan', 'danger')
     });
   }
 

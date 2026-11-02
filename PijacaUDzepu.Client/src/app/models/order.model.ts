@@ -29,6 +29,9 @@ export interface Order {
   pickedUpAt?: string;
   deliveredAt?: string;
   items: OrderItem[];
+  // Sve porudžbine jedne korpe imaju isti checkoutId (kurir ih vozi zajedno)
+  checkoutId?: string | null;
+  marketAddress?: string | null;
   // Ocena kupca posle preuzimanja
   rating?: OrderRating | null;
 }

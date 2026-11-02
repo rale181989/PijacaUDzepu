@@ -32,6 +32,8 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Smena; zvono za nove dostave dok ih ne prihvati ili odbije
 - Prihvati (prvi dobija dostavu) ili odbij (sklanja se samo njemu)
 - Preuzeo sam robu → isporučeno; završene dostave po stranama
+- Porudžbina od više tezgi iste korpe: grupisano, „Prihvati sve”, ruta sa svim tezgama u Google mapama
+- Dnevni obračun: naplaćeno od kupaca, koliko se predaje kom prodavcu, zarada
 
 **Administrator**
 - Pijace, tezge, prodavci (pozivnice e-mailom), korisnici (pretraga, po stranama), kuriri

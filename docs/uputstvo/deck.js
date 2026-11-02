@@ -199,7 +199,7 @@ async function build() {
   const roles = [
     ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko Eko kurira. Nalog nije obavezan.', 'Strane 3–12'],
     ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 13–20'],
-    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 21–24']
+    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 21–25']
   ];
   for (const [i, [ic, col, h, d, pages]] of roles.entries()) {
     const x = 0.6 + i * 4.1;
@@ -451,6 +451,17 @@ async function build() {
   ]);
   s.phone('k-mine', RIGHT_X, PHONE_Y, PHONE_H, 'Prihvaćena dostava sa dugmetom Preuzeo sam robu',
     [[1, 0.93, 0.1], [2, 0.82, 0.45], [3, 0.93, 0.723]]);
+
+  // Više tezgi, ruta, obračun
+  s = new S('Sadrzaj - dva ekrana', 'Kuriri', 'kurir');
+  s.title('Više tezgi i obračun');
+  s.steps([
+    { h: 'Ista dostava', d: 'Kupac je poručio od više prodavaca: dostave su grupisane. „Prihvati sve” uzima celu korpu odjednom.' },
+    { h: 'Ruta', d: 'U kartici „Moje”: tezge redom pa kupac, i dugme „Otvori rutu u mapama” sa svim usputnim tačkama.' },
+    { h: 'Obračun', d: 'Kartica „Obračun”: za izabrani dan koliko ste naplatili, koliko predajete kom prodavcu i vaša zarada.' }
+  ], 0.6, 1.75, 5.2);
+  s.phone('k-group', LEFT_X, PHONE_Y, PHONE_H, 'Grupisane dostave iste korpe sa dugmetom Prihvati sve', [[1, -0.11, 0.21]]);
+  s.phone('k-settlement', RIGHT_X, PHONE_Y, PHONE_H, 'Dnevni obračun kurira', [[3, 1.11, 0.33]]);
 
   // 21. Profil kurira
   s = new S('Sadrzaj - jedan ekran', 'Kuriri', 'kurir');

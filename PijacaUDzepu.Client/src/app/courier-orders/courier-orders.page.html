@@ -6,12 +6,15 @@
     <ion-title>Dostave</ion-title>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment [value]="tab" (ionChange)="tab = $any($event).detail.value">
+    <ion-segment [value]="tab" (ionChange)="selectTab($any($event).detail.value)">
       <ion-segment-button value="available">
         <ion-label>Nove ({{ available.length }})</ion-label>
       </ion-segment-button>
       <ion-segment-button value="mine">
         <ion-label>Moje ({{ activeMine.length }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="settlement">
+        <ion-label>Obračun</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -38,7 +41,19 @@
       <p>Trenutno nema novih porudžbina. Bićete obavešteni čim stigne nova.</p>
     </div>
 
-    <ion-card *ngFor="let order of available" class="order-card">
+    <ng-container *ngFor="let group of availableGroups; trackBy: trackByKey">
+    <div *ngIf="group.orders.length > 1" class="group-banner">
+      <ion-icon name="git-merge-outline"></ion-icon>
+      <div>
+        <strong>Ista dostava · {{ group.orders.length }} tezge</strong>
+        <p>{{ group.orders[0].deliveryAddress || 'Adresa nije uneta' }} · usluga ukupno {{ group.orders.length * group.orders[0].deliveryFee | number:'1.0-0' }} din</p>
+      </div>
+      <ion-button size="small" color="success" [disabled]="acceptingGroup !== null || !isOnShift" (click)="acceptGroup(group)">
+        <ion-spinner *ngIf="acceptingGroup === group.key" name="crescent" slot="start"></ion-spinner>
+        Prihvati sve
+      </ion-button>
+    </div>
+    <ion-card *ngFor="let order of group.orders" class="order-card" [class.grouped]="group.orders.length > 1">
       <ion-card-header>
         <div class="card-top">
           <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM. HH:mm' }}</ion-card-subtitle>
@@ -78,6 +93,7 @@
         </div>
       </ion-card-content>
     </ion-card>
+    </ng-container>
   </ng-container>
 
   <!-- Porudžbine koje je ovaj kurir prihvatio -->
@@ -85,6 +101,18 @@
     <div *ngIf="mine.length === 0 && finishedTotal === 0" class="empty-state">
       <ion-icon name="receipt-outline" size="large"></ion-icon>
       <p>Još niste prihvatili nijednu porudžbinu.</p>
+    </div>
+
+    <!-- Ruta kada je jedna korpa raspoređena na više tezgi -->
+    <div *ngFor="let route of routes; trackBy: trackByKey" class="route-card">
+      <strong><ion-icon name="navigate-outline"></ion-icon> Ruta: {{ route.orders.length }} tezge → kupac</strong>
+      <ol>
+        <li *ngFor="let o of route.orders">#{{ o.id }} {{ o.vendorName }} <span class="muted">– {{ o.marketName }}<span *ngIf="o.stallLabel">, tezga {{ o.stallLabel }}</span></span></li>
+        <li><strong>Kupac:</strong> {{ route.address || 'Adresa nije uneta' }}</li>
+      </ol>
+      <ion-button size="small" fill="outline" [href]="route.mapsUrl" target="_blank">
+        <ion-icon name="map-outline" slot="start"></ion-icon> Otvori rutu u mapama
+      </ion-button>
     </div>
 
     <ion-card *ngFor="let order of activeMine.concat(finishedMine)" class="order-card" [class.finished]="finishedMine.includes(order)">
@@ -150,5 +178,34 @@
     <app-pager [page]="finishedPage" [pageSize]="finishedPageSize" [totalCount]="finishedTotal"
                [storageKey]="pageSizeKey" (pageChange)="goToFinishedPage($event)" (pageSizeChange)="setFinishedPageSize($event)">
     </app-pager>
+  </ng-container>
+
+  <!-- Dnevni obračun: naplaćeno od kupaca, dugovanje prodavcima, zarada -->
+  <ng-container *ngIf="tab === 'settlement'">
+    <div class="settlement">
+      <label class="date-pick">Dan <input type="date" [(ngModel)]="settlementDate" (change)="loadSettlement()" /></label>
+      <ng-container *ngIf="settlement">
+        <div class="stats">
+          <div class="stat"><span class="value">{{ settlement.delivered }}</span><span class="label">isporučeno</span></div>
+          <div class="stat"><span class="value">{{ settlement.collected | number:'1.0-0' }}</span><span class="label">naplaćeno od kupaca (din)</span></div>
+          <div class="stat warn"><span class="value">{{ settlement.owedToVendors | number:'1.0-0' }}</span><span class="label">predati prodavcima (din)</span></div>
+          <div class="stat ok"><span class="value">{{ settlement.earned | number:'1.0-0' }}</span><span class="label">moja zarada (din)</span></div>
+        </div>
+        <p *ngIf="settlement.inProgress > 0" class="muted">Još {{ settlement.inProgress }} dostava u toku nije uračunato.</p>
+
+        <h3>Predati prodavcima</h3>
+        <p *ngIf="settlement.vendors.length === 0" class="muted">Nema isporuka tog dana.</p>
+        <div *ngFor="let v of settlement.vendors" class="row">
+          <span>{{ v.vendorName }} <span class="muted">· {{ v.marketName }} · {{ v.orders }} porudž.</span></span>
+          <strong>{{ v.amount | number:'1.0-0' }} din</strong>
+        </div>
+
+        <h3 *ngIf="settlement.deliveries.length > 0">Isporuke</h3>
+        <div *ngFor="let d of settlement.deliveries" class="row">
+          <span>#{{ d.orderId }} {{ d.deliveredAt | date:'HH:mm' }} · {{ d.vendorName }} <span class="muted">→ {{ d.deliveryAddress }}</span></span>
+          <strong>{{ d.goods + d.fee | number:'1.0-0' }}</strong>
+        </div>
+      </ng-container>
+    </div>
   </ng-container>
 </ion-content>

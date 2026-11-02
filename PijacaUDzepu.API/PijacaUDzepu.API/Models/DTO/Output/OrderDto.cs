@@ -25,6 +25,8 @@ public class OrderDto
 
     // Mesto preuzimanja robe za kurira
     public string? MarketName { get; set; }
+    public string? MarketAddress { get; set; }
+    public Guid? CheckoutId { get; set; }
     public string? StallLabel { get; set; }
     public List<string> VendorPhones { get; set; } = new();
 

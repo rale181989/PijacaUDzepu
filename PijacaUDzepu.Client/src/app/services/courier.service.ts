@@ -5,6 +5,17 @@ import { Order } from '../models/order.model';
 import { PagedResult } from '../models/paged-result.model';
 import { CourierProfile, CourierProfileInput } from '../models/courier.model';
 
+export interface CourierSettlement {
+  date: string;
+  delivered: number;
+  inProgress: number;
+  collected: number;
+  owedToVendors: number;
+  earned: number;
+  vendors: { vendorId: number; vendorName: string; marketName?: string; orders: number; amount: number }[];
+  deliveries: { orderId: number; deliveredAt: string; vendorName: string; deliveryAddress?: string; goods: number; fee: number }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CourierService {
   private baseUrl = environment.apiUrl + '/couriers';
@@ -43,6 +54,18 @@ export class CourierService {
 
   acceptOrder(id: number) {
     return this.http.post<Order>(`${this.baseUrl}/orders/${id}/accept`, {});
+  }
+
+  // "Prihvati sve": sve slobodne porudžbine iste korpe
+  acceptCheckout(checkoutId: string) {
+    return this.http.post<Order[]>(`${this.baseUrl}/checkouts/${checkoutId}/accept`, {});
+  }
+
+  // Dnevni obračun (yyyy-MM-dd; bez datuma = danas)
+  getSettlement(date?: string) {
+    let params = new HttpParams();
+    if (date) params = params.set('date', date);
+    return this.http.get<CourierSettlement>(`${this.baseUrl}/settlement`, { params });
   }
 
   // Porudžbina nestaje samo ovom kuriru; ostali kuriri je i dalje vide

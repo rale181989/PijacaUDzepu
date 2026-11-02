@@ -76,6 +76,28 @@ public class CouriersController : BaseApiController
         }
     }
 
+    [HttpPost("checkouts/{checkoutId}/accept")]
+    public async Task<IActionResult> AcceptCheckout(Guid checkoutId)
+    {
+        try
+        {
+            return Ok(await _orderService.AcceptCourierCheckout(checkoutId, User.GetUserId()));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // Obračun za dan (?date=2026-11-02); podrazumevano danas
+    [HttpGet("settlement")]
+    public async Task<IActionResult> GetSettlement([FromQuery] DateOnly? date) =>
+        Ok(await _orderService.GetCourierSettlement(User.GetUserId(), date ?? Helpers.LocalTime.Today));
+
     [HttpPost("orders/{id}/decline")]
     public async Task<IActionResult> DeclineOrder(int id)
     {

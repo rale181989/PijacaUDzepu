@@ -153,6 +153,7 @@ public class DataContext : IdentityDbContext<User, Role, int,
 
         builder.Entity<Order>(entity =>
         {
+            entity.HasIndex(o => o.CheckoutId);
             entity.Property(o => o.TotalAmount).HasPrecision(10, 2);
             entity.Property(o => o.DeliveryFee).HasPrecision(10, 2);
             entity.Ignore(o => o.IsGuestOrder);

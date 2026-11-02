@@ -20,6 +20,8 @@ public class Order
 
     // Tajni kod iz linka za praćenje (/prati/{kod}); isti za sve porudžbine jedne gostujuće kupovine
     public string? TrackingCode { get; set; }
+    // Sve porudžbine jedne korpe (po jedna za svakog prodavca) imaju isti CheckoutId - kurir ih vozi zajedno
+    public Guid? CheckoutId { get; set; }
 
     // Kontakt i adresa za dostavu, i za goste i za prijavljene kupce
     public string? ContactPhone { get; set; }
