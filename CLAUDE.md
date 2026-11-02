@@ -110,7 +110,11 @@ The environments differ only in `apiUrl`:
 - **Push notifications:** `PushService` sends through Firebase Cloud Messaging to `DeviceTokens`, which the mobile app registers via `POST /api/devices`. Push is enabled only when `FIREBASE_CREDENTIALS_JSON` or `FIREBASE_CREDENTIALS_PATH` is set; otherwise it is silently skipped. The Android app also needs `android/app/google-services.json`. The client's `PushService` creates the `orders` channel, which must match the server's `AndroidChannelId`.
 - **Sounds:** `SoundService` generates notification sounds with Web Audio. It unlocks the `AudioContext` on the user's first tap, because browsers block audio before any user interaction.
 - **Vendor onboarding:** a SuperAdmin creates vendors and sends email invitations (`EmailService`, SMTP via Brevo). The invited user completes registration through `AcceptInvitation`, which the client handles on the `setup-account` page.
-- **Images** are resized with SkiaSharp and stored under `wwwroot/Resources/Images`. The DB stores the relative `/Resources/...` path, while seed data uses absolute Unsplash URLs. The client's `getImageUrl` handles both forms.
+- **Images** are resized to JPEG with `Helpers/ImageResizer` and saved through `IImageStorage`:
+  - `R2ImageStorage` (Cloudflare R2 via AWSSDK.S3) is used when all `R2__*` env vars are set; the DB stores the absolute public URL. Render's disk is wiped on deploy, so production needs R2.
+  - Otherwise `LocalImageStorage` writes to `wwwroot/Resources/Images` and the DB stores the relative `/Resources/...` path.
+  - Order matters for consistency: save the new image, save the DB, then delete the old one (delete the new one if the DB save fails). `Delete` ignores URLs the storage didn't create, such as the seed data's Unsplash URLs.
+  - The client's `getImageUrl` handles both relative and absolute URLs.
 
 ## Seed data
 

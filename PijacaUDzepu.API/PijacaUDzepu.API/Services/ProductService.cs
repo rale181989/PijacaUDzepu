@@ -1,22 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using PijacaUDzepu.API.DataAccess;
+using PijacaUDzepu.API.Helpers;
 using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Services.Interfaces;
-using SkiaSharp;
 
 namespace PijacaUDzepu.API.Services;
 
 public class ProductService : IProductService
 {
     private readonly DataContext _context;
-    private readonly IWebHostEnvironment _env;
+    private readonly IImageStorage _images;
 
-    public ProductService(DataContext context, IWebHostEnvironment env)
+    public ProductService(DataContext context, IImageStorage images)
     {
         _context = context;
-        _env = env;
+        _images = images;
     }
 
     public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, Models.Enums.ProductUnit? unit = null, Models.Enums.ProductSort sort = Models.Enums.ProductSort.NameAsc, int skip = 0, int take = 20)
@@ -149,6 +149,8 @@ public class ProductService : IProductService
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+
+        await _images.Delete(product.ImageUrl);
     }
 
     public async Task<string> UpdateProductImage(int productId, int vendorId, IFormFile file)
@@ -157,56 +159,25 @@ public class ProductService : IProductService
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
             ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
 
-        var fileName = $"product_{productId}_{Guid.NewGuid()}.jpg";
-        var filePath = Path.Combine(_env.WebRootPath, "Resources", "Images", fileName);
+        var jpeg = await ImageResizer.ToJpeg(file);
+        var newUrl = await _images.Save(jpeg, $"products/product_{productId}_{Guid.NewGuid()}.jpg", ImageResizer.ContentType);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-
-        using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream);
-        memoryStream.Position = 0;
-
-        using var original = SKBitmap.Decode(memoryStream);
-        if (original == null)
-            throw new InvalidOperationException("Neispravan format slike.");
-
-        const int maxWidth = 800;
-        const int maxHeight = 600;
-
-        var bitmap = original;
-        if (original.Width > maxWidth || original.Height > maxHeight)
+        // Stara slika se briše tek kad baza pokazuje na novu; ako čuvanje padne, briše se nova
+        var oldUrl = product.ImageUrl;
+        product.ImageUrl = newUrl;
+        product.UpdatedAt = DateTime.UtcNow;
+        try
         {
-            var ratioX = (float)maxWidth / original.Width;
-            var ratioY = (float)maxHeight / original.Height;
-            var ratio = Math.Min(ratioX, ratioY);
-            var newWidth = (int)(original.Width * ratio);
-            var newHeight = (int)(original.Height * ratio);
-            bitmap = original.Resize(new SKImageInfo(newWidth, newHeight), SKSamplingOptions.Default);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            await _images.Delete(newUrl);
+            throw;
         }
 
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 80);
-        await using var fileStream = new FileStream(filePath, FileMode.Create);
-        data.SaveTo(fileStream);
-
-        if (bitmap != original) bitmap.Dispose();
-
-        DeleteOldImage(product.ImageUrl);
-
-        product.ImageUrl = $"/Resources/Images/{fileName}";
-        product.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return product.ImageUrl;
-    }
-
-    private void DeleteOldImage(string? imageUrl)
-    {
-        if (string.IsNullOrEmpty(imageUrl) || imageUrl.StartsWith("http"))
-            return;
-
-        var oldPath = Path.Combine(_env.WebRootPath, imageUrl.TrimStart('/'));
-        if (File.Exists(oldPath)) File.Delete(oldPath);
+        await _images.Delete(oldUrl);
+        return newUrl;
     }
 
     // Cena na gram se preračunava u cenu po kg da bi se pri sortiranju poredila sa proizvodima na kg

@@ -130,6 +130,10 @@ public class ProductsController : BaseApiController
         {
             return NotFound(new { message = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     private async Task<int?> GetCurrentVendorId()

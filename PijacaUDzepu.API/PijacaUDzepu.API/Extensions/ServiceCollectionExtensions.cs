@@ -38,6 +38,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICourierService, CourierService>();
         services.AddScoped<IPushService, PushService>();
         services.AddScoped<ISupportService, SupportService>();
+        // Slike u Cloudflare R2 kad su podešene R2__* env varijable, inače na lokalnom disku
+        if (R2ImageStorage.IsConfigured(config))
+            services.AddSingleton<IImageStorage, R2ImageStorage>();
+        else
+            services.AddSingleton<IImageStorage, LocalImageStorage>();
         // Enumi kao stringovi i u SignalR porukama, kao u REST API-ju (inače klijent dobija brojeve)
         services.AddSignalR().AddJsonProtocol(options =>
             options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));

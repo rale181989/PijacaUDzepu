@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PijacaUDzepu.API.DataAccess;
+using PijacaUDzepu.API.Helpers;
 using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
@@ -10,12 +11,12 @@ namespace PijacaUDzepu.API.Services;
 public class VendorService : IVendorService
 {
     private readonly DataContext _context;
-    private readonly IWebHostEnvironment _env;
+    private readonly IImageStorage _images;
 
-    public VendorService(DataContext context, IWebHostEnvironment env)
+    public VendorService(DataContext context, IImageStorage images)
     {
         _context = context;
-        _env = env;
+        _images = images;
     }
 
     public async Task<List<VendorDto>> GetAllVendors(bool includeInactive = false)
@@ -118,25 +119,25 @@ public class VendorService : IVendorService
         var vendor = await _context.Vendors.FindAsync(vendorId)
             ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
 
-        var fileName = $"vendor_{vendorId}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var filePath = Path.Combine(_env.WebRootPath, "Resources", "Images", fileName);
+        var jpeg = await ImageResizer.ToJpeg(file);
+        var newUrl = await _images.Save(jpeg, $"vendors/vendor_{vendorId}_{Guid.NewGuid()}.jpg", ImageResizer.ContentType);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-
-        await using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream);
-
-        if (!string.IsNullOrEmpty(vendor.ImageUrl))
+        // Stara slika se briše tek kad baza pokazuje na novu; ako čuvanje padne, briše se nova
+        var oldUrl = vendor.ImageUrl;
+        vendor.ImageUrl = newUrl;
+        vendor.UpdatedAt = DateTime.UtcNow;
+        try
         {
-            var oldPath = Path.Combine(_env.WebRootPath, vendor.ImageUrl.TrimStart('/'));
-            if (File.Exists(oldPath)) File.Delete(oldPath);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            await _images.Delete(newUrl);
+            throw;
         }
 
-        vendor.ImageUrl = $"/Resources/Images/{fileName}";
-        vendor.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return vendor.ImageUrl;
+        await _images.Delete(oldUrl);
+        return newUrl;
     }
 
     private static List<string> NormalizePhones(List<string>? phones) =>

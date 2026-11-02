@@ -114,3 +114,44 @@ ali Android 9+ blokira `http://`. Opcije:
 2. HTTPS tunel do računara (Cloudflare Tunnel / ngrok) – bez izmena u Androidu.
 
 Ako se izabere opcija 2, iz `PijacaUDzepu.Client/capacitor.config.ts` ukloniti `cleartext` i `allowMixedContent`.
+
+---
+
+## 7. Slike u Cloudflare R2 – VAŽNO pre produkcije
+
+- [ ] Napravljen R2 bucket sa javnim pristupom
+- [ ] Napravljen API token
+- [ ] Env varijable dodate na Render
+
+**Bez ovoga** slike koje prodavci ubace čuvaju se na disku Render servera, a taj disk se briše
+pri svakom deploy-u i restartu – slike nestaju, a u bazi ostaju linkovi koji ne rade.
+Lokalno (bez R2 varijabli) slike se i dalje čuvaju u `wwwroot/Resources/Images`.
+
+### Uputstvo
+1. <https://dash.cloudflare.com> → **R2 Object Storage** (besplatno do 10 GB, preuzimanje uvek besplatno;
+   traži se kartica, ali se ne naplaćuje u okviru besplatnog limita).
+2. **Create bucket**, npr. `pijacaudzepu-images`, lokacija Automatic (ili Eastern Europe).
+3. U bucket-u **Settings → Public access**:
+   - brzo rešenje: uključi **R2.dev subdomain** – dobijaš adresu tipa `https://pub-xxxx.r2.dev`
+     (Cloudflare je ograničava, nije za veliki saobraćaj);
+   - za produkciju: **Custom Domains → Connect domain**, npr. `slike.pijacaudzepu.rs`
+     (domen mora biti na Cloudflare-u).
+4. **R2 → Manage R2 API Tokens → Create API token**, dozvola **Object Read & Write**, samo za taj bucket.
+   Zapiši **Access Key ID** i **Secret Access Key** (secret se vidi samo jednom).
+   **Account ID** piše na glavnoj R2 stranici.
+5. Na Render-u dodaj:
+
+   | Env varijabla | Vrednost |
+   |---|---|
+   | `R2__AccountId` | Account ID |
+   | `R2__AccessKeyId` | Access Key ID |
+   | `R2__SecretAccessKey` | Secret Access Key |
+   | `R2__Bucket` | `pijacaudzepu-images` |
+   | `R2__PublicUrl` | javna adresa iz koraka 3, bez `/` na kraju |
+
+   R2 se uključuje tek kad je svih pet podešeno; ako neka fali, ostaje lokalni disk.
+6. Proba: kao prodavac promeni sliku proizvoda – u bucket-u treba da se pojavi fajl u `products/`,
+   a slika treba da ostane i posle sledećeg deploy-a.
+
+> Slike ubačene na Render pre ovoga su već izgubljene (ili će biti pri sledećem deploy-u) –
+> prodavci treba da ih ponovo ubace. Seed slike (Unsplash) nisu pogođene.
