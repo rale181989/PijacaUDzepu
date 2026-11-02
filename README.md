@@ -31,6 +31,11 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Tehnička podrška (pitanja sa sajta)
 - Izveštaji: porudžbine, kupci i kuriri (gde i koliko su vozili), za izabrani period ili sve
 
+**Nalog (sve uloge)**
+- „Zaboravili ste lozinku?” – link za novu lozinku na e-mail (važi 2 sata, jednom)
+- Moj nalog: promena lozinke i brisanje naloga (porudžbine ostaju prodavcima bez ličnih podataka)
+- Administrator može postaviti privremenu lozinku korisniku bez e-maila
+
 **Bezbednost**
 - Lozinke najmanje 8 znakova; zaključavanje naloga posle 10 pogrešnih pokušaja
 - Ograničen broj pokušaja prijave po IP adresi

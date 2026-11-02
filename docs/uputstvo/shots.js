@@ -81,12 +81,14 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   await page.evaluate(code => { localStorage.removeItem('cart'); localStorage.setItem('guestOrders', JSON.stringify([code])); }, demo.trackingCode);
   await shot(page, 'c-track', '/prati/' + demo.trackingCode);
   await shot(page, 'c-login', '/login');
+  await shot(page, 'a-forgot', '/forgot-password');
   await shot(page, 'c-support', '/podrska');
 
   // Prijavljeni kupac
   await asUser(page, demo.kupac);
   await shot(page, 'c-my-orders', '/my-orders');
   await shot(page, 'c-order-detail', '/order-detail/' + demo.orders[0]);
+  await shot(page, 'a-account', '/account');
 
   // Prodavac
   await asUser(page, demo.marko);

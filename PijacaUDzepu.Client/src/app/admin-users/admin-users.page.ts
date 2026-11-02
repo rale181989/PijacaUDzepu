@@ -86,6 +86,34 @@ export class AdminUsersPage implements OnInit {
     });
   }
 
+  // Privremena lozinka za korisnika koji nema e-mail (kurir, prodavac); prikazuje se samo jednom
+  async resetPassword(user: User) {
+    const confirm = await this.alertController.create({
+      header: 'Resetuj lozinku',
+      message: `Korisnik ${user.userName} dobija novu privremenu lozinku, a stara prestaje da važi. Nalog se otključava ako je bio zaključan.`,
+      buttons: [
+        { text: 'Otkaži', role: 'cancel' },
+        {
+          text: 'Resetuj',
+          handler: () => {
+            this.userService.resetPassword(user.id).subscribe({
+              next: async r => {
+                const shown = await this.alertController.create({
+                  header: 'Nova lozinka',
+                  message: `Lozinka za ${user.userName}: ${r.password}  -  zapišite je i prosledite korisniku; posle zatvaranja se više ne vidi. Korisnik je može promeniti u „Moj nalog”.`,
+                  buttons: ['Zapisao sam']
+                });
+                await shown.present();
+              },
+              error: err => this.showToast(err.error?.message || 'Greška pri resetovanju lozinke', 'danger')
+            });
+          }
+        }
+      ]
+    });
+    await confirm.present();
+  }
+
   // Admin otvara nalog, a kurir posle sam dopunjuje podatke u "Moji podaci"
   async createCourier() {
     const alert = await this.alertController.create({

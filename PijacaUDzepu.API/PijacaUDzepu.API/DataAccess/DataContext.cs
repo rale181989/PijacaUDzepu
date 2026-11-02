@@ -23,6 +23,7 @@ public class DataContext : IdentityDbContext<User, Role, int,
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
     public DbSet<CourierDecline> CourierDeclines => Set<CourierDecline>();
+    public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -92,6 +93,16 @@ public class DataContext : IdentityDbContext<User, Role, int,
             entity.HasOne(d => d.Courier)
                 .WithMany()
                 .HasForeignKey(d => d.CourierId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PasswordReset>(entity =>
+        {
+            entity.HasIndex(r => r.TokenHash).IsUnique();
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

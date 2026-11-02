@@ -142,6 +142,9 @@ Documentation rule: every change also goes into this file, `README.md` and the u
 - Login uses lockout: 10 wrong passwords lock the account for 15 minutes (`CheckPasswordSignInAsync(..., lockoutOnFailure: true)`).
 - Rate limits (`Program.cs`, partitioned by the first `X-Forwarded-For` address): `auth` = 10 requests/minute on login and register, `support` = 5 per 10 minutes on the support form.
 - `GET /api/auth/health` is anonymous and returns only `{ status, timestamp }`.
+- **Forgot password:** `POST /api/auth/forgot-password { login }` (username or email) always returns the same message, so it can't be used to find accounts. If the account has an email, a `PasswordReset` row is created (only the SHA-256 hash of the token is stored; valid 2 hours, single use) and `EmailService.SendPasswordReset` emails `/reset-password?token=…` in the background. In Development, without SMTP, the link is logged instead. `POST /api/auth/reset-password { token, newPassword }` sets the password, clears a failed-login lockout and invalidates the user's other links. Identity's own reset tokens are not used, because Render loses the data-protection keys on every deploy.
+- **Admin reset:** `POST /api/users/{id}/reset-password` (SuperAdmin) sets a random 10-character temporary password, unlocks the account and returns the password once. This covers couriers and vendors without email.
+- **Account deletion** (Google Play requirement): `POST /api/auth/delete-account { password }`. It is blocked while the user has active orders as a customer or courier, and for the last SuperAdmin. The customer's orders are kept but anonymized (`CustomerId` null, `GuestName` "Obrisan nalog", no email, phone, address or note); the rest is removed by cascade or set to null. The client page is `/account` ("Moj nalog", all roles), which also has the password change.
 
 ## Client architecture
 

@@ -13,11 +13,13 @@ public class EmailService : IEmailService
     private readonly IConfiguration _config;
     private readonly ILogger<EmailService> _logger;
     private readonly string _frontendUrl;
+    private readonly bool _isDevelopment;
 
-    public EmailService(IConfiguration config, ILogger<EmailService> logger, FrontendUrlResolver frontendUrl)
+    public EmailService(IConfiguration config, ILogger<EmailService> logger, FrontendUrlResolver frontendUrl, IHostEnvironment env)
     {
         _config = config;
         _logger = logger;
+        _isDevelopment = env.IsDevelopment();
         // Adresa se određuje odmah, dok traje zahtev, jer se e-mail za praćenje šalje u pozadini
         _frontendUrl = frontendUrl.Resolve();
     }
@@ -99,6 +101,25 @@ public class EmailService : IEmailService
         <p>Istu robu možete potražiti kod drugih prodavaca u aplikaciji.</p>";
 
         await Send(toEmail, $"Porudžbina #{order.Id} je odbijena - Pijaca u Džepu", body);
+    }
+
+    public async Task SendPasswordReset(string toEmail, string? firstName, string token)
+    {
+        var link = $"{_frontendUrl}/reset-password?token={Uri.EscapeDataString(token)}";
+        if (!IsConfigured)
+        {
+            _logger.LogWarning("Email nije podešen (Email:SmtpUser/SmtpPass) - link za novu lozinku nije poslat na {Email}.", toEmail);
+            // Lokalno se link ispisuje u log, da bi se moglo testirati bez Brevo naloga (u produkciji nikad)
+            if (_isDevelopment) _logger.LogWarning("Link za novu lozinku (samo Development): {Link}", link);
+            return;
+        }
+        var body = $@"
+        <h2>Nova lozinka</h2>
+        <p>{(string.IsNullOrWhiteSpace(firstName) ? "Zdravo" : $"Zdravo {Encode(firstName)}")}, zatražena je nova lozinka za vaš nalog na Pijaci u Džepu.</p>
+        {Button(link, "Postavi novu lozinku")}
+        <p style=""color: #666; font-size: 13px;"">Link važi 2 sata i može se iskoristiti jednom. Ako niste vi tražili novu lozinku, ignorišite ovaj e-mail - vaša lozinka ostaje ista.</p>";
+
+        await Send(toEmail, "Nova lozinka - Pijaca u Džepu", body);
     }
 
     public async Task SendSupportRequest(SupportRequest request)

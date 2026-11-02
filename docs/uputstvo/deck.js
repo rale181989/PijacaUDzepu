@@ -428,8 +428,20 @@ async function build() {
   s.phone('k-profile', RIGHT_X, PHONE_Y, PHONE_H, 'Podaci kurira i promena lozinke',
     [[1, 0.93, 0.29], [2, 0.93, 0.38], [3, 0.93, 0.64]]);
 
-  // 22. Pomoć
+  // 22. Nalog i lozinka (sve uloge)
   pres.addSection({ title: 'Pomoć' });
+  s = new S('Sadrzaj - dva ekrana', 'Pomoć');
+  s.title('Moj nalog i lozinka');
+  s.steps([
+    { h: 'Zaboravljena lozinka', d: 'Na prijavi: „Zaboravili ste lozinku?”. Link za novu lozinku stiže na e-mail naloga i važi 2 sata.' },
+    { h: 'Bez e-maila na nalogu', n: '✓', d: 'Kuriri i prodavci bez e-maila traže novu lozinku od administratora.' },
+    { h: 'Moj nalog', d: 'U meniju ☰ (ili klik na svoje ime): promena lozinke.' },
+    { h: 'Brisanje naloga', d: 'Briše nalog i lične podatke; porudžbine ostaju prodavcu bez vašeg imena, telefona i adrese. Nije moguće dok traje porudžbina ili dostava.' }
+  ], 0.6, 1.75, 5.2);
+  s.phone('a-forgot', LEFT_X, PHONE_Y, PHONE_H, 'Zahtev za novu lozinku', [[1, 0.95, 0.27]]);
+  s.phone('a-account', RIGHT_X, PHONE_Y, PHONE_H, 'Moj nalog: promena lozinke i brisanje naloga', [[3, 0.93, 0.23], [4, 0.93, 0.565]]);
+
+  // 23. Pomoć
   s = new S('Sadrzaj - jedan ekran', 'Pomoć');
   s.title('Pomoć i saveti');
   const tip = async (y, ic, col, h, d) => {

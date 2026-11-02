@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'account.title' | t }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="narrow">
+    <div class="message">
+      <ion-icon name="person-circle-outline"></ion-icon>
+      <p><strong>{{ authService.currentUser?.firstName }} {{ authService.currentUser?.lastName }}</strong><br>
+        {{ authService.currentUser?.userName }}<span *ngIf="authService.currentUser?.email"> · {{ authService.currentUser?.email }}</span></p>
+    </div>
+
+    <section class="section">
+      <h3>{{ 'account.changePassword' | t }}</h3>
+      <form (ngSubmit)="changePassword()">
+        <ion-item>
+          <ion-input [label]="'account.current' | t" labelPlacement="floating" type="password"
+                     [(ngModel)]="currentPassword" name="currentPassword"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'reset.password' | t" labelPlacement="floating" type="password"
+                     [(ngModel)]="newPassword" name="newPassword" minlength="8"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'reset.confirm' | t" labelPlacement="floating" type="password"
+                     [(ngModel)]="confirmPassword" name="confirmPassword"></ion-input>
+        </ion-item>
+        <p *ngIf="confirmPassword && !passwordsMatch" class="error-text">{{ 'reset.mismatch' | t }}</p>
+        <ion-button expand="block" type="submit" [disabled]="!canChange" class="ion-margin-top">
+          <ion-spinner *ngIf="changing" name="crescent" slot="start"></ion-spinner>
+          {{ 'account.changePassword' | t }}
+        </ion-button>
+      </form>
+    </section>
+
+    <section class="section danger-zone">
+      <h3>{{ 'account.delete' | t }}</h3>
+      <p class="intro">{{ 'account.deleteInfo' | t }}</p>
+      <ion-button expand="block" color="danger" fill="outline" (click)="deleteAccount()">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
+        {{ 'account.deleteButton' | t }}
+      </ion-button>
+    </section>
+  </div>
+  <app-footer></app-footer>
+</ion-content>

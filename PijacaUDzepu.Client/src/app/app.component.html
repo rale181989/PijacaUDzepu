@@ -117,6 +117,10 @@
           <ion-icon name="person-add-outline" slot="start"></ion-icon>
           <ion-label>{{ 'nav.register' | t }}</ion-label>
         </ion-item>
+        <ion-item *ngIf="authService.isLoggedIn" routerLink="/account" routerDirection="root" (click)="closeMenu()">
+          <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+          <ion-label>{{ 'nav.account' | t }}</ion-label>
+        </ion-item>
         <ion-item *ngIf="authService.isLoggedIn" (click)="logout()" button>
           <ion-icon name="log-out-outline" slot="start"></ion-icon>
           <ion-label>{{ 'nav.logout' | t }} ({{ authService.currentUser?.userName }})</ion-label>
@@ -226,10 +230,10 @@
           </a>
         </ng-container>
         <ng-container *ngIf="authService.isLoggedIn">
-          <span class="nav-user">
+          <a class="nav-user" routerLink="/account" routerLinkActive="active" [title]="'nav.account' | t">
             <ion-icon name="person-circle-outline"></ion-icon>
             {{ authService.currentUser?.userName }}
-          </span>
+          </a>
           <a (click)="logout()" class="nav-logout">
             <ion-icon name="log-out-outline"></ion-icon>
             <span>{{ 'nav.logout' | t }}</span>

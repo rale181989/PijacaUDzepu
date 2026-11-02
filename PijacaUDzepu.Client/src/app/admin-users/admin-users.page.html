@@ -64,6 +64,9 @@
           </span>
         </p>
       </ion-label>
+      <ion-button slot="end" fill="clear" size="small" (click)="resetPassword(user)" title="Resetuj lozinku">
+        <ion-icon name="key-outline" slot="icon-only"></ion-icon>
+      </ion-button>
       <ion-toggle slot="end" [checked]="user.isActive"
                   (ionChange)="toggleActive(user)">
       </ion-toggle>

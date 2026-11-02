@@ -21,6 +21,11 @@ export class UserService {
     return this.http.post<User>(environment.apiUrl + '/auth/create-courier', dto);
   }
 
+  // Admin postavlja privremenu lozinku (kurir/prodavac bez e-maila); vraća je jednom
+  resetPassword(id: number) {
+    return this.http.post<{ password: string }>(`${this.baseUrl}/${id}/reset-password`, {});
+  }
+
   toggleActive(id: number) {
     return this.http.put<void>(`${this.baseUrl}/${id}/toggle-active`, {});
   }

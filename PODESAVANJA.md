@@ -41,6 +41,8 @@ najviše 10 pokušaja prijave u minuti sa jedne IP adrese.
 - ❌ pozivnice prodavcima (Admin → Prodavci → pozovi) – slanje pada sa greškom
 - ❌ kopija pitanja za podršku na zivkovic_kac@live.com (pitanja i dalje stižu u admin panel „Podrška”)
 - ❌ e-mail sa linkom za praćenje za goste (link se i dalje vidi na ekranu posle kupovine)
+- ❌ „Zaboravili ste lozinku?” – link za novu lozinku ne stiže (administrator i dalje može da postavi privremenu lozinku u Admin → Korisnici → 🔑)
+- ❌ e-mail kupcu sa razlogom kad prodavac odbije porudžbinu
 
 Sve ostalo (porudžbine, kuriri, obaveštenja u aplikaciji) radi i bez toga.
 
@@ -121,6 +123,8 @@ Aplikacija čita cenu sa servera, pa za ovo ne treba novi APK.
 U `PijacaUDzepu.Client/src/app/legal/legal-content.ts`, objekat `LEGAL_INFO`:
 naziv firme, adresa, PIB, matični broj, kontakt e-mail, telefon i **naziv kurirske službe**
 (sada stoje kao `[...]`). Uslove korišćenja i politiku privatnosti bi pre objave trebalo da pogleda pravnik.
+U politici privatnosti navedi i da korisnik može sam da obriše nalog (Moj nalog → Obriši nalog) i šta se tada
+čuva (porudžbine bez ličnih podataka) – to traži i Google Play pri objavi.
 
 ---
 

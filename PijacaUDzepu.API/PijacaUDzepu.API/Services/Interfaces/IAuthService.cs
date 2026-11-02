@@ -13,4 +13,8 @@ public interface IAuthService
     Task InviteVendor(InviteVendorDto dto);
     Task<AuthResponseDto> AcceptInvitation(AcceptInvitationDto dto);
     Task ChangePassword(int userId, string currentPassword, string newPassword);
+    Task RequestPasswordReset(string login);
+    Task ResetPassword(string token, string newPassword);
+    Task DeleteAccount(int userId, string password);
+    Task<string> AdminResetPassword(int userId);
 }

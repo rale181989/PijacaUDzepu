@@ -127,6 +127,45 @@ public class AuthController : BaseApiController
         }
     }
 
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicy)]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+    {
+        await _authService.RequestPasswordReset(dto.Login);
+        return Ok(new { message = "Ako nalog postoji i ima e-mail adresu, poslali smo link za novu lozinku." });
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicy)]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+    {
+        try
+        {
+            await _authService.ResetPassword(dto.Token, dto.NewPassword);
+            return Ok(new { message = "Lozinka je promenjena. Možete se prijaviti." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("delete-account")]
+    public async Task<IActionResult> DeleteAccount(DeleteAccountDto dto)
+    {
+        try
+        {
+            await _authService.DeleteAccount(User.GetUserId(), dto.Password);
+            return Ok(new { message = "Nalog je obrisan." });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser()
     {

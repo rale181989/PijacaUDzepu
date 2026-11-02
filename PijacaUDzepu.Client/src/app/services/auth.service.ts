@@ -60,6 +60,18 @@ export class AuthService {
     return this.http.put<{ message: string }>(`${this.baseUrl}/change-password`, { currentPassword, newPassword });
   }
 
+  forgotPassword(login: string) {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/forgot-password`, { login });
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/reset-password`, { token, newPassword });
+  }
+
+  deleteAccount(password: string) {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/delete-account`, { password });
+  }
+
   loadCurrentUser() {
     return this.http.get<User>(`${this.baseUrl}/me`).pipe(
       tap(user => this.currentUserSource.next(user))

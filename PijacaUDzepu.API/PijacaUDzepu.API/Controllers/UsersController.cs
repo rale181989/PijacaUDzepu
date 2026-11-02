@@ -84,6 +84,24 @@ public class UsersController : BaseApiController
         });
     }
 
+    [HttpPost("{id}/reset-password")]
+    public async Task<IActionResult> ResetPassword(int id, [FromServices] Services.Interfaces.IAuthService authService)
+    {
+        try
+        {
+            var password = await authService.AdminResetPassword(id);
+            return Ok(new { password });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPut("{id}/toggle-active")]
     public async Task<IActionResult> ToggleActive(int id)
     {
