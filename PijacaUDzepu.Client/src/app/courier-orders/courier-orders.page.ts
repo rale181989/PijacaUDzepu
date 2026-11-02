@@ -18,6 +18,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
   mine: Order[] = [];
   loading = false;
   acceptingId: number | null = null;
+  decliningId: number | null = null;
   busyId: number | null = null;
   isOnShift = false;
   shiftLoaded = false;
@@ -60,6 +61,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     this.courierService.getProfile().subscribe(p => {
       this.isOnShift = p.isOnShift;
       this.shiftLoaded = true;
+      this.notificationService.setCourierOnShift(p.isOnShift);
     });
     this.loading = true;
     let pending = 2;
@@ -84,6 +86,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     this.courierService.setShift(value).subscribe({
       next: async p => {
         this.isOnShift = p.isOnShift;
+        this.notificationService.setCourierOnShift(p.isOnShift);
         await this.toast(p.isOnShift ? 'Na smeni ste – stižu vam nove porudžbine' : 'Van smene – nove porudžbine vam neće stizati', p.isOnShift ? 'success' : 'medium');
       },
       error: async () => {
@@ -141,6 +144,27 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
           this.available = this.available.filter(o => o.id !== order.id);
         }
         await this.toast(err.error?.message || 'Greška pri prihvatanju', 'warning');
+      }
+    });
+  }
+
+  // Porudžbina nestaje samo ovom kuriru i prestaje da mu zvoni; ostali kuriri je i dalje vide
+  decline(order: Order) {
+    this.decliningId = order.id;
+    this.courierService.declineOrder(order.id).subscribe({
+      next: async () => {
+        this.decliningId = null;
+        this.available = this.available.filter(o => o.id !== order.id);
+        this.notificationService.loadCourierAvailableCount();
+        await this.toast(`Porudžbina #${order.id} je odbijena`, 'medium');
+      },
+      error: async err => {
+        this.decliningId = null;
+        if (err.status === 404) {
+          this.available = this.available.filter(o => o.id !== order.id);
+          this.notificationService.loadCourierAvailableCount();
+        }
+        await this.toast(err.error?.message || 'Greška pri odbijanju', 'warning');
       }
     });
   }

@@ -41,4 +41,9 @@ export class CourierService {
   acceptOrder(id: number) {
     return this.http.post<Order>(`${this.baseUrl}/orders/${id}/accept`, {});
   }
+
+  // Porudžbina nestaje samo ovom kuriru; ostali kuriri je i dalje vide
+  declineOrder(id: number) {
+    return this.http.post<void>(`${this.baseUrl}/orders/${id}/decline`, {});
+  }
 }

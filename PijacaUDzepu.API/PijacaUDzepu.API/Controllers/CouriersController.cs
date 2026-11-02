@@ -43,7 +43,7 @@ public class CouriersController : BaseApiController
     [HttpGet("available-orders")]
     public async Task<IActionResult> GetAvailableOrders()
     {
-        var orders = await _orderService.GetAvailableCourierOrders();
+        var orders = await _orderService.GetAvailableCourierOrders(User.GetUserId());
         return Ok(orders);
     }
 
@@ -73,6 +73,20 @@ public class CouriersController : BaseApiController
         catch (UnauthorizedAccessException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("orders/{id}/decline")]
+    public async Task<IActionResult> DeclineOrder(int id)
+    {
+        try
+        {
+            await _orderService.DeclineCourierOrder(id, User.GetUserId());
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
     }
 

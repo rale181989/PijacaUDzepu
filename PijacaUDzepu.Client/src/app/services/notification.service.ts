@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/lazy';
 import * as signalR from '@microsoft/signalr';
+import { Capacitor } from '@capacitor/core';
 import { AuthService } from './auth.service';
 import { SoundService } from './sound.service';
 import { Order } from '../models/order.model';
@@ -50,6 +51,12 @@ export class NotificationService {
 
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Zvono: ponavlja se dok prodavac ima porudžbina na čekanju, odnosno dok kurir na smeni ima
+  // neprihvaćenih (a neodbijenih) porudžbina. Dok aplikacija nije na ekranu, zvoni Android obaveštenje.
+  private static readonly AlarmIntervalMs = 4000;
+  private alarmTimer: ReturnType<typeof setInterval> | null = null;
+  private courierOnShift = false;
+
   get courierAvailableCount(): number {
     return this.courierAvailableSubject.value;
   }
@@ -74,8 +81,12 @@ export class NotificationService {
       }
     });
 
+    this.pendingCount$.subscribe(() => this.updateAlarm());
+    this.courierAvailable$.subscribe(() => this.updateAlarm());
+
     // Povratak u aplikaciju (ili na tab): Android često prekine vezu dok je ekran zaključan
     document.addEventListener('visibilitychange', () => {
+      this.updateAlarm();
       if (document.visibilityState !== 'visible' || !this.authService.token) return;
       if (this.hubConnection?.state === signalR.HubConnectionState.Disconnected || !this.hubConnection) {
         this.startConnection();
@@ -90,13 +101,52 @@ export class NotificationService {
     }
     if (this.authService.hasRole('Courier')) {
       this.loadCourierAvailableCount();
+      this.loadCourierShift();
     }
     if (this.authService.hasRole('SuperAdmin')) {
       this.loadSupportOpenCount();
     }
   }
 
-  private resync() {
+  private loadCourierShift() {
+    this.http.get<{ isOnShift: boolean }>(`${environment.apiUrl}/couriers/me`).subscribe({
+      next: p => this.setCourierOnShift(p.isOnShift),
+      error: () => {}
+    });
+  }
+
+  // Poziva i stranica kurira kada kurir uključi/isključi smenu
+  setCourierOnShift(onShift: boolean) {
+    this.courierOnShift = onShift;
+    this.updateAlarm();
+  }
+
+  private updateAlarm() {
+    const vendorRinging = this.authService.hasRole('VendorAdmin') && this.pendingCount > 0;
+    const courierRinging = this.authService.hasRole('Courier') && this.courierOnShift && this.courierAvailableCount > 0;
+    // Kad aplikacija nije na ekranu, zvoni Android obaveštenje (push); bez push-a zvoni i dalje aplikacija,
+    // koliko god joj Android dozvoli da radi u pozadini
+    const nativeAlarms = Capacitor.isNativePlatform() && environment.pushEnabled;
+    const ring = (vendorRinging || courierRinging) && (document.visibilityState === 'visible' || !nativeAlarms);
+
+    if (ring && !this.alarmTimer) {
+      this.sound.play('alarm');
+      this.alarmTimer = setInterval(() => this.sound.play('alarm'), NotificationService.AlarmIntervalMs);
+    } else if (!ring && this.alarmTimer) {
+      clearInterval(this.alarmTimer);
+      this.alarmTimer = null;
+    }
+  }
+
+  // Nova porudžbina dok zvono već radi: zazvoni odmah, a ne tek na sledećem ponavljanju
+  private ringAgain() {
+    if (!this.alarmTimer) return;
+    clearInterval(this.alarmTimer);
+    this.alarmTimer = null;
+  }
+
+  // Poziva se i kad push alarm stigne dok je aplikacija otvorena (SignalR je možda propustio događaj)
+  resync() {
     this.loadCounts();
     this.resyncSubject.next();
   }
@@ -156,8 +206,9 @@ export class NotificationService {
 
     this.hubConnection.on('NewOrder', (data: any) => {
       this.ngZone.run(async () => {
+        // Brojač pokreće zvono (updateAlarm), koje traje dok porudžbina ne bude prihvaćena ili odbijena
+        this.ringAgain();
         this.pendingCountSubject.next(this.pendingCount + 1);
-        this.sound.play('newOrder');
         this.orderUpdatedSubject.next(data.orderId);
         const kind = data.fulfillment === 'Pickup' ? 'Nova rezervacija' : 'Nova porudžbina (Eko kurir)';
         await this.showToast(`${kind} #${data.orderId} – ${data.customerName}`, 'tertiary');
@@ -187,7 +238,7 @@ export class NotificationService {
 
     this.hubConnection.on('CourierNewOrder', (order: Order) => {
       this.ngZone.run(async () => {
-        this.sound.play('newOrder');
+        this.ringAgain();
         this.courierAvailableSubject.next(this.courierAvailableCount + 1);
         this.courierEventsSubject.next({ type: 'new', order });
         await this.showToast(`Nova porudžbina za dostavu: ${order.vendorName} → ${order.deliveryAddress ?? ''}`, 'tertiary');
@@ -200,6 +251,14 @@ export class NotificationService {
         this.supportOpenSubject.next(this.supportOpenCount + 1);
         this.supportRequestSubject.next(data.id);
         await this.showToast(`Novo pitanje za podršku #${data.id} – ${data.name}`, 'warning');
+      });
+    });
+
+    // Porudžbina kod ove tezge više nije na čekanju (prihvaćena/odbijena, možda sa drugog uređaja) - zvono staje
+    this.hubConnection.on('PendingChanged', (data: { orderId: number }) => {
+      this.ngZone.run(() => {
+        this.loadPendingCount();
+        this.orderUpdatedSubject.next(data.orderId);
       });
     });
 
@@ -239,6 +298,7 @@ export class NotificationService {
     const old = this.hubConnection;
     this.hubConnection = null;
     old?.stop().catch(() => {});
+    this.courierOnShift = false;
     this.pendingCountSubject.next(0);
     this.courierAvailableSubject.next(0);
     this.supportOpenSubject.next(0);

@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 
-export type SoundKind = 'newOrder' | 'update';
+// alarm = zvono za nove porudžbine koje se ponavlja (NotificationService) dok se ne prihvate/odbiju
+export type SoundKind = 'newOrder' | 'alarm' | 'update';
 
 // Zvuk se generiše kroz Web Audio, bez audio fajlova.
 // Browseri (i Android WebView) dozvoljavaju zvuk tek posle prve interakcije korisnika,
@@ -27,10 +28,11 @@ export class SoundService {
     if (!ctx) return;
 
     // Nova porudžbina: tri rastuća tona, dva puta (da se čuje i kad telefon nije u ruci)
-    const notes = kind === 'newOrder'
+    const urgent = kind !== 'update';
+    const notes = urgent
       ? [659, 880, 1175, 0, 659, 880, 1175]
       : [880, 1175];
-    const step = kind === 'newOrder' ? 0.16 : 0.12;
+    const step = urgent ? 0.16 : 0.12;
 
     notes.forEach((freq, i) => {
       if (freq) this.tone(ctx, freq, ctx.currentTime + i * step, step * 1.6);
@@ -66,6 +68,11 @@ export class SoundService {
   }
 
   private vibrate(kind: SoundKind) {
+    // Zvono vibrira duže; Haptics u browseru koristi navigator.vibrate (Android Chrome)
+    if (kind === 'alarm') {
+      Haptics.vibrate({ duration: 1000 }).catch(() => {});
+      return;
+    }
     if (!Capacitor.isNativePlatform()) return;
     Haptics.notification({ type: kind === 'newOrder' ? NotificationType.Warning : NotificationType.Success }).catch(() => {});
   }

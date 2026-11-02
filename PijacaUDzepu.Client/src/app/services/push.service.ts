@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { firstValueFrom, timeout } from 'rxjs';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 import { environment } from '../../environments/environment';
 
 // Push obaveštenja (Firebase) stižu i kada je aplikacija zatvorena.
@@ -22,7 +23,8 @@ export class PushService {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private notificationService: NotificationService
   ) {
     if (!Capacitor.isNativePlatform() || !environment.pushEnabled) return;
     this.authService.currentUser$.subscribe(user => {
@@ -63,6 +65,12 @@ export class PushService {
     await PushNotifications.addListener('registration', ({ value }) => {
       this.token = value;
       this.http.post(this.baseUrl, { token: value, platform: Capacitor.getPlatform() }).subscribe({ error: () => {} });
+    });
+
+    // Alarm za novu porudžbinu stigao dok je aplikacija otvorena: zvono pokreće NotificationService
+    // iz osveženih brojača (za slučaj da je SignalR događaj propušten)
+    await PushNotifications.addListener('pushNotificationReceived', notification => {
+      if (notification.data?.type === 'alarm') this.ngZone.run(() => this.notificationService.resync());
     });
 
     // Dodir na obaveštenje otvara odgovarajuću stranicu

@@ -22,6 +22,7 @@ public class DataContext : IdentityDbContext<User, Role, int,
     public DbSet<CourierProfile> CourierProfiles => Set<CourierProfile>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
+    public DbSet<CourierDecline> CourierDeclines => Set<CourierDecline>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -77,6 +78,21 @@ public class DataContext : IdentityDbContext<User, Role, int,
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
+        });
+
+        builder.Entity<CourierDecline>(entity =>
+        {
+            entity.HasIndex(d => new { d.OrderId, d.CourierId }).IsUnique();
+
+            entity.HasOne(d => d.Order)
+                .WithMany()
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Courier)
+                .WithMany()
+                .HasForeignKey(d => d.CourierId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<DeviceToken>(entity =>

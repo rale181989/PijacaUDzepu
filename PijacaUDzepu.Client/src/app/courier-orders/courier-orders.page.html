@@ -64,11 +64,18 @@
           </div>
         </div>
         <p class="summary">{{ order.items.length }} stavki · roba {{ order.totalAmount | number:'1.0-0' }} din · <strong>usluga {{ order.deliveryFee | number:'1.0-0' }} din</strong></p>
-        <ion-button expand="block" color="success" [disabled]="acceptingId !== null || !isOnShift" (click)="accept(order)">
-          <ion-spinner *ngIf="acceptingId === order.id" name="crescent" slot="start"></ion-spinner>
-          <ion-icon *ngIf="acceptingId !== order.id" name="checkmark-circle-outline" slot="start"></ion-icon>
-          Prihvati
-        </ion-button>
+        <div class="decision">
+          <ion-button fill="outline" color="danger" [disabled]="acceptingId !== null || decliningId !== null" (click)="decline(order)">
+            <ion-spinner *ngIf="decliningId === order.id" name="crescent" slot="start"></ion-spinner>
+            <ion-icon *ngIf="decliningId !== order.id" name="close-circle-outline" slot="start"></ion-icon>
+            Odbij
+          </ion-button>
+          <ion-button color="success" [disabled]="acceptingId !== null || decliningId !== null || !isOnShift" (click)="accept(order)">
+            <ion-spinner *ngIf="acceptingId === order.id" name="crescent" slot="start"></ion-spinner>
+            <ion-icon *ngIf="acceptingId !== order.id" name="checkmark-circle-outline" slot="start"></ion-icon>
+            Prihvati
+          </ion-button>
+        </div>
       </ion-card-content>
     </ion-card>
   </ng-container>

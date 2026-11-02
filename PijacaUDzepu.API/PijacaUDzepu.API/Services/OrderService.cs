@@ -249,6 +249,7 @@ public class OrderService : IOrderService
             ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
 
         ValidateStatusTransition(order.Status, newStatus);
+        var wasPending = order.Status == OrderStatus.Pending;
 
         // Kada robu nosi kurir, porudžbinu završava on potvrdom isporuke
         if (newStatus == OrderStatus.Completed && order.Fulfillment == FulfillmentType.Courier)
@@ -264,6 +265,8 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
 
         await NotifyStatusChanged(order, notifyVendor: false);
+        if (wasPending)
+            await StopVendorAlarm(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue && newStatus == OrderStatus.Rejected)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -287,6 +290,7 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
 
         await NotifyStatusChanged(order, notifyCustomer: false);
+        await StopVendorAlarm(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -315,6 +319,7 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
 
         await NotifyStatusChanged(order, notifyCustomer: false);
+        await StopVendorAlarm(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -367,10 +372,11 @@ public class OrderService : IOrderService
             .CountAsync(o => o.VendorId == vendorId && o.Status == OrderStatus.Pending);
     }
 
-    public async Task<List<OrderDto>> GetAvailableCourierOrders()
+    public async Task<List<OrderDto>> GetAvailableCourierOrders(int courierId)
     {
         var orders = await OrdersWithDetails()
             .Where(o => o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && ActiveStatuses.Contains(o.Status))
+            .Where(o => !_context.CourierDeclines.Any(d => d.OrderId == o.Id && d.CourierId == courierId))
             .OrderByDescending(o => o.CreatedAt)
             .Take(100)
             .ToListAsync();
@@ -429,6 +435,22 @@ public class OrderService : IOrderService
                 "Kurir je preuzeo vašu porudžbinu", $"{courierName} će vam dostaviti porudžbinu od {order.Vendor.Name}.", $"/order-detail/{order.Id}");
 
         return MapToDto(order);
+    }
+
+    public async Task DeclineCourierOrder(int orderId, int courierId)
+    {
+        var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.Fulfillment == FulfillmentType.Courier)
+            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+
+        if (!await _context.CourierDeclines.AnyAsync(d => d.OrderId == orderId && d.CourierId == courierId))
+        {
+            _context.CourierDeclines.Add(new CourierDecline { OrderId = orderId, CourierId = courierId });
+            await _context.SaveChangesAsync();
+        }
+
+        // Nestaje sa spiska i prestaje da zvoni samo ovom kuriru (i na njegovim drugim uređajima)
+        await _hubContext.Clients.Group($"user_{courierId}").SendAsync("CourierOrderUnavailable", new { orderId = order.Id });
+        await _pushService.CancelAlarm(new[] { courierId }, CourierAlarmTag(order.Id));
     }
 
     public async Task<OrderDto> MarkPickedUp(int orderId, int courierId)
@@ -541,7 +563,8 @@ public class OrderService : IOrderService
                     fulfillment = order.Fulfillment.ToString()
                 });
 
-            await _pushService.SendToUsers(await VendorUserIds(order.VendorId),
+            // Zvoni prodavcu dok porudžbinu ne prihvati ili odbije
+            await _pushService.SendAlarm(await VendorUserIds(order.VendorId), VendorAlarmTag(order.Id),
                 order.Fulfillment == FulfillmentType.Pickup ? $"Nova rezervacija #{order.Id}" : $"Nova porudžbina #{order.Id} (Eko kurir)",
                 $"{customerName} · {order.TotalAmount:0} din", "/vendor-orders");
 
@@ -556,15 +579,31 @@ public class OrderService : IOrderService
 
             await _hubContext.Clients.Groups(onShift.Select(id => $"user_{id}").ToList())
                 .SendAsync("CourierNewOrder", MapToCourierPreview(order));
-            await _pushService.SendToUsers(onShift,
+            // Zvoni kuriru dok porudžbinu ne prihvati ili odbije (ili dok je ne preuzme drugi kurir)
+            await _pushService.SendAlarm(onShift, CourierAlarmTag(order.Id),
                 "Nova porudžbina za dostavu",
                 $"{order.Vendor.Name} ({order.Vendor.Market?.Name}) → {order.DeliveryAddress}",
                 "/courier-orders");
         }
     }
 
-    private Task NotifyCouriersOrderUnavailable(int orderId) =>
-        _hubContext.Clients.Group(CouriersGroup).SendAsync("CourierOrderUnavailable", new { orderId });
+    // Porudžbina više nije slobodna (prihvaćena, odbijena ili otkazana): nestaje kod svih kurira i prestaje da im zvoni
+    private async Task NotifyCouriersOrderUnavailable(int orderId)
+    {
+        await _hubContext.Clients.Group(CouriersGroup).SendAsync("CourierOrderUnavailable", new { orderId });
+        var courierIds = await _context.CourierProfiles.Select(c => c.UserId).ToListAsync();
+        await _pushService.CancelAlarm(courierIds, CourierAlarmTag(orderId));
+    }
+
+    // Porudžbina više nije na čekanju: prestaje da zvoni prodavcu, i na drugim uređajima/nalozima iste tezge
+    private async Task StopVendorAlarm(Order order)
+    {
+        await _hubContext.Clients.Group($"vendor_{order.VendorId}").SendAsync("PendingChanged", new { orderId = order.Id });
+        await _pushService.CancelAlarm(await VendorUserIds(order.VendorId), VendorAlarmTag(order.Id));
+    }
+
+    private static string VendorAlarmTag(int orderId) => $"order_{orderId}";
+    private static string CourierAlarmTag(int orderId) => $"courier_order_{orderId}";
 
     // Pre prihvatanja kurir vidi odakle i kuda se nosi, ali ne i ime i telefon kupca
     private static OrderDto MapToCourierPreview(Order o)

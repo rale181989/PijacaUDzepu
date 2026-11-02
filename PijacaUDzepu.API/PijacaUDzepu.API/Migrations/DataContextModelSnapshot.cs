@@ -113,6 +113,33 @@ namespace PijacaUDzepu.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.CourierDecline", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourierId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("OrderId", "CourierId")
+                        .IsUnique();
+
+                    b.ToTable("CourierDeclines");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.CourierProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -753,6 +780,25 @@ namespace PijacaUDzepu.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.CourierDecline", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.User", "Courier")
+                        .WithMany()
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PijacaUDzepu.API.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Courier");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.CourierProfile", b =>

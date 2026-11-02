@@ -80,7 +80,42 @@ public class PushService : IPushService
         await _context.DeviceTokens.Where(d => d.Token == token).ExecuteDeleteAsync();
     }
 
-    public async Task SendToUsers(IEnumerable<int> userIds, string title, string body, string? url = null)
+    public Task SendToUsers(IEnumerable<int> userIds, string title, string body, string? url = null) =>
+        Send(userIds, tokens => new MulticastMessage
+        {
+            Tokens = tokens,
+            Notification = new Notification { Title = title, Body = body },
+            Data = new Dictionary<string, string> { ["url"] = url ?? "" },
+            Android = new AndroidConfig
+            {
+                Priority = Priority.High,
+                Notification = new AndroidNotification { ChannelId = AndroidChannelId, Sound = "default" }
+            },
+            Apns = new ApnsConfig { Aps = new Aps { Sound = "default" } }
+        });
+
+    // Samo data poruka (bez Notification dela): Android je ne prikazuje sam, nego je predaje
+    // AlarmMessagingService-u u aplikaciji, koji pravi obaveštenje koje zvoni dok se ne reši
+    public Task SendAlarm(IEnumerable<int> userIds, string tag, string title, string body, string url) =>
+        Send(userIds, tokens => new MulticastMessage
+        {
+            Tokens = tokens,
+            Data = new Dictionary<string, string>
+            {
+                ["type"] = "alarm", ["tag"] = tag, ["title"] = title, ["body"] = body, ["url"] = url
+            },
+            Android = new AndroidConfig { Priority = Priority.High, TimeToLive = TimeSpan.FromMinutes(15) }
+        });
+
+    public Task CancelAlarm(IEnumerable<int> userIds, string tag) =>
+        Send(userIds, tokens => new MulticastMessage
+        {
+            Tokens = tokens,
+            Data = new Dictionary<string, string> { ["type"] = "alarm-cancel", ["tag"] = tag },
+            Android = new AndroidConfig { Priority = Priority.High, TimeToLive = TimeSpan.FromMinutes(15) }
+        });
+
+    private async Task Send(IEnumerable<int> userIds, Func<List<string>, MulticastMessage> buildMessage)
     {
         if (_messaging == null) return;
 
@@ -93,22 +128,9 @@ public class PushService : IPushService
             .ToListAsync();
         if (tokens.Count == 0) return;
 
-        var message = new MulticastMessage
-        {
-            Tokens = tokens,
-            Notification = new Notification { Title = title, Body = body },
-            Data = new Dictionary<string, string> { ["url"] = url ?? "" },
-            Android = new AndroidConfig
-            {
-                Priority = Priority.High,
-                Notification = new AndroidNotification { ChannelId = AndroidChannelId, Sound = "default" }
-            },
-            Apns = new ApnsConfig { Aps = new Aps { Sound = "default" } }
-        };
-
         try
         {
-            var response = await _messaging.SendEachForMulticastAsync(message);
+            var response = await _messaging.SendEachForMulticastAsync(buildMessage(tokens));
 
             // Tokeni deinstaliranih aplikacija se brišu da ne bi gomilali greške
             var invalid = response.Responses
