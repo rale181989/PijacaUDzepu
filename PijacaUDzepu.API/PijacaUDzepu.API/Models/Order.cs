@@ -22,6 +22,10 @@ public class Order
     public string? TrackingCode { get; set; }
     // Sve porudžbine jedne korpe (po jedna za svakog prodavca) imaju isti CheckoutId - kurir ih vozi zajedno
     public Guid? CheckoutId { get; set; }
+    // Kada je prodavac prvi put odgovorio (prešla iz "na čekanju") - za vreme odgovora u izveštaju
+    public DateTime? RespondedAt { get; set; }
+    // Kada je poslato upozorenje da porudžbina predugo čeka (OrderWatchdog), da se ne šalje ponovo
+    public DateTime? WaitAlertSentAt { get; set; }
 
     // Kontakt i adresa za dostavu, i za goste i za prijavljene kupce
     public string? ContactPhone { get; set; }

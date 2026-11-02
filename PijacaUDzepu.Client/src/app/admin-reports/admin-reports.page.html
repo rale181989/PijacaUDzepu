@@ -6,7 +6,7 @@
     <ion-title>Izveštaji</ion-title>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment class="tabs" [value]="tab" (ionChange)="selectTab($any($event).detail.value)">
+    <ion-segment class="tabs" scrollable [value]="tab" (ionChange)="selectTab($any($event).detail.value)">
       <ion-segment-button value="orders">
         <ion-label>Porudžbine</ion-label>
       </ion-segment-button>
@@ -15,6 +15,12 @@
       </ion-segment-button>
       <ion-segment-button value="couriers">
         <ion-label>Kuriri</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="vendors">
+        <ion-label>Prodavci</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="products">
+        <ion-label>Proizvodi</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -44,6 +50,15 @@
 
     <!-- ===== Porudžbine ===== -->
     <ng-container *ngIf="tab === 'orders' && ordersReport && !loading">
+      <section *ngIf="waiting.length > 0" class="panel waiting">
+        <h3><ion-icon name="alarm-outline"></ion-icon> Čekaju predugo ({{ waiting.length }})</h3>
+        <div *ngFor="let w of waiting" class="waiting-row">
+          <span>#{{ w.orderId }} · {{ w.vendorName }}</span>
+          <span class="muted">{{ w.reason }}</span>
+          <strong>{{ w.minutes < 120 ? w.minutes + ' min' : (w.minutes / 60 | number:'1.0-0') + ' h' }}</strong>
+        </div>
+      </section>
+
       <div class="stats">
         <div class="stat">
           <span class="stat-value">{{ ordersReport.totalOrders }}</span>
@@ -107,7 +122,12 @@
       </div>
 
       <section class="panel">
-        <h3>Po danima</h3>
+        <div class="panel-head">
+          <h3>Po danima</h3>
+          <ion-button *ngIf="ordersReport.byDay.length > 0" size="small" fill="outline" (click)="exportDays()">
+            <ion-icon name="download-outline" slot="start"></ion-icon> Izvoz (Excel)
+          </ion-button>
+        </div>
         <p *ngIf="ordersReport.byDay.length === 0" class="muted">Nema porudžbina u periodu.</p>
         <div class="table-scroll">
           <table *ngIf="ordersReport.byDay.length > 0" class="table">
@@ -142,6 +162,9 @@
           <ion-segment-button value="goods"><ion-label>Po prometu</ion-label></ion-segment-button>
         </ion-segment>
       </div>
+      <ion-button *ngIf="filteredCustomers.length > 0" size="small" fill="outline" class="export-btn" (click)="exportCustomers()">
+        <ion-icon name="download-outline" slot="start"></ion-icon> Izvoz (Excel)
+      </ion-button>
       <p class="muted">
         {{ customers.length }} kupaca u periodu ({{ guestCount }} gostiju bez naloga). Gosti se prepoznaju po broju telefona.
       </p>
@@ -191,6 +214,9 @@
     <ng-container *ngIf="tab === 'couriers' && !loading && !error">
       <p *ngIf="couriers.length === 0" class="muted empty">Nema kurira.</p>
 
+      <ion-button *ngIf="couriers.length > 0" size="small" fill="outline" class="export-btn" (click)="exportCouriers()">
+        <ion-icon name="download-outline" slot="start"></ion-icon> Izvoz vožnji (Excel)
+      </ion-button>
       <section *ngIf="couriers.length > 0 && courierTotals as t" class="panel totals">
         <h3>Svi kuriri ukupno <span class="muted">({{ t.couriers }} kurira, {{ t.onShift }} na smeni)</span></h3>
         <div class="stats compact">
@@ -265,6 +291,74 @@
         <app-pager *ngIf="expandedCourier === c.courierId" [page]="deliveriesPage" [pageSize]="tablePageSize" [pageSizes]="tablePageSizes"
                    [totalCount]="c.deliveries.length" [storageKey]="pageSizeKey"
                    (pageChange)="deliveriesPage = $event" (pageSizeChange)="setTablePageSize($event, 'deliveries')">
+        </app-pager>
+      </section>
+    </ng-container>
+
+    <!-- ===== Prodavci ===== -->
+    <ng-container *ngIf="tab === 'vendors' && !loading && !error">
+      <ion-button *ngIf="vendors.length > 0" size="small" fill="outline" class="export-btn" (click)="exportVendors()">
+        <ion-icon name="download-outline" slot="start"></ion-icon> Izvoz (Excel)
+      </ion-button>
+      <p class="muted">Promet računa završene porudžbine. Vreme odgovora: od porudžbine do prve odluke prodavca (beleži se od novembra 2026).</p>
+      <div class="table-scroll">
+        <table *ngIf="vendors.length > 0" class="table">
+          <thead>
+            <tr><th>Prodavac</th><th>Porudžbina</th><th>Završeno</th><th>Odbijeno</th><th>Promet</th><th>Odgovor</th><th>Ocena</th><th>Poslednji razlozi odbijanja</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let v of vendors" [class.inactive]="!v.isActive">
+              <td><strong>{{ v.name }}</strong><div class="muted">{{ v.marketName }}<span *ngIf="!v.isActive"> · neaktivan</span></div></td>
+              <td>{{ v.orders }}</td>
+              <td>{{ v.completed }}</td>
+              <td [class.danger]="v.rejectionRate >= 20">{{ v.rejected }} <span class="muted">({{ v.rejectionRate | number:'1.0-1' }}%)</span></td>
+              <td class="nowrap">{{ v.goodsTotal | number:'1.0-0' }} din</td>
+              <td class="nowrap">{{ v.averageResponseMinutes != null ? (v.averageResponseMinutes | number:'1.0-1') + ' min' : '–' }}</td>
+              <td class="nowrap">{{ v.averageRating != null ? '★ ' + (v.averageRating | number:'1.1-1') + ' (' + v.ratingCount + ')' : '–' }}</td>
+              <td class="reasons"><div *ngFor="let r of v.recentRejectionReasons">„{{ r }}”</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p *ngIf="vendors.length === 0" class="muted empty">Nema prodavaca.</p>
+    </ng-container>
+
+    <!-- ===== Proizvodi ===== -->
+    <ng-container *ngIf="tab === 'products' && productsReport && !loading && !error">
+      <section class="panel">
+        <h3>Po grupama</h3>
+        <p *ngIf="productsReport.categories.length === 0" class="muted">Nema završenih porudžbina u periodu.</p>
+        <div *ngFor="let c of productsReport.categories" class="bar-row wide">
+          <span>{{ categoryLabel(c.category) }}</span>
+          <div class="bar"><div class="bar-fill" [style.width.%]="percent(c.revenue, maxCategoryRevenue)"></div></div>
+          <strong class="nowrap">{{ c.revenue | number:'1.0-0' }} din</strong>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>Najprodavaniji proizvodi</h3>
+          <ion-button *ngIf="productsReport.products.length > 0" size="small" fill="outline" (click)="exportProducts()">
+            <ion-icon name="download-outline" slot="start"></ion-icon> Izvoz (Excel)
+          </ion-button>
+        </div>
+        <div class="table-scroll">
+          <table *ngIf="productsReport.products.length > 0" class="table">
+            <thead><tr><th>#</th><th>Proizvod</th><th>Prodavac</th><th>Količina</th><th>Porudžbina</th><th>Promet</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of pagedProducts; let i = index">
+                <td class="muted">{{ productsPage * tablePageSize + i + 1 }}</td>
+                <td><strong>{{ p.productName }}</strong></td>
+                <td>{{ p.vendorName }}</td>
+                <td class="nowrap">{{ p.quantity | number:'1.0-2' }} {{ unitLabel(p.unit) }}</td>
+                <td>{{ p.orders }}</td>
+                <td class="nowrap">{{ p.revenue | number:'1.0-0' }} din</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pager [page]="productsPage" [pageSize]="tablePageSize" [pageSizes]="tablePageSizes" [totalCount]="productsReport.products.length"
+                   [storageKey]="pageSizeKey" (pageChange)="productsPage = $event" (pageSizeChange)="setTablePageSize($event, 'products')">
         </app-pager>
       </section>
     </ng-container>

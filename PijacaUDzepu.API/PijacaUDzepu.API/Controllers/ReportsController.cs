@@ -41,6 +41,25 @@ public class ReportsController : BaseApiController
         return Ok(await _reportService.GetCouriersReport(f, t));
     }
 
+    [HttpGet("vendors")]
+    public async Task<IActionResult> GetVendors([FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
+    {
+        var (f, t, error) = await GetRange(from, to);
+        if (error != null) return BadRequest(new { message = error });
+        return Ok(await _reportService.GetVendorsReport(f, t));
+    }
+
+    [HttpGet("products")]
+    public async Task<IActionResult> GetProducts([FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
+    {
+        var (f, t, error) = await GetRange(from, to);
+        if (error != null) return BadRequest(new { message = error });
+        return Ok(await _reportService.GetProductsReport(f, t));
+    }
+
+    [HttpGet("waiting")]
+    public async Task<IActionResult> GetWaiting() => Ok(await _reportService.GetWaitingOrders());
+
     private async Task<(DateOnly from, DateOnly to, string? error)> GetRange(DateOnly? from, DateOnly? to)
     {
         var t = to ?? DateOnly.FromDateTime(DateTime.UtcNow);

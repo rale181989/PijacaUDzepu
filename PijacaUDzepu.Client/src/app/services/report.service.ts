@@ -66,6 +66,37 @@ export interface CourierReport {
   deliveries: CourierDelivery[];
 }
 
+export interface VendorReport {
+  vendorId: number;
+  name: string;
+  marketName?: string;
+  isActive: boolean;
+  orders: number;
+  completed: number;
+  rejected: number;
+  rejectionRate: number;
+  goodsTotal: number;
+  averageResponseMinutes?: number | null;
+  averageRating?: number | null;
+  ratingCount: number;
+  recentRejectionReasons: string[];
+}
+
+export interface ProductsReport {
+  products: { productName: string; vendorName: string; unit: string; quantity: number; orders: number; revenue: number }[];
+  categories: { category?: string | null; orders: number; revenue: number }[];
+}
+
+export interface WaitingOrder {
+  orderId: number;
+  vendorName: string;
+  status: OrderStatus;
+  fulfillment: FulfillmentType;
+  createdAt: string;
+  minutes: number;
+  reason: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private baseUrl = environment.apiUrl + '/reports';
@@ -85,6 +116,18 @@ export class ReportService {
   }
 
   // Prazan datum se ne šalje: bez "od" izveštaj ide od prve porudžbine, bez "do" do danas
+  getVendors(from: string, to: string) {
+    return this.http.get<VendorReport[]>(`${this.baseUrl}/vendors`, { params: this.range(from, to) });
+  }
+
+  getProducts(from: string, to: string) {
+    return this.http.get<ProductsReport>(`${this.baseUrl}/products`, { params: this.range(from, to) });
+  }
+
+  getWaiting() {
+    return this.http.get<WaitingOrder[]>(`${this.baseUrl}/waiting`);
+  }
+
   private range(from: string, to: string) {
     let params = new HttpParams();
     if (from) params = params.set('from', from);

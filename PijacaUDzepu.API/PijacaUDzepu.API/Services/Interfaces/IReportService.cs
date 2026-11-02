@@ -9,4 +9,7 @@ public interface IReportService
     Task<OrdersReportDto> GetOrdersReport(DateOnly from, DateOnly to);
     Task<List<CustomerReportDto>> GetCustomersReport(DateOnly from, DateOnly to);
     Task<List<CourierReportDto>> GetCouriersReport(DateOnly from, DateOnly to);
+    Task<List<VendorReportDto>> GetVendorsReport(DateOnly from, DateOnly to);
+    Task<ProductsReportDto> GetProductsReport(DateOnly from, DateOnly to);
+    Task<List<WaitingOrderDto>> GetWaitingOrders();
 }

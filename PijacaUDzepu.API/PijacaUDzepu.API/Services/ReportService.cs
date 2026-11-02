@@ -215,6 +215,122 @@ public class ReportService : IReportService
             .ToList();
     }
 
+    public async Task<List<VendorReportDto>> GetVendorsReport(DateOnly from, DateOnly to)
+    {
+        var (fromUtc, toUtc) = ToUtcRange(from, to);
+        var vendors = await _context.Vendors
+            .Select(v => new { v.Id, v.Name, MarketName = v.Market.Name, v.IsActive })
+            .ToListAsync();
+        var orders = await _context.Orders
+            .Where(o => o.CreatedAt >= fromUtc && o.CreatedAt < toUtc)
+            .Select(o => new
+            {
+                o.VendorId, o.Status, o.TotalAmount, o.CreatedAt, o.RespondedAt, o.VendorMessage, o.UpdatedAt,
+                Score = o.Rating != null ? (int?)o.Rating.VendorScore : null
+            })
+            .ToListAsync();
+        var byVendor = orders.ToLookup(o => o.VendorId);
+
+        return vendors.Select(v =>
+        {
+            var mine = byVendor[v.Id].ToList();
+            var responses = mine.Where(o => o.RespondedAt != null).Select(o => (o.RespondedAt!.Value - o.CreatedAt).TotalMinutes).ToList();
+            var scores = mine.Where(o => o.Score != null).Select(o => o.Score!.Value).ToList();
+            var rejected = mine.Where(o => o.Status == OrderStatus.Rejected).ToList();
+            return new VendorReportDto
+            {
+                VendorId = v.Id,
+                Name = v.Name,
+                MarketName = v.MarketName,
+                IsActive = v.IsActive,
+                Orders = mine.Count,
+                Completed = mine.Count(o => o.Status == OrderStatus.Completed),
+                Rejected = rejected.Count,
+                RejectionRate = mine.Count > 0 ? Math.Round(100.0 * rejected.Count / mine.Count, 1) : 0,
+                GoodsTotal = mine.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.TotalAmount),
+                AverageResponseMinutes = responses.Count > 0 ? Math.Round(responses.Average(), 1) : null,
+                AverageRating = scores.Count > 0 ? Math.Round(scores.Average(), 1) : null,
+                RatingCount = scores.Count,
+                RecentRejectionReasons = rejected
+                    .Where(o => !string.IsNullOrWhiteSpace(o.VendorMessage))
+                    .OrderByDescending(o => o.UpdatedAt)
+                    .Select(o => o.VendorMessage!)
+                    .Take(3)
+                    .ToList()
+            };
+        })
+        .OrderByDescending(v => v.GoodsTotal)
+        .ThenByDescending(v => v.Orders)
+        .ToList();
+    }
+
+    // Prodaja po proizvodu i grupi (samo završene porudžbine)
+    public async Task<ProductsReportDto> GetProductsReport(DateOnly from, DateOnly to)
+    {
+        var (fromUtc, toUtc) = ToUtcRange(from, to);
+        var items = await _context.OrderItems
+            .Where(i => i.Order.Status == OrderStatus.Completed && i.Order.CreatedAt >= fromUtc && i.Order.CreatedAt < toUtc)
+            .Select(i => new
+            {
+                i.ProductName, i.Unit, i.Quantity, i.TotalPrice, i.OrderId,
+                VendorName = i.Order.Vendor.Name,
+                Category = i.Product != null ? (ProductCategory?)i.Product.Category : null
+            })
+            .ToListAsync();
+
+        return new ProductsReportDto
+        {
+            Products = items
+                .GroupBy(i => new { i.ProductName, i.VendorName, i.Unit })
+                .Select(g => new ProductSalesDto
+                {
+                    ProductName = g.Key.ProductName,
+                    VendorName = g.Key.VendorName,
+                    Unit = g.Key.Unit,
+                    Quantity = g.Sum(i => i.Quantity),
+                    Orders = g.Select(i => i.OrderId).Distinct().Count(),
+                    Revenue = g.Sum(i => i.TotalPrice)
+                })
+                .OrderByDescending(p => p.Revenue)
+                .ToList(),
+            Categories = items
+                .GroupBy(i => i.Category)
+                .Select(g => new CategorySalesDto
+                {
+                    Category = g.Key,
+                    Orders = g.Select(i => i.OrderId).Distinct().Count(),
+                    Revenue = g.Sum(i => i.TotalPrice)
+                })
+                .OrderByDescending(c => c.Revenue)
+                .ToList()
+        };
+    }
+
+    // Porudžbine koje trenutno čekaju prodavca ili kurira duže od 15 minuta
+    public async Task<List<WaitingOrderDto>> GetWaitingOrders()
+    {
+        var before = DateTime.UtcNow.AddMinutes(-15);
+        var orders = await _context.Orders
+            .Where(o => o.CreatedAt < before && (o.Status == OrderStatus.Pending ||
+                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null &&
+                 (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup))))
+            .OrderBy(o => o.CreatedAt)
+            .Select(o => new { o.Id, VendorName = o.Vendor.Name, o.Status, o.Fulfillment, o.CreatedAt })
+            .Take(100)
+            .ToListAsync();
+        var now = DateTime.UtcNow;
+        return orders.Select(o => new WaitingOrderDto
+        {
+            OrderId = o.Id,
+            VendorName = o.VendorName,
+            Status = o.Status,
+            Fulfillment = o.Fulfillment,
+            CreatedAt = o.CreatedAt,
+            Minutes = (int)(now - o.CreatedAt).TotalMinutes,
+            Reason = o.Status == OrderStatus.Pending ? "Čeka prodavca" : "Čeka kurira"
+        }).ToList();
+    }
+
     private static bool IsActive(OrderStatus s) =>
         s is OrderStatus.Pending or OrderStatus.Confirmed or OrderStatus.ReadyForPickup or OrderStatus.InDelivery;
 

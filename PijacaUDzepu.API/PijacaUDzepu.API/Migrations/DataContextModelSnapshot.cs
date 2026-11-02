@@ -330,6 +330,9 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<DateTime?>("PickedUpAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -350,6 +353,9 @@ namespace PijacaUDzepu.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("VendorMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("WaitAlertSentAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");

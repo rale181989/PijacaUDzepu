@@ -98,3 +98,55 @@ public class CourierDeliveryDto
     public decimal AmountToPay { get; set; }
     public double? Minutes { get; set; }
 }
+
+public class VendorReportDto
+{
+    public int VendorId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? MarketName { get; set; }
+    public bool IsActive { get; set; }
+    public int Orders { get; set; }
+    public int Completed { get; set; }
+    public int Rejected { get; set; }
+    public double RejectionRate { get; set; }
+    public decimal GoodsTotal { get; set; }
+    // Prosečno vreme od porudžbine do prvog odgovora prodavca (minuti); null dok nema podataka
+    public double? AverageResponseMinutes { get; set; }
+    public double? AverageRating { get; set; }
+    public int RatingCount { get; set; }
+    public List<string> RecentRejectionReasons { get; set; } = new();
+}
+
+public class ProductsReportDto
+{
+    public List<ProductSalesDto> Products { get; set; } = new();
+    public List<CategorySalesDto> Categories { get; set; } = new();
+}
+
+public class ProductSalesDto
+{
+    public string ProductName { get; set; } = string.Empty;
+    public string VendorName { get; set; } = string.Empty;
+    public ProductUnit Unit { get; set; }
+    public decimal Quantity { get; set; }
+    public int Orders { get; set; }
+    public decimal Revenue { get; set; }
+}
+
+public class CategorySalesDto
+{
+    public ProductCategory? Category { get; set; }
+    public int Orders { get; set; }
+    public decimal Revenue { get; set; }
+}
+
+public class WaitingOrderDto
+{
+    public int OrderId { get; set; }
+    public string VendorName { get; set; } = string.Empty;
+    public OrderStatus Status { get; set; }
+    public FulfillmentType Fulfillment { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int Minutes { get; set; }
+    public string Reason { get; set; } = string.Empty;
+}

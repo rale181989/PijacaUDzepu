@@ -392,6 +392,7 @@ public class OrderService : IOrderService
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
+        if (wasPending) order.RespondedAt = DateTime.UtcNow;
         if (!string.IsNullOrWhiteSpace(message))
         {
             order.VendorMessage = message.Trim();

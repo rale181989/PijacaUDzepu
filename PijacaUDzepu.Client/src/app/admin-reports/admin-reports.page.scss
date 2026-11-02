@@ -173,3 +173,30 @@
   .courier-head p { margin: 0 0 10px; }
   .markets { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  h3 { margin: 0; }
+}
+.export-btn { margin: 0 0 8px; }
+
+.panel.waiting {
+  border-color: rgba(var(--ion-color-danger-rgb), 0.5);
+  h3 { display: flex; align-items: center; gap: 6px; color: var(--ion-color-danger); }
+  .waiting-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--ion-color-light);
+  }
+}
+
+.bar-row.wide { grid-template-columns: 130px 1fr 90px; }
+.table .reasons { font-size: 12px; color: var(--ion-color-medium); min-width: 180px; }
+.table tr.inactive td { opacity: 0.55; }
+
+.tabs ion-segment-button { min-width: 90px; }

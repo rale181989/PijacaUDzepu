@@ -38,7 +38,8 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 **Administrator**
 - Pijace, tezge, prodavci (pozivnice e-mailom), korisnici (pretraga, po stranama), kuriri
 - Tehnička podrška (pitanja sa sajta)
-- Izveštaji: porudžbine, kupci i kuriri (gde i koliko su vozili), za izabrani period ili sve
+- Izveštaji: porudžbine, kupci, kuriri (gde i koliko su vozili), prodavci (promet, odbijanja i razlozi, vreme odgovora, ocena) i najprodavaniji proizvodi – za izabrani period ili sve; svaka tabela se izvozi u Excel
+- Upozorenje kada porudžbina predugo čeka prodavca (15 min) ili kurira (20 min); prodavcu ponovo zazvoni
 
 **Nalog (sve uloge)**
 - „Zaboravili ste lozinku?” – link za novu lozinku na e-mail (važi 2 sata, jednom)

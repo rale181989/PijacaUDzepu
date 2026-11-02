@@ -102,6 +102,19 @@ Bez ovoga obaveštenja stižu samo dok je aplikacija otvorena.
 
 ---
 
+## 4a. Upozorenje za porudžbine koje čekaju (opciono)
+
+Server sam proverava svakog minuta i javlja adminu (obaveštenje u aplikaciji + push) kada porudžbina
+čeka prodavca duže od 15 minuta ili kurira duže od 20 minuta; prodavcu tada ponovo zazvoni.
+Pragovi se menjaju na Render-u (bez novog APK-a):
+
+| Env varijabla | Podrazumevano |
+|---|---|
+| `Alerts__PendingMinutes` | `15` |
+| `Alerts__CourierMinutes` | `20` |
+
+---
+
 ## 4. Cena Eko kurira
 
 - [ ] Upisana dogovorena cena

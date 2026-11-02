@@ -274,6 +274,14 @@ export class NotificationService {
       });
     });
 
+    // Porudžbina predugo čeka prodavca ili kurira (OrderWatchdog na serveru) - za SuperAdmin-a
+    this.hubConnection.on('OrderWaiting', (data: { orderId: number; vendorName: string; reason: string; minutes: number }) => {
+      this.ngZone.run(async () => {
+        this.sound.play('update');
+        await this.showToast(`Porudžbina #${data.orderId} (${data.vendorName}) ${data.reason} već ${data.minutes} min`, 'warning', 10000);
+      });
+    });
+
     // Proizvod za koji je kupac tražio obaveštenje ponovo je u ponudi
     this.hubConnection.on('StockAvailable', (data: { productId: number; productName: string; vendorName: string }) => {
       this.ngZone.run(async () => {

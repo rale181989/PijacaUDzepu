@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-import { CourierReport, CustomerReport, OrdersReport, ReportService } from '../services/report.service';
+import { CourierReport, CustomerReport, OrdersReport, ProductsReport, ReportService, VendorReport, WaitingOrder } from '../services/report.service';
+import { downloadCsv } from '../shared/csv';
 import { FulfillmentType, OrderStatus } from '../models/order.model';
 import { PagerComponent, pageOf } from '../shared/pager/pager.component';
 
-type Tab = 'orders' | 'customers' | 'couriers';
+type Tab = 'orders' | 'customers' | 'couriers' | 'vendors' | 'products';
 type Preset = 'today' | '7' | '30' | 'month' | 'lastMonth' | 'year' | 'all';
 
 @Component({
@@ -35,6 +36,10 @@ export class AdminReportsPage {
   ordersReport: OrdersReport | null = null;
   customers: CustomerReport[] = [];
   couriers: CourierReport[] = [];
+  vendors: VendorReport[] = [];
+  productsReport: ProductsReport | null = null;
+  waiting: WaitingOrder[] = [];
+  productsPage = 0;
   // Izveštaj se učitava za karticu koja se gleda; ključ pamti za koji period je već učitan
   private loadedFor: Partial<Record<Tab, string>> = {};
   // Zahtev koji je u toku: isti se ne šalje ponovo, a novi (drugi period ili kartica) prekida stari
@@ -123,7 +128,11 @@ export class AdminReportsPage {
     const tab = this.tab;
     const request: Observable<unknown> = tab === 'orders' ? this.reportService.getOrders(this.from, this.to)
       : tab === 'customers' ? this.reportService.getCustomers(this.from, this.to)
+      : tab === 'vendors' ? this.reportService.getVendors(this.from, this.to)
+      : tab === 'products' ? this.reportService.getProducts(this.from, this.to)
       : this.reportService.getCouriers(this.from, this.to);
+    // Porudžbine koje trenutno predugo čekaju (ne zavise od perioda)
+    if (tab === 'orders') this.reportService.getWaiting().subscribe({ next: w => this.waiting = w, error: () => {} });
 
     this.loading = true;
     this.error = null;
@@ -131,6 +140,8 @@ export class AdminReportsPage {
       next: data => {
         if (tab === 'orders') { this.ordersReport = data as OrdersReport; this.daysPage = 0; }
         else if (tab === 'customers') { this.customers = data as CustomerReport[]; this.customersPage = 0; }
+        else if (tab === 'vendors') { this.vendors = data as VendorReport[]; }
+        else if (tab === 'products') { this.productsReport = data as ProductsReport; this.productsPage = 0; }
         else { this.couriers = data as CourierReport[]; this.deliveriesPage = 0; }
         this.loadedFor[tab] = key;
         this.loading = false;
@@ -205,13 +216,15 @@ export class AdminReportsPage {
     this.customersPage = 0;
   }
 
-  setTablePageSize(size: number, which: 'customers' | 'days' | 'deliveries') {
-    const pageOfTable = which === 'customers' ? this.customersPage : which === 'days' ? this.daysPage : this.deliveriesPage;
+  setTablePageSize(size: number, which: 'customers' | 'days' | 'deliveries' | 'products') {
+    const pageOfTable = which === 'customers' ? this.customersPage : which === 'days' ? this.daysPage
+      : which === 'products' ? this.productsPage : this.deliveriesPage;
     const next = PagerComponent.pageAfterResize(pageOfTable, this.tablePageSize, size);
     this.tablePageSize = size;
     this.customersPage = which === 'customers' ? next : 0;
     this.daysPage = which === 'days' ? next : 0;
     this.deliveriesPage = which === 'deliveries' ? next : 0;
+    this.productsPage = which === 'products' ? next : 0;
   }
 
   get guestCount(): number {
@@ -268,6 +281,60 @@ export class AdminReportsPage {
   dayName(date: string): string {
     const [y, m, d] = date.split('-').map(Number);
     return ['ned', 'pon', 'uto', 'sre', 'čet', 'pet', 'sub'][new Date(y, m - 1, d).getDay()];
+  }
+
+  get pagedProducts() {
+    return pageOf(this.productsReport?.products ?? [], this.productsPage, this.tablePageSize);
+  }
+
+  get maxCategoryRevenue(): number {
+    return Math.max(1, ...(this.productsReport?.categories.map(c => c.revenue) ?? []));
+  }
+
+  categoryLabel(c?: string | null): string {
+    const labels: Record<string, string> = {
+      Voce: 'Voće', Povrce: 'Povrće', MlecniProizvodi: 'Mlečni proizvodi', MesniProizvodi: 'Mesni proizvodi',
+      Konditori: 'Konditori', KucnaHemija: 'Kućna hemija', Ostalo: 'Ostalo'
+    };
+    return c ? labels[c] ?? c : 'Obrisan proizvod';
+  }
+
+  unitLabel(u: string): string {
+    const labels: Record<string, string> = { Kg: 'kg', Gram: 'g', Komad: 'kom', Veza: 'veza', Litar: 'l', Pakovanje: 'pak', Kutija: 'kut', Flasa: 'fl' };
+    return labels[u] ?? u;
+  }
+
+  // ---- izvoz u Excel (CSV) ----
+
+  private get periodSuffix(): string {
+    return `${this.from || 'pocetak'}_${this.to || 'danas'}`;
+  }
+
+  exportDays() {
+    if (!this.ordersReport) return;
+    downloadCsv(`porudzbine-po-danima_${this.periodSuffix}`, ['Datum', 'Porudžbina', 'Završeno', 'Promet (din)'],
+      this.ordersReport.byDay.map(d => [d.date, d.orders, d.completed, d.goodsTotal]));
+  }
+
+  exportCustomers() {
+    downloadCsv(`kupci_${this.periodSuffix}`, ['Kupac', 'Korisničko ime', 'Gost', 'Telefon', 'Porudžbina', 'Završeno', 'Odbijeno', 'Promet (din)', 'Poslednja'],
+      this.filteredCustomers.map(c => [c.name, c.userName, c.isGuest ? 'da' : 'ne', c.phone, c.orders, c.completed, c.rejected, c.goodsTotal, c.lastOrderAt.slice(0, 16).replace('T', ' ')]));
+  }
+
+  exportCouriers() {
+    downloadCsv(`kuriri-voznje_${this.periodSuffix}`, ['Kurir', 'Porudžbina', 'Datum', 'Prodavac', 'Pijaca', 'Adresa', 'Status', 'Trajanje (min)', 'Naknada (din)', 'Naplata (din)'],
+      this.couriers.flatMap(c => c.deliveries.map(d => [c.name, d.orderId, d.createdAt.slice(0, 16).replace('T', ' '), d.vendorName, d.marketName, d.deliveryAddress, this.statusLabel(d.status), d.minutes, d.deliveryFee, d.amountToPay])));
+  }
+
+  exportVendors() {
+    downloadCsv(`prodavci_${this.periodSuffix}`, ['Prodavac', 'Pijaca', 'Porudžbina', 'Završeno', 'Odbijeno', 'Odbijeno (%)', 'Promet (din)', 'Odgovor (min)', 'Ocena', 'Broj ocena', 'Poslednji razlozi odbijanja'],
+      this.vendors.map(v => [v.name, v.marketName, v.orders, v.completed, v.rejected, v.rejectionRate, v.goodsTotal, v.averageResponseMinutes, v.averageRating, v.ratingCount, v.recentRejectionReasons.join(' | ')]));
+  }
+
+  exportProducts() {
+    if (!this.productsReport) return;
+    downloadCsv(`proizvodi_${this.periodSuffix}`, ['Proizvod', 'Prodavac', 'Količina', 'Jedinica', 'Porudžbina', 'Promet (din)'],
+      this.productsReport.products.map(p => [p.productName, p.vendorName, p.quantity, this.unitLabel(p.unit), p.orders, p.revenue]));
   }
 
   fulfillmentLabel(f: FulfillmentType): string {
