@@ -43,6 +43,13 @@ export class NotificationService {
   private orderUpdatedSubject = new Subject<number>();
   orderUpdated$ = this.orderUpdatedSubject.asObservable();
 
+  // Veza je ponovo uspostavljena posle prekida (zaključan telefon, mreža) - događaji iz
+  // tog perioda su propušteni, pa stranice sa porudžbinama treba da se ponovo učitaju
+  private resyncSubject = new Subject<void>();
+  resync$ = this.resyncSubject.asObservable();
+
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+
   get courierAvailableCount(): number {
     return this.courierAvailableSubject.value;
   }
@@ -61,19 +68,37 @@ export class NotificationService {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.startConnection();
-        if (this.authService.hasRole('VendorAdmin')) {
-          this.loadPendingCount();
-        }
-        if (this.authService.hasRole('Courier')) {
-          this.loadCourierAvailableCount();
-        }
-        if (this.authService.hasRole('SuperAdmin')) {
-          this.loadSupportOpenCount();
-        }
+        this.loadCounts();
       } else {
         this.stopConnection();
       }
     });
+
+    // Povratak u aplikaciju (ili na tab): Android često prekine vezu dok je ekran zaključan
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || !this.authService.token) return;
+      if (this.hubConnection?.state === signalR.HubConnectionState.Disconnected || !this.hubConnection) {
+        this.startConnection();
+      }
+      this.ngZone.run(() => this.resync());
+    });
+  }
+
+  private loadCounts() {
+    if (this.authService.hasRole('VendorAdmin')) {
+      this.loadPendingCount();
+    }
+    if (this.authService.hasRole('Courier')) {
+      this.loadCourierAvailableCount();
+    }
+    if (this.authService.hasRole('SuperAdmin')) {
+      this.loadSupportOpenCount();
+    }
+  }
+
+  private resync() {
+    this.loadCounts();
+    this.resyncSubject.next();
   }
 
   loadPendingCount() {
@@ -104,15 +129,30 @@ export class NotificationService {
     if (!token) return;
 
     this.connecting = true;
+    this.clearRetry();
 
     if (this.hubConnection) {
-      await this.hubConnection.stop().catch(() => {});
+      const old = this.hubConnection;
+      this.hubConnection = null;
+      await old.stop().catch(() => {});
     }
 
-    this.hubConnection = new signalR.HubConnectionBuilder()
+    // Podrazumevani withAutomaticReconnect() odustaje posle 4 pokušaja (~42 s), pa bi prodavac
+    // i kurir posle dužeg prekida ostali bez obaveštenja; ovde se pokušava dok god je korisnik prijavljen
+    const connection = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, { accessTokenFactory: () => token })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: ctx => [0, 2000, 5000, 10000][ctx.previousRetryCount] ?? 30000
+      })
       .build();
+    this.hubConnection = connection;
+
+    connection.onreconnected(() => this.ngZone.run(() => this.resync()));
+
+    // Zatvorena veza (npr. server je bio nedostupan duže vreme) - nova veza za 5 s
+    connection.onclose(() => {
+      if (this.hubConnection === connection) this.scheduleRetry();
+    });
 
     this.hubConnection.on('NewOrder', (data: any) => {
       this.ngZone.run(async () => {
@@ -171,16 +211,34 @@ export class NotificationService {
     });
 
     try {
-      await this.hubConnection.start();
-    } catch {}
+      await connection.start();
+    } catch {
+      // Server nedostupan pri pokretanju (npr. Render se tek budi) - pokušaj ponovo
+      if (this.hubConnection === connection) this.scheduleRetry();
+    }
     finally {
       this.connecting = false;
     }
   }
 
+  private scheduleRetry() {
+    this.clearRetry();
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      if (this.authService.token) this.startConnection();
+    }, 5000);
+  }
+
+  private clearRetry() {
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+  }
+
   private stopConnection() {
-    this.hubConnection?.stop().catch(() => {});
+    this.clearRetry();
+    const old = this.hubConnection;
     this.hubConnection = null;
+    old?.stop().catch(() => {});
     this.pendingCountSubject.next(0);
     this.courierAvailableSubject.next(0);
     this.supportOpenSubject.next(0);

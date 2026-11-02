@@ -30,6 +30,8 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
     this.loadOrders();
     // Nova porudžbina, dodeljen kurir ili promena statusa od strane kurira
     this.sub = this.notificationService.orderUpdated$.subscribe(() => this.loadOrders());
+    // Posle prekida veze (zaključan telefon) učitavaju se i porudžbine koje su stigle u međuvremenu
+    this.sub.add(this.notificationService.resync$.subscribe(() => this.loadOrders()));
   }
 
   ngOnDestroy() {

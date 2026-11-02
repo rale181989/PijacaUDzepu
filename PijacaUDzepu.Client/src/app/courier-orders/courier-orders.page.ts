@@ -44,6 +44,8 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
         if (order) order.status = event.status as OrderStatus;
       }
     });
+    // Posle prekida veze (zaključan telefon) učitavaju se i porudžbine koje su stigle u međuvremenu
+    this.sub.add(this.notificationService.resync$.subscribe(() => this.load()));
   }
 
   ionViewWillEnter() {

@@ -95,7 +95,7 @@
           </p>
           <p class="muted">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
 
-          <ion-button *ngIf="order.status === 'Pending'" fill="outline" color="danger" size="small" (click)="cancel(group.code, order)">
+          <ion-button *ngIf="canCancel && order.status === 'Pending'" fill="outline" color="danger" size="small" (click)="cancel(group.code, order)">
             {{ 'orders.cancel' | t }}
           </ion-button>
         </ion-card-content>

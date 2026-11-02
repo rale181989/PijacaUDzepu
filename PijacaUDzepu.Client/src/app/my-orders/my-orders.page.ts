@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { OrderService } from '../services/order.service';
-import { Order } from '../models/order.model';
+import { Order, CUSTOMER_CANCEL_ENABLED } from '../models/order.model';
 import { ToastController } from '@ionic/angular/lazy';
 import { TranslateService } from '../services/translate.service';
 import { NotificationService } from '../services/notification.service';
@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 })
 export class MyOrdersPage implements OnInit, OnDestroy {
   orders: Order[] = [];
+  readonly canCancel = CUSTOMER_CANCEL_ENABLED;
   private sub?: Subscription;
   private loadSub?: Subscription;
   loading = false;

@@ -89,6 +89,7 @@ The environments differ only in `apiUrl`:
 - **Guest tracking:**
   - A guest checkout gets a random `TrackingCode`, shared by all orders of that checkout. It is returned only in the guest-create response, never in vendor or courier views.
   - `GET /api/orders/track/{code}` returns the orders with the address and phone partly masked. `PUT .../track/{code}/{id}/cancel` cancels a pending order.
+  - Customer and guest cancellation is temporarily disabled: `OrderService.CustomerCancelEnabled` and the client's `CUSTOMER_CANCEL_ENABLED` (`order.model.ts`) must be switched together.
   - The link works while any order is active and for 30 days after the last change.
   - Live updates go through the anonymous `TrackingHub` (`/hubs/tracking`, `Subscribe(code)`).
   - If the guest enters an optional email, `EmailService.SendTrackingLink` sends the link from a background task, so checkout neither waits for SMTP nor fails because of it. It is skipped with a log warning when `Email:SmtpUser`/`SmtpPass` are empty. Links use `FrontendUrl`.
@@ -133,4 +134,4 @@ It also creates four markets, their stalls, the vendors, and their products. The
   - Role-restricted pages use `RoleGuard` with `data: { roles: [...] }`.
 - `interceptors/token.interceptor.ts` attaches the JWT, which `AuthService` keeps in `localStorage` (`token`, `user`).
 - **i18n:** `services/translate.service.ts` holds an inline dictionary per language (`sr`, `en`, `ru`). Templates use the `t` pipe (`'key' | t`) from `pipes/translate.pipe.ts`, exported through `SharedModule`. New user-facing text on customer pages needs keys in all three languages. The vendor and admin pages still mostly use hardcoded Serbian strings.
-- `CartService` keeps the cart on the client, in `localStorage` (`cart`). `NotificationService` wraps the SignalR connection.
+- `CartService` keeps the cart on the client, in `localStorage` (`cart`). `NotificationService` wraps the SignalR connection. It reconnects indefinitely (the default `withAutomaticReconnect()` gives up after ~42 s) and emits `resync$` after a reconnect or when the app becomes visible, so the vendor and courier order pages reload events they missed.

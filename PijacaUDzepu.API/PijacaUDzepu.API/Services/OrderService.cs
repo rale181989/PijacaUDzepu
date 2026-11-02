@@ -46,6 +46,11 @@ public class OrderService : IOrderService
 
     private const string CouriersGroup = "couriers";
 
+    // Kupci i gosti privremeno ne mogu da otkažu porudžbinu (prodavac i dalje može da je odbije).
+    // Za ponovno uključivanje promeniti i CUSTOMER_CANCEL_ENABLED u klijentu (order.model.ts).
+    private static readonly bool CustomerCancelEnabled = false;
+    private const string CancelDisabledMessage = "Otkazivanje porudžbina trenutno nije moguće. Javite se prodavcu.";
+
     public async Task<List<OrderDto>> CreateOrders(int customerId, OrderInputDto dto)
     {
         var address = ValidateAddress(dto.Fulfillment, dto.DeliveryAddress);
@@ -267,6 +272,9 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CancelOrder(int orderId, int customerId)
     {
+        if (!CustomerCancelEnabled)
+            throw new InvalidOperationException(CancelDisabledMessage);
+
         var order = await OrdersWithDetails()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId)
             ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
@@ -293,6 +301,9 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CancelTrackedOrder(string code, int orderId)
     {
+        if (!CustomerCancelEnabled)
+            throw new InvalidOperationException(CancelDisabledMessage);
+
         var order = (await LoadTrackedOrders(code)).FirstOrDefault(o => o.Id == orderId)
             ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
 

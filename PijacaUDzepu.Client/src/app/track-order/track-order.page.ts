@@ -8,7 +8,7 @@ import { OrderService } from '../services/order.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
 import { SoundService } from '../services/sound.service';
 import { TranslateService } from '../services/translate.service';
-import { Order } from '../models/order.model';
+import { Order, CUSTOMER_CANCEL_ENABLED } from '../models/order.model';
 import { environment } from '../../environments/environment';
 
 interface TrackedGroup {
@@ -26,6 +26,7 @@ interface TrackedGroup {
 })
 export class TrackOrderPage implements OnInit, OnDestroy {
   code: string | null = null;
+  readonly canCancel = CUSTOMER_CANCEL_ENABLED;
   groups: TrackedGroup[] = [];
   loading = false;
   notFound = false;

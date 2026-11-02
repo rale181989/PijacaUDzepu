@@ -67,4 +67,8 @@ export interface OrderItemInput {
 // Pickup = rezervacija, kupac sam preuzima kod prodavca; Courier = dostava preko Eko kurira
 export type FulfillmentType = 'Pickup' | 'Courier';
 
+// Kupci i gosti privremeno ne mogu da otkažu porudžbinu; mora da se poklapa sa
+// CustomerCancelEnabled u OrderService na serveru
+export const CUSTOMER_CANCEL_ENABLED = false;
+
 export type OrderStatus = 'Pending' | 'Confirmed' | 'Rejected' | 'ReadyForPickup' | 'InDelivery' | 'Completed' | 'Cancelled';

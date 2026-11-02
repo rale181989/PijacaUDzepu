@@ -41,7 +41,7 @@
         <p *ngIf="order.courierName" class="date">
           <ion-icon name="bicycle-outline"></ion-icon> {{ 'order.courier' | t }}: {{ order.courierName }}
         </p>
-        <ion-button *ngIf="order.status === 'Pending'" fill="outline" color="danger" size="small"
+        <ion-button *ngIf="canCancel && order.status === 'Pending'" fill="outline" color="danger" size="small"
                     (click)="cancelOrder(order); $event.stopPropagation()">
           {{ 'orders.cancel' | t }}
         </ion-button>
