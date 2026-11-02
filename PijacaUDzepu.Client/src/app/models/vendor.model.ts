@@ -15,7 +15,21 @@ export interface Vendor {
   minOrderAmount?: number;
   deliveryRadiusKm?: number;
   deliverySchedule?: DeliveryScheduleEntry[];
+  // Radno vreme i dostupnost (day: 1 = ponedeljak ... 7 = nedelja)
+  ordersPaused: boolean;
+  openingHours: DeliveryScheduleEntry[];
+  closedDates: string[];
+  isOpen: boolean;
+  closedReason?: 'Paused' | 'ClosedDay' | 'Hours' | 'Inactive' | null;
+  opensAt?: string | null;
+  closesAt?: string | null;
   createdAt: string;
+}
+
+export interface VendorAvailabilityInput {
+  ordersPaused: boolean;
+  openingHours: DeliveryScheduleEntry[];
+  closedDates: string[];
 }
 
 export interface VendorInput {

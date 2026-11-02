@@ -666,6 +666,9 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
+                    b.Property<List<DateOnly>>("ClosedDates")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -695,6 +698,12 @@ namespace PijacaUDzepu.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("OffersDelivery")
+                        .HasColumnType("boolean");
+
+                    b.Property<List<DeliveryScheduleEntry>>("OpeningHours")
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("OrdersPaused")
                         .HasColumnType("boolean");
 
                     b.Property<List<string>>("Phones")

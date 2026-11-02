@@ -20,3 +20,58 @@
   padding: 4px 16px;
   margin: 0;
 }
+
+// Radno vreme i dostupnost
+.availability-section {
+  padding: 16px;
+  margin-top: 8px;
+
+  h3 { margin: 0 0 6px; }
+  h4 { margin: 16px 0 6px; font-size: 15px; }
+  .hint { font-size: 13px; color: var(--ion-color-medium); }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    font-weight: 600;
+    color: var(--ion-color-success);
+    &.closed { color: var(--ion-color-danger); }
+  }
+
+  .pause-item {
+    --background: rgba(var(--ion-color-medium-rgb), 0.08);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    &.paused { --background: rgba(var(--ion-color-danger-rgb), 0.1); }
+    .hint { display: block; font-weight: 400; }
+    ion-toggle::part(label) { white-space: normal; }
+  }
+
+  .day-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--ion-color-light);
+    &.off .times { opacity: 0.4; }
+    ion-checkbox { flex: 1; min-width: 0; }
+    // Vreme uvek u jednom redu, i za duže nazive dana na uskom telefonu
+    .times { display: flex; align-items: center; gap: 4px; flex-shrink: 0; white-space: nowrap; }
+    .times input { width: 92px; font-size: 14px; padding: 3px 4px; }
+  }
+
+  input[type="time"], input[type="date"] {
+    font: inherit;
+    padding: 4px 6px;
+    border: 1px solid var(--ion-color-light-shade);
+    border-radius: 6px;
+    background: var(--ion-background-color, #fff);
+    color: var(--ion-text-color);
+  }
+
+  .closed-dates { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+  .add-date { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+}

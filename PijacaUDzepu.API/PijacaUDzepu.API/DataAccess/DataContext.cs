@@ -201,6 +201,10 @@ public class DataContext : IdentityDbContext<User, Role, int,
 
             entity.Property(v => v.DeliverySchedule)
                 .HasColumnType("jsonb");
+            entity.Property(v => v.OpeningHours)
+                .HasColumnType("jsonb");
+            entity.Property(v => v.ClosedDates)
+                .HasColumnType("jsonb");
 
             entity.HasOne(v => v.Market)
                 .WithMany(m => m.Vendors)

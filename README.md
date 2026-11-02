@@ -20,6 +20,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost
 - Porudžbine po stranama; zvono dok ima porudžbina na čekanju
 - Potvrdi / odbij (razlog obavezan, kupac ga dobija i e-mailom) / spremno / kupac preuzeo
+- Radno vreme po danima, neradni dani i pauza („privremeno ne primam porudžbine”); van radnog vremena kupac vidi kad se tezga otvara i ne može da poruči
 
 **Eko kurir**
 - Smena; zvono za nove dostave dok ih ne prihvati ili odbije

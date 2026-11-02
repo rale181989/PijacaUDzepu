@@ -24,3 +24,11 @@ public class VendorInputDto
     public int? DeliveryRadiusKm { get; set; }
     public List<DeliveryScheduleEntry>? DeliverySchedule { get; set; }
 }
+
+// Prodavac podešava svoju dostupnost (Moj profil → Radno vreme)
+public class VendorAvailabilityDto
+{
+    public bool OrdersPaused { get; set; }
+    public List<DeliveryScheduleEntry> OpeningHours { get; set; } = new();
+    public List<DateOnly> ClosedDates { get; set; } = new();
+}

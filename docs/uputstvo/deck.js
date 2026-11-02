@@ -198,8 +198,8 @@ async function build() {
   s.title('Jedna aplikacija, tri uloge');
   const roles = [
     ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko Eko kurira. Nalog nije obavezan.', 'Strane 3–11'],
-    ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 12–17'],
-    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 18–21']
+    ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 12–18'],
+    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 19–22']
   ];
   for (const [i, [ic, col, h, d, pages]] of roles.entries()) {
     const x = 0.6 + i * 4.1;
@@ -242,7 +242,7 @@ async function build() {
   s.steps([
     { h: 'Kartica proizvoda', d: 'Naziv, prodavac, pijaca i broj tezge, telefon prodavca i cena po jedinici mere.' },
     { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite.' },
-    { h: 'Dodaj', d: 'Proizvod ide u korpu. Ikonica korpe gore desno vodi do nje.' },
+    { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno). Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
     { h: 'Više prodavaca u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca. Svaki prodavac dobija svoj deo porudžbine.' }
   ]);
   s.phone('c-home-products', RIGHT_X, PHONE_Y, PHONE_H, 'Kartice proizvoda sa količinom i dugmetom Dodaj',
@@ -389,6 +389,18 @@ async function build() {
   ]);
   s.phone('v-profile', RIGHT_X, PHONE_Y, PHONE_H, 'Profil tezge sa promenom lozinke',
     [[1, 0.95, 0.125], [2, 0.93, 0.32], [3, 0.93, 0.62]]);
+
+  // Radno vreme
+  s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');
+  s.title('Radno vreme i neradni dani');
+  s.steps([
+    { h: 'Pauza', d: 'Prekidač „Privremeno ne primam porudžbine” – npr. kad nestane robe ili napuštate tezgu.' },
+    { h: 'Radno vreme', d: 'Označite dane i vreme kada primate porudžbine. Bez označenih dana porudžbine stižu u svako doba.' },
+    { h: 'Neradni dani', d: 'Odmor ili praznik: dodajte datum. Prošli datumi se brišu sami.' },
+    { h: 'Šta vidi kupac', n: '✓', d: 'Van radnog vremena kupac vidi „Zatvoreno · otvara se sutra u 07:00” i ne može da poruči.' }
+  ]);
+  s.phone('v-hours', RIGHT_X, PHONE_Y, PHONE_H, 'Radno vreme, pauza i neradni dani tezge',
+    [[1, 0.93, 0.25], [2, -0.11, 0.453], [3, 0.47, 0.887]]);
 
   // 18. Odeljak: kuriri
   await section('03', 'Za Eko kurire', 'Smena, zvono za nove dostave, prihvatanje ili odbijanje i isporuka korak po korak.', 'MdDeliveryDining', 'sky', 'Kuriri');

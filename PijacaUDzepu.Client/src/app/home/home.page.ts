@@ -5,6 +5,7 @@ import { VendorService } from '../services/vendor.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
 import { Product, ProductCategory, ProductSort, ProductUnit } from '../models/product.model';
+import { vendorClosedText } from '../services/vendor-status';
 import { Vendor } from '../models/vendor.model';
 import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
@@ -344,6 +345,10 @@ export class HomePage implements OnInit {
 
   getUnitLabel(unit: string): string {
     return this.ts.t('unit.' + unit) || unit;
+  }
+
+  closedText(product: Product): string {
+    return vendorClosedText(this.ts, product.vendorClosedReason, product.vendorOpensAt);
   }
 
   // Neispravna ili nedostupna slika se menja zamenskom, umesto da se prikaže tekst

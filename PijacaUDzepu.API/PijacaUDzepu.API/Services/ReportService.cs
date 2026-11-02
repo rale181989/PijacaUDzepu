@@ -1,3 +1,4 @@
+using PijacaUDzepu.API.Helpers;
 using Microsoft.EntityFrameworkCore;
 using PijacaUDzepu.API.DataAccess;
 using PijacaUDzepu.API.Models.DTO.Output;
@@ -10,7 +11,7 @@ namespace PijacaUDzepu.API.Services;
 // Baza vraća samo potrebne kolone, a grupisanje ide u memoriji - za obim jedne pijace to je dovoljno brzo.
 public class ReportService : IReportService
 {
-    private static readonly TimeZoneInfo LocalZone = FindLocalZone();
+    private static readonly TimeZoneInfo LocalZone = LocalTime.Zone;
 
     private readonly DataContext _context;
 
@@ -232,9 +233,4 @@ public class ReportService : IReportService
     private static DateOnly ToLocalDate(DateTime utc) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), LocalZone));
 
-    private static TimeZoneInfo FindLocalZone()
-    {
-        try { return TimeZoneInfo.FindSystemTimeZoneById("Europe/Belgrade"); }
-        catch { return TimeZoneInfo.Utc; }
-    }
 }

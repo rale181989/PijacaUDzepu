@@ -64,6 +64,47 @@
     </ion-button>
   </form>
 
+  <div *ngIf="!loading" class="availability-section">
+    <h3>Radno vreme i dostupnost</h3>
+    <p class="status" [class.closed]="!isOpen"><ion-icon [name]="isOpen ? 'checkmark-circle' : 'time-outline'"></ion-icon> {{ statusText }}</p>
+
+    <ion-item lines="none" class="pause-item" [class.paused]="ordersPaused">
+      <ion-toggle [(ngModel)]="ordersPaused" justify="space-between">
+        <strong>Privremeno ne primam porudžbine</strong>
+        <span class="hint">Kupci vide da tezga trenutno ne prima porudžbine.</span>
+      </ion-toggle>
+    </ion-item>
+
+    <p class="hint">Radni dani i vreme kada primate porudžbine. Ako nijedan dan nije označen, porudžbine stižu u svako doba.</p>
+    <div *ngFor="let d of days" class="day-row" [class.off]="!d.open">
+      <ion-checkbox [(ngModel)]="d.open" labelPlacement="end" justify="start">{{ d.label }}</ion-checkbox>
+      <span class="times">
+        <input type="time" [(ngModel)]="d.from" [disabled]="!d.open" [attr.aria-label]="d.label + ' od'" />
+        –
+        <input type="time" [(ngModel)]="d.to" [disabled]="!d.open" [attr.aria-label]="d.label + ' do'" />
+      </span>
+    </div>
+    <ion-button fill="clear" size="small" (click)="copyFirstDay()">Isto vreme za sve označene dane</ion-button>
+
+    <h4>Neradni dani (odmor, praznik)</h4>
+    <div class="closed-dates">
+      <ion-chip *ngFor="let date of closedDates" outline color="danger">
+        <ion-label>{{ date | date:'dd.MM.yyyy' }}</ion-label>
+        <ion-icon name="close-circle" (click)="removeClosedDate(date)"></ion-icon>
+      </ion-chip>
+      <span *ngIf="closedDates.length === 0" class="hint">Nema neradnih dana.</span>
+    </div>
+    <div class="add-date">
+      <input type="date" [(ngModel)]="newClosedDate" [min]="today" aria-label="Neradni dan" />
+      <ion-button size="small" fill="outline" [disabled]="!newClosedDate" (click)="addClosedDate()">Dodaj</ion-button>
+    </div>
+
+    <ion-button expand="block" (click)="saveAvailability()" [disabled]="savingAvailability" class="ion-margin-top">
+      <ion-spinner *ngIf="savingAvailability" name="crescent" slot="start"></ion-spinner>
+      Sačuvaj radno vreme
+    </ion-button>
+  </div>
+
   <div *ngIf="!loading" class="password-section">
     <h3>Promena lozinke</h3>
     <form (ngSubmit)="changePassword()">

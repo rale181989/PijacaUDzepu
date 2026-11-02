@@ -1,3 +1,4 @@
+using PijacaUDzepu.API.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -163,6 +164,14 @@ public class OrderService : IOrderService
         var missingIds = productIds.Except(products.Select(p => p.Id)).ToList();
         if (missingIds.Any())
             throw new KeyNotFoundException($"Proizvodi sa ID {string.Join(", ", missingIds)} nisu pronađeni.");
+
+        // Pauza, neradni dan ili van radnog vremena: porudžbina se ne prima (poruka kaže kad se tezga otvara)
+        var closed = products.Select(p => p.Vendor).DistinctBy(v => v.Id)
+            .Select(v => (vendor: v, status: VendorAvailability.Evaluate(v)))
+            .Where(x => !x.status.IsOpen)
+            .ToList();
+        if (closed.Any())
+            throw new InvalidOperationException(string.Join(" ", closed.Select(x => VendorAvailability.ClosedMessage(x.vendor, x.status))));
 
         var groupedByVendor = items
             .GroupBy(item => products.First(p => p.Id == item.ProductId).VendorId)

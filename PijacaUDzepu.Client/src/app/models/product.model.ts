@@ -13,6 +13,10 @@ export interface Product {
   note?: string;
   imageUrl?: string;
   isAvailable: boolean;
+  // Da li tezga sada prima porudžbine (radno vreme, neradni dan, pauza)
+  vendorOpen?: boolean;
+  vendorClosedReason?: string | null;
+  vendorOpensAt?: string | null;
 }
 
 export interface ProductInput {

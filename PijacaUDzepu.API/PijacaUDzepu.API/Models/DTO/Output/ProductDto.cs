@@ -17,5 +17,9 @@ public class ProductDto
     public ProductClass? ProductClass { get; set; }
     public string? Note { get; set; }
     public string? ImageUrl { get; set; }
+    // Da li tezga sada prima porudžbine (vidi VendorDto)
+    public bool VendorOpen { get; set; } = true;
+    public string? VendorClosedReason { get; set; }
+    public DateTime? VendorOpensAt { get; set; }
     public bool IsAvailable { get; set; }
 }

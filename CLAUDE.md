@@ -89,6 +89,12 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - Vendors can attach a `Message` to a status change, stored as `VendorMessage`. It is pushed to the customer only with the change it was written for.
   - Rejecting requires a reason (the vendor's dialog won't close without one, and the API returns 400). The reason is also emailed in the background (`EmailService.SendOrderRejected`) to `GuestEmail` or the customer's account email, linking to `/prati/{code}` for guests and `/order-detail/{id}` for customers. The customer's pages (`my-orders`, `order-detail`, `prati`) show a rejected order with its items and amount struck through and the reason in a red box, and the live notification is a red toast (`rejectionText` in `NotificationService`).
   - SignalR uses `JsonStringEnumConverter` like the REST API, so enums arrive as strings on both channels.
+- **Vendor opening hours** (`Helpers/VendorAvailability`, all in local Europe/Belgrade time via `Helpers/LocalTime`):
+  - Fields: `Vendor.OrdersPaused`, `OpeningHours` (jsonb list of `{ day: 1=Mon … 7=Sun, from, to }`) and `ClosedDates` (jsonb list of dates). No opening hours means the vendor is always open.
+  - The vendor edits them in "Moj profil → Radno vreme" (`PUT /api/vendors/my-vendor/availability`). Past closed dates are dropped and there is one entry per day.
+  - `VendorDto` and `ProductDto` carry the current state: `IsOpen`/`VendorOpen`, `ClosedReason` (`Paused`/`ClosedDay`/`Hours`/`Inactive`) and `OpensAt` (local time). The home page shows "Zatvoreno · otvara se …" (`services/vendor-status.ts`) and disables adding to the cart.
+  - `OrderService.BuildOrders` rejects an order containing items from a closed vendor, with a message that says when the vendor opens.
+  - `AcceptsReservations`, `OffersDelivery`, `MinOrderAmount`, `DeliveryRadiusKm` and `DeliverySchedule` on `Vendor` are leftovers from an earlier plan in which vendors delivered themselves. Nothing reads them. The minimum order amount is deliberately not enforced (owner's decision). The delivery radius would need geocoding.
 - **Guest tracking:**
   - A guest checkout gets a random `TrackingCode`, shared by all orders of that checkout. It is returned only in the guest-create response, never in vendor or courier views.
   - `GET /api/orders/track/{code}` returns the orders with the address and phone partly masked. `PUT .../track/{code}/{id}/cancel` cancels a pending order.

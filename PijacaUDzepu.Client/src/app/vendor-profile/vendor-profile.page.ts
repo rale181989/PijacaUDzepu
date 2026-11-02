@@ -5,6 +5,8 @@ import { AuthService } from '../services/auth.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
 import { VendorInput } from '../models/vendor.model';
+import { TranslateService } from '../services/translate.service';
+import { vendorClosedText } from '../services/vendor-status';
 import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
 
@@ -31,6 +33,17 @@ export class VendorProfilePage implements OnInit {
 
   readonly maxPhones = 5;
 
+  // Radno vreme i dostupnost (posebno čuvanje: PUT my-vendor/availability)
+  readonly dayLabels = ['Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja'];
+  days = this.dayLabels.map((label, i) => ({ day: i + 1, label, open: false, from: '07:00', to: '14:00' }));
+  ordersPaused = false;
+  closedDates: string[] = [];
+  newClosedDate = '';
+  statusText = '';
+  isOpen = true;
+  savingAvailability = false;
+  readonly today = new Date().toISOString().slice(0, 10);
+
   addPhone() {
     this.model.phones.push('');
   }
@@ -48,7 +61,8 @@ export class VendorProfilePage implements OnInit {
     private authService: AuthService,
     private marketService: MarketService,
     private stallService: StallService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private ts: TranslateService
   ) {}
 
   ngOnInit() {
@@ -71,9 +85,61 @@ export class VendorProfilePage implements OnInit {
           deliverySchedule: v.deliverySchedule ?? []
         };
         if (v.marketId) this.loadStalls(v.marketId);
+        this.applyAvailability(v);
         this.loading = false;
       },
       error: () => this.loading = false
+    });
+  }
+
+  private applyAvailability(v: { ordersPaused: boolean; openingHours: { day: number; from: string; to: string }[]; closedDates: string[]; isOpen: boolean; closedReason?: string | null; opensAt?: string | null; closesAt?: string | null }) {
+    this.ordersPaused = v.ordersPaused;
+    this.closedDates = [...(v.closedDates ?? [])];
+    this.days = this.dayLabels.map((label, i) => {
+      const h = v.openingHours?.find(x => x.day === i + 1);
+      return { day: i + 1, label, open: !!h, from: h?.from ?? '07:00', to: h?.to ?? '14:00' };
+    });
+    this.isOpen = v.isOpen;
+    this.statusText = v.isOpen
+      ? (v.closesAt ? `Sada primate porudžbine (do ${v.closesAt})` : 'Sada primate porudžbine')
+      : vendorClosedText(this.ts, v.closedReason, v.opensAt);
+  }
+
+  // Vreme prvog uključenog dana prepisuje se na sve uključene dane
+  copyFirstDay() {
+    const first = this.days.find(d => d.open);
+    if (!first) return;
+    this.days.forEach(d => { if (d.open) { d.from = first.from; d.to = first.to; } });
+  }
+
+  addClosedDate() {
+    if (!this.newClosedDate || this.closedDates.includes(this.newClosedDate)) return;
+    this.closedDates = [...this.closedDates, this.newClosedDate].sort();
+    this.newClosedDate = '';
+  }
+
+  removeClosedDate(date: string) {
+    this.closedDates = this.closedDates.filter(d => d !== date);
+  }
+
+  saveAvailability() {
+    this.savingAvailability = true;
+    this.vendorService.updateMyAvailability({
+      ordersPaused: this.ordersPaused,
+      openingHours: this.days.filter(d => d.open).map(d => ({ day: d.day, from: d.from, to: d.to })),
+      closedDates: this.closedDates
+    }).subscribe({
+      next: async v => {
+        this.savingAvailability = false;
+        this.applyAvailability(v);
+        const toast = await this.toastController.create({ message: 'Radno vreme sačuvano', duration: 2000, color: 'success' });
+        await toast.present();
+      },
+      error: async err => {
+        this.savingAvailability = false;
+        const toast = await this.toastController.create({ message: err.error?.message || 'Greška pri čuvanju', duration: 3000, color: 'danger' });
+        await toast.present();
+      }
     });
   }
 

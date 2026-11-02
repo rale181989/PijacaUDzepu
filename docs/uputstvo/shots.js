@@ -97,6 +97,16 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   await shot(page, 'v-products', '/vendor-products');
   await shot(page, 'v-product-form', '/vendor-product-form/1');
   await shot(page, 'v-profile', '/vendor-profile');
+  // Radno vreme: privremeno 07-14 pon-sub i neradni dan za 3 dana, snimak, pa vraćanje bez ograničenja
+  if (!only.length || only.includes('v-hours')) {
+    const avail = body => fetch('http://localhost:5000/api/vendors/my-vendor/availability', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + demo.marko.token }, body: JSON.stringify(body)
+    });
+    const d = new Date(); d.setDate(d.getDate() + 3);
+    await avail({ ordersPaused: false, openingHours: [1, 2, 3, 4, 5, 6].map(day => ({ day, from: '07:00', to: '14:00' })), closedDates: [d.toISOString().slice(0, 10)] });
+    await shot(page, 'v-hours', '/vendor-profile', scrollToText('Radno vreme i dostupnost'));
+    await avail({ ordersPaused: false, openingHours: [], closedDates: [] });
+  }
   await shot(page, 'v-menu', '/vendor-orders', openMenu);
 
   // Kurir

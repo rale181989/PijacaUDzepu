@@ -284,17 +284,20 @@
             </p>
             <p *ngIf="product.note" class="product-note">{{ product.note }}</p>
             <p class="product-price">{{ product.price | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel(product.unit) }}</p>
+            <p *ngIf="product.vendorOpen === false" class="vendor-closed">
+              <ion-icon name="time-outline"></ion-icon> {{ closedText(product) }}
+            </p>
             <p *ngIf="getPricePerKg(product) as perKg" class="product-unit-price">≈ {{ perKg | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel('Kg') }}</p>
             <div class="qty-controls">
               <ion-button fill="outline" size="small" (click)="decreaseQty(product)" [disabled]="getSelectedQty(product.id) === 0">
                 <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
               </ion-button>
               <span class="qty-value">{{ getSelectedQty(product.id) }}</span>
-              <ion-button fill="outline" size="small" (click)="increaseQty(product)">
+              <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false">
                 <ion-icon name="add-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>
-            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="getSelectedQty(product.id) === 0">
+            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="getSelectedQty(product.id) === 0 || product.vendorOpen === false">
               <ion-icon name="cart-outline" slot="start"></ion-icon>
               {{ 'home.add' | t }}
             </ion-button>

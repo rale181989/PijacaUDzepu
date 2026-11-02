@@ -97,6 +97,24 @@ public class VendorsController : BaseApiController
         return Ok(vendor);
     }
 
+    // Pauza, radno vreme i neradni dani tezge (prodavac sam)
+    [Authorize(Policy = "RequireVendorAdmin")]
+    [HttpPut("my-vendor/availability")]
+    public async Task<IActionResult> UpdateMyAvailability(VendorAvailabilityDto dto)
+    {
+        var vendorId = await _vendorService.GetVendorIdForUser(User.GetUserId());
+        if (vendorId == null) return NotFound(new { message = "Niste dodeljeni prodavcu." });
+
+        try
+        {
+            return Ok(await _vendorService.UpdateAvailability(vendorId.Value, dto));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [Authorize(Policy = "RequireVendorAdmin")]
     [HttpPut("my-vendor")]
     public async Task<IActionResult> UpdateMyVendor(VendorInputDto dto)

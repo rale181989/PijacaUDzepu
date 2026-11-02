@@ -18,6 +18,14 @@ public class VendorDto
     public decimal? MinOrderAmount { get; set; }
     public int? DeliveryRadiusKm { get; set; }
     public List<DeliveryScheduleEntry>? DeliverySchedule { get; set; }
+    public bool OrdersPaused { get; set; }
+    public List<DeliveryScheduleEntry> OpeningHours { get; set; } = new();
+    public List<DateOnly> ClosedDates { get; set; } = new();
+    // Trenutno stanje (lokalno vreme): da li prima porudžbine, razlog (Paused/ClosedDay/Hours/Inactive), kad se otvara/zatvara
+    public bool IsOpen { get; set; }
+    public string? ClosedReason { get; set; }
+    public DateTime? OpensAt { get; set; }
+    public string? ClosesAt { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

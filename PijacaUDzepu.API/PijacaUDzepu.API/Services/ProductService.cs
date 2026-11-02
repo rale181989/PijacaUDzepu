@@ -184,8 +184,11 @@ public class ProductService : IProductService
     private static readonly System.Linq.Expressions.Expression<Func<Product, decimal>> PricePerComparableUnit =
         p => p.Unit == Models.Enums.ProductUnit.Gram ? p.Price * 1000 : p.Price;
 
-    private static ProductDto MapToDto(Product p) => new()
+    private static ProductDto MapToDto(Product p)
     {
+        var status = p.Vendor != null ? VendorAvailability.Evaluate(p.Vendor) : null;
+        return new ProductDto
+        {
         Id = p.Id,
         VendorId = p.VendorId,
         VendorName = p.Vendor?.Name ?? "",
@@ -199,6 +202,10 @@ public class ProductService : IProductService
         ProductClass = p.ProductClass,
         Note = p.Note,
         ImageUrl = p.ImageUrl,
-        IsAvailable = p.IsAvailable
-    };
+        IsAvailable = p.IsAvailable,
+        VendorOpen = status?.IsOpen ?? true,
+        VendorClosedReason = status?.ClosedReason,
+        VendorOpensAt = status?.OpensAt
+        };
+    }
 }

@@ -17,6 +17,12 @@ public class Vendor
     public decimal? MinOrderAmount { get; set; }
     public int? DeliveryRadiusKm { get; set; }
     public List<DeliveryScheduleEntry>? DeliverySchedule { get; set; }
+    // Radno vreme i dostupnost tezge (VendorAvailability): pauza, radno vreme po danima (Day 1 = pon ... 7 = ned)
+    // i neradni dani. Bez radnog vremena tezga radi stalno. AcceptsReservations/OffersDelivery/MinOrderAmount/
+    // DeliveryRadiusKm/DeliverySchedule su iz ranijeg plana (prodavac sam dostavlja) i aplikacija ih ne koristi.
+    public bool OrdersPaused { get; set; }
+    public List<DeliveryScheduleEntry>? OpeningHours { get; set; }
+    public List<DateOnly>? ClosedDates { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

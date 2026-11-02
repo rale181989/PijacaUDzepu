@@ -114,6 +114,24 @@ public class VendorService : IVendorService
             .AnyAsync(vu => vu.UserId == userId && vu.VendorId == vendorId);
     }
 
+    public async Task<VendorDto> UpdateAvailability(int vendorId, VendorAvailabilityDto dto)
+    {
+        var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall).FirstOrDefaultAsync(v => v.Id == vendorId)
+            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+
+        var invalid = dto.OpeningHours.FirstOrDefault(h => !VendorAvailability.IsValid(h));
+        if (invalid != null)
+            throw new InvalidOperationException("Radno vreme nije ispravno: početak mora biti pre kraja (npr. 07:00 – 14:00).");
+
+        vendor.OrdersPaused = dto.OrdersPaused;
+        // Jedan unos po danu; prošli neradni dani se ne čuvaju
+        vendor.OpeningHours = dto.OpeningHours.GroupBy(h => h.Day).Select(g => g.First()).OrderBy(h => h.Day).ToList();
+        vendor.ClosedDates = dto.ClosedDates.Where(d => d >= LocalTime.Today).Distinct().OrderBy(d => d).Take(60).ToList();
+        vendor.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return MapToDto(vendor);
+    }
+
     public async Task<string> UpdateVendorImage(int vendorId, IFormFile file)
     {
         var vendor = await _context.Vendors.FindAsync(vendorId)
@@ -147,8 +165,11 @@ public class VendorService : IVendorService
             .Distinct()
             .ToList();
 
-    private static VendorDto MapToDto(Vendor v) => new()
+    private static VendorDto MapToDto(Vendor v)
     {
+        var status = VendorAvailability.Evaluate(v);
+        return new VendorDto
+        {
         Id = v.Id,
         MarketId = v.MarketId,
         MarketName = v.Market?.Name ?? "",
@@ -165,6 +186,14 @@ public class VendorService : IVendorService
         MinOrderAmount = v.MinOrderAmount,
         DeliveryRadiusKm = v.DeliveryRadiusKm,
         DeliverySchedule = v.DeliverySchedule,
+        OrdersPaused = v.OrdersPaused,
+        OpeningHours = v.OpeningHours ?? new(),
+        ClosedDates = v.ClosedDates ?? new(),
+        IsOpen = status.IsOpen,
+        ClosedReason = status.ClosedReason,
+        OpensAt = status.OpensAt,
+        ClosesAt = status.ClosesAt,
         CreatedAt = v.CreatedAt
-    };
+        };
+    }
 }

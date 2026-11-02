@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Vendor, VendorInput } from '../models/vendor.model';
+import { Vendor, VendorAvailabilityInput, VendorInput } from '../models/vendor.model';
 
 @Injectable({ providedIn: 'root' })
 export class VendorService {
@@ -31,6 +31,10 @@ export class VendorService {
 
   getMyVendor() {
     return this.http.get<Vendor>(`${this.baseUrl}/my-vendor`);
+  }
+
+  updateMyAvailability(dto: VendorAvailabilityInput) {
+    return this.http.put<Vendor>(`${this.baseUrl}/my-vendor/availability`, dto);
   }
 
   updateMyVendor(dto: VendorInput) {
