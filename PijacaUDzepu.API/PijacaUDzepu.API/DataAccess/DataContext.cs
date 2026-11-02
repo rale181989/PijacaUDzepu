@@ -24,6 +24,9 @@ public class DataContext : IdentityDbContext<User, Role, int,
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
     public DbSet<CourierDecline> CourierDeclines => Set<CourierDecline>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<StockAlert> StockAlerts => Set<StockAlert>();
+    public DbSet<OrderRating> OrderRatings => Set<OrderRating>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -94,6 +97,28 @@ public class DataContext : IdentityDbContext<User, Role, int,
                 .WithMany()
                 .HasForeignKey(d => d.CourierId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Favorite>(entity =>
+        {
+            entity.HasIndex(f => new { f.UserId, f.ProductId }).IsUnique().HasFilter("\"ProductId\" IS NOT NULL");
+            entity.HasIndex(f => new { f.UserId, f.VendorId }).IsUnique().HasFilter("\"VendorId\" IS NOT NULL");
+            entity.HasOne(f => f.User).WithMany().HasForeignKey(f => f.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(f => f.Product).WithMany().HasForeignKey(f => f.ProductId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(f => f.Vendor).WithMany().HasForeignKey(f => f.VendorId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<StockAlert>(entity =>
+        {
+            entity.HasIndex(a => new { a.UserId, a.ProductId }).IsUnique();
+            entity.HasOne(a => a.User).WithMany().HasForeignKey(a => a.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(a => a.Product).WithMany().HasForeignKey(a => a.ProductId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<OrderRating>(entity =>
+        {
+            entity.HasIndex(r => r.OrderId).IsUnique();
+            entity.HasOne(r => r.Order).WithOne(o => o.Rating).HasForeignKey<OrderRating>(r => r.OrderId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<PasswordReset>(entity =>

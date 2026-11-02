@@ -197,9 +197,9 @@ async function build() {
   s = new S('Sadrzaj - bez ekrana', 'Uvod');
   s.title('Jedna aplikacija, tri uloge');
   const roles = [
-    ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko Eko kurira. Nalog nije obavezan.', 'Strane 3–11'],
-    ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 12–18'],
-    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 19–22']
+    ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko Eko kurira. Nalog nije obavezan.', 'Strane 3–12'],
+    ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 13–19'],
+    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 20–23']
   ];
   for (const [i, [ic, col, h, d, pages]] of roles.entries()) {
     const x = 0.6 + i * 4.1;
@@ -312,6 +312,18 @@ async function build() {
   ]);
   s.phone('c-order-detail', RIGHT_X, PHONE_Y, PHONE_H, 'Detalji porudžbine sa porukom prodavca i kurirom',
     [[1, 0.75, 0.155], [2, 0.93, 0.346], [3, 0.93, 0.45], [4, 0.1, 0.862]]);
+
+  // Omiljeni, ocene, poruči ponovo
+  s = new S('Sadrzaj - dva ekrana', 'Kupci', 'kupac');
+  s.title('Omiljeni, ocene i ponovo');
+  s.steps([
+    { h: 'Omiljeni', d: 'Srce na slici čuva proizvod, a srce uz ime prodavca celu tezgu. Dugme ♥ pored pretrage prikazuje samo omiljene.' },
+    { h: 'Obavesti me', d: 'Omiljeni proizvod kojeg trenutno nema: „Obavesti me” i javićemo vam kad se vrati u ponudu (uz nalog).' },
+    { h: 'Ocena', d: 'Posle preuzimanja ocenite prodavca (i kurira) zvezdicama. Prosečna ocena se vidi uz ime prodavca.' },
+    { h: 'Poruči ponovo', d: 'U detaljima porudžbine: iste stavke idu u korpu (samo one koje su i dalje dostupne).' }
+  ], 0.6, 1.75, 5.2);
+  s.phone('f-favorites', LEFT_X, PHONE_Y, PHONE_H, 'Filter omiljenih sa srcima na proizvodima', [[1, 0.86, 0.19]]);
+  s.phone('f-rating', RIGHT_X, PHONE_Y, PHONE_H, 'Ocena porudžbine zvezdicama', [[3, 0.93, 0.41]]);
 
   // 11. Statusi
   s = new S('Sadrzaj - bez ekrana', 'Kupci', 'kupac');

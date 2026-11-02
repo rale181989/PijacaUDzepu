@@ -52,6 +52,15 @@
         <p *ngIf="order.courierName" class="date">
           <ion-icon name="bicycle-outline"></ion-icon> {{ 'order.courier' | t }}: {{ order.courierName }}
         </p>
+        <p *ngIf="order.rating" class="my-rating">{{ order.rating.vendorScore | stars }} <span *ngIf="order.rating.comment">„{{ order.rating.comment }}”</span></p>
+        <div class="order-actions">
+          <ion-button *ngIf="orderActions.canRate(order)" size="small" (click)="rate(order, $event)">
+            <ion-icon name="star-outline" slot="start"></ion-icon> {{ 'rating.rate' | t }}
+          </ion-button>
+          <ion-button *ngIf="order.status === 'Completed' || order.status === 'Rejected'" size="small" fill="outline" (click)="reorder(order, $event)">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon> {{ 'reorder.button' | t }}
+          </ion-button>
+        </div>
         <ion-button *ngIf="canCancel && order.status === 'Pending'" fill="outline" color="danger" size="small"
                     (click)="cancelOrder(order); $event.stopPropagation()">
           {{ 'orders.cancel' | t }}

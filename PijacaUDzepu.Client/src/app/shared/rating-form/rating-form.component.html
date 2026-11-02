@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>{{ 'rating.title' | t }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">{{ 'account.cancel' | t }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h3>{{ 'rating.vendor' | t }}: {{ vendorName }}</h3>
+  <div class="stars" role="radiogroup" [attr.aria-label]="'rating.vendor' | t">
+    <button *ngFor="let s of scores" type="button" [class.on]="s <= vendorScore" (click)="vendorScore = s"
+            [attr.aria-label]="s + '/5'" [attr.aria-checked]="s === vendorScore" role="radio">★</button>
+  </div>
+
+  <ng-container *ngIf="withCourier">
+    <h3>{{ 'rating.courier' | t }}</h3>
+    <div class="stars" role="radiogroup" [attr.aria-label]="'rating.courier' | t">
+      <button *ngFor="let s of scores" type="button" [class.on]="s <= courierScore" (click)="courierScore = s"
+              [attr.aria-label]="s + '/5'" [attr.aria-checked]="s === courierScore" role="radio">★</button>
+    </div>
+  </ng-container>
+
+  <ion-item>
+    <ion-textarea [label]="'rating.comment' | t" labelPlacement="floating" [(ngModel)]="comment"
+                  [autoGrow]="true" [maxlength]="500"></ion-textarea>
+  </ion-item>
+
+  <ion-button expand="block" class="ion-margin-top" [disabled]="!canSubmit" (click)="submit()">
+    {{ 'rating.submit' | t }}
+  </ion-button>
+</ion-content>

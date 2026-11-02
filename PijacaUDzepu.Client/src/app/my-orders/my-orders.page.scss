@@ -28,3 +28,6 @@ ion-card-header {
   strong { display: flex; align-items: center; gap: 6px; color: var(--ion-color-danger); }
   p { margin: 4px 0 0; font-size: 15px; color: var(--ion-text-color); white-space: pre-line; }
 }
+
+.order-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.my-rating { color: #b8860b; font-size: 15px; margin: 6px 0 0; span { color: var(--ion-text-color); font-size: 13px; } }

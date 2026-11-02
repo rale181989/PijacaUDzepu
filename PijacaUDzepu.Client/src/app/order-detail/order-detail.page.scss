@@ -47,3 +47,10 @@ ion-card-header {
 
   h3, p, ion-note, strong { text-decoration: line-through; color: var(--ion-color-medium); }
 }
+
+.rating-card {
+  strong { display: block; margin-bottom: 4px; }
+  p { margin: 2px 0; }
+  .stars { color: #b8860b; font-size: 16px; }
+}
+.detail-actions { padding: 0 16px; }

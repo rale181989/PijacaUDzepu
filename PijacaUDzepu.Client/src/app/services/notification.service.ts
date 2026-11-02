@@ -274,6 +274,22 @@ export class NotificationService {
       });
     });
 
+    // Proizvod za koji je kupac tražio obaveštenje ponovo je u ponudi
+    this.hubConnection.on('StockAvailable', (data: { productId: number; productName: string; vendorName: string }) => {
+      this.ngZone.run(async () => {
+        this.sound.play('update');
+        await this.showToast(`${this.ts.t('fav.backInStock')}: ${data.productName} – ${data.vendorName}`, 'success', 8000);
+      });
+    });
+
+    // Kupac je ocenio porudžbinu (prodavac)
+    this.hubConnection.on('OrderRated', (data: { orderId: number; vendorScore: number }) => {
+      this.ngZone.run(async () => {
+        this.orderUpdatedSubject.next(data.orderId);
+        await this.showToast(`Nova ocena za porudžbinu #${data.orderId}: ${'★'.repeat(data.vendorScore)}`, 'success');
+      });
+    });
+
     this.hubConnection.on('CourierOrderUnavailable', (data: { orderId: number }) => {
       this.ngZone.run(() => {
         this.courierEventsSubject.next({ type: 'unavailable', orderId: data.orderId });

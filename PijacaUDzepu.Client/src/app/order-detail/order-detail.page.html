@@ -75,6 +75,24 @@
       </ion-item>
     </ion-list>
 
+    <ion-card *ngIf="order.rating" class="rating-card">
+      <ion-card-content>
+        <strong>{{ 'rating.yours' | t }}</strong>
+        <p>{{ 'rating.vendor' | t }}: <span class="stars">{{ order.rating.vendorScore | stars }}</span></p>
+        <p *ngIf="order.rating.courierScore">{{ 'rating.courier' | t }}: <span class="stars">{{ order.rating.courierScore | stars }}</span></p>
+        <p *ngIf="order.rating.comment">„{{ order.rating.comment }}”</p>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="detail-actions">
+      <ion-button *ngIf="orderActions.canRate(order)" expand="block" (click)="rate()">
+        <ion-icon name="star-outline" slot="start"></ion-icon> {{ 'rating.rate' | t }}
+      </ion-button>
+      <ion-button *ngIf="order.status === 'Completed' || order.status === 'Rejected'" expand="block" fill="outline" (click)="orderActions.reorder(order)">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon> {{ 'reorder.button' | t }}
+      </ion-button>
+    </div>
+
     <div class="total-row" [class.struck]="order.status === 'Rejected'">
       <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
       <ng-container *ngIf="order.deliveryFee > 0">

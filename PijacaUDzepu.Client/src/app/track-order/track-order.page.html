@@ -99,6 +99,13 @@
           </p>
           <p class="muted">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
 
+          <p *ngIf="order.rating" class="my-rating">{{ order.rating.vendorScore | stars }} <span *ngIf="order.rating.comment">„{{ order.rating.comment }}”</span></p>
+          <ion-button *ngIf="orderActions.canRate(order)" size="small" (click)="rate(group.code, order)">
+            <ion-icon name="star-outline" slot="start"></ion-icon> {{ 'rating.rate' | t }}
+          </ion-button>
+          <ion-button *ngIf="order.status === 'Completed' || order.status === 'Rejected'" size="small" fill="outline" (click)="orderActions.reorder(order)">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon> {{ 'reorder.button' | t }}
+          </ion-button>
           <ion-button *ngIf="canCancel && order.status === 'Pending'" fill="outline" color="danger" size="small" (click)="cancel(group.code, order)">
             {{ 'orders.cancel' | t }}
           </ion-button>

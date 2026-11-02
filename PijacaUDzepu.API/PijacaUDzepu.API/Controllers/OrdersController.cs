@@ -83,6 +83,31 @@ public class OrdersController : BaseApiController
         }
     }
 
+    [AllowAnonymous]
+    [HttpPost("track/{code}/{id}/rating")]
+    public Task<IActionResult> RateTracked(string code, int id, OrderRatingInputDto dto) =>
+        Rate(() => _orderService.RateOrder(id, null, code, dto));
+
+    [HttpPost("{id}/rating")]
+    public Task<IActionResult> Rate(int id, OrderRatingInputDto dto) =>
+        Rate(() => _orderService.RateOrder(id, User.GetUserId(), null, dto));
+
+    private async Task<IActionResult> Rate(Func<Task<Models.DTO.Output.OrderDto>> rate)
+    {
+        try
+        {
+            return Ok(await rate());
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("my-orders")]
     public async Task<IActionResult> GetMyOrders([FromQuery] int skip = 0, [FromQuery] int take = 20)
     {

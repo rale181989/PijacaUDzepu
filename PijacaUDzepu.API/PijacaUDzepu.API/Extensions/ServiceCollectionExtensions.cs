@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPushService, PushService>();
         services.AddScoped<ISupportService, SupportService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IFavoriteService, FavoriteService>();
         // Slike u Cloudflare R2 kad su podešene R2__* env varijable, inače na lokalnom disku
         if (R2ImageStorage.IsConfigured(config))
             services.AddSingleton<IImageStorage, R2ImageStorage>();

@@ -6,6 +6,8 @@ import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
 import { Product, ProductCategory, ProductSort, ProductUnit } from '../models/product.model';
 import { vendorClosedText } from '../services/vendor-status';
+import { FavoritesService } from '../services/favorites.service';
+import { AuthService } from '../services/auth.service';
 import { Vendor } from '../models/vendor.model';
 import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
@@ -97,7 +99,9 @@ export class HomePage implements OnInit {
     private marketService: MarketService,
     private stallService: StallService,
     private toastController: ToastController,
-    public ts: TranslateService
+    public ts: TranslateService,
+    public favorites: FavoritesService,
+    private authService: AuthService
   ) {
     this.ts.lang$.subscribe(() => this.rebuildCategories());
   }
@@ -155,7 +159,8 @@ export class HomePage implements OnInit {
       this.selectedUnit || undefined,
       this.sortBy,
       this.products.length,
-      this.pageSize
+      this.pageSize,
+      this.favoritesFilter()
     ).subscribe({
       next: result => {
         this.products = [...this.products, ...result.items];
@@ -180,7 +185,8 @@ export class HomePage implements OnInit {
       this.selectedUnit || undefined,
       this.sortBy,
       this.products.length,
-      this.pageSize
+      this.pageSize,
+      this.favoritesFilter()
     ).subscribe({
       next: result => {
         this.products = [...this.products, ...result.items];
@@ -195,6 +201,46 @@ export class HomePage implements OnInit {
 
   onSearch() {
     this.loadProducts();
+  }
+
+  // ---- omiljeni ----
+  showFavorites = false;
+
+  private favoritesFilter() {
+    return this.showFavorites ? { productIds: this.favorites.productIds, vendorIds: this.favorites.vendorIds } : undefined;
+  }
+
+  toggleFavoritesFilter() {
+    this.showFavorites = !this.showFavorites;
+    if (this.showFavorites && this.favorites.isEmpty) {
+      this.products = [];
+      this.hasMore = false;
+      return;
+    }
+    this.loadProducts();
+  }
+
+  toggleFavoriteProduct(product: Product, event: Event) {
+    event.stopPropagation();
+    this.favorites.toggleProduct(product.id);
+    if (this.showFavorites) this.loadProducts();
+  }
+
+  toggleFavoriteVendor(product: Product, event: Event) {
+    event.stopPropagation();
+    this.favorites.toggleVendor(product.vendorId);
+    if (this.showFavorites) this.loadProducts();
+  }
+
+  async toggleAlert(product: Product) {
+    if (!this.favorites.toggleAlert(product.id)) {
+      const toast = await this.toastController.create({ message: this.ts.t('fav.alertLogin'), duration: 3000, color: 'warning' });
+      await toast.present();
+      return;
+    }
+    const on = this.favorites.hasAlert(product.id);
+    const toast = await this.toastController.create({ message: this.ts.t(on ? 'fav.alertOn' : 'fav.alertOff'), duration: 2500, color: 'success' });
+    await toast.present();
   }
 
   get searchedCategories() {

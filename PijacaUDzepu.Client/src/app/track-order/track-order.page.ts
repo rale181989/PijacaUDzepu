@@ -8,6 +8,7 @@ import { OrderService } from '../services/order.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
 import { SoundService } from '../services/sound.service';
 import { rejectionText } from '../services/notification.service';
+import { OrderActionsService } from '../services/order-actions.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, CUSTOMER_CANCEL_ENABLED } from '../models/order.model';
 import { environment } from '../../environments/environment';
@@ -41,8 +42,14 @@ export class TrackOrderPage implements OnInit, OnDestroy {
     private sound: SoundService,
     private alertController: AlertController,
     private toastController: ToastController,
-    private ts: TranslateService
+    private ts: TranslateService,
+    public orderActions: OrderActionsService
   ) {}
+
+  async rate(code: string, order: Order) {
+    const rating = await this.orderActions.rate(order, code);
+    if (rating) order.rating = rating;
+  }
 
   ngOnInit() {
     this.code = this.route.snapshot.paramMap.get('code');

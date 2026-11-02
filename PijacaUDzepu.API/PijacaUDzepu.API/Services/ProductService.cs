@@ -12,20 +12,35 @@ public class ProductService : IProductService
 {
     private readonly DataContext _context;
     private readonly IImageStorage _images;
+    private readonly IFavoriteService _favorites;
 
-    public ProductService(DataContext context, IImageStorage images)
+    public ProductService(DataContext context, IImageStorage images, IFavoriteService favorites)
     {
         _context = context;
         _images = images;
+        _favorites = favorites;
     }
 
-    public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, Models.Enums.ProductUnit? unit = null, Models.Enums.ProductSort sort = Models.Enums.ProductSort.NameAsc, int skip = 0, int take = 20)
+    public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, Models.Enums.ProductUnit? unit = null, Models.Enums.ProductSort sort = Models.Enums.ProductSort.NameAsc, int skip = 0, int take = 20, List<int>? ids = null, List<int>? vendorIds = null)
     {
         var query = _context.Products
             .Include(p => p.Vendor).ThenInclude(v => v.Market)
             .Include(p => p.Vendor).ThenInclude(v => v.Stall)
-            .Where(p => p.IsAvailable && p.Vendor.IsActive)
+            .Where(p => p.Vendor.IsActive)
             .AsQueryable();
+
+        // Filter "Omiljeni": samo izabrani proizvodi i dostupni proizvodi omiljenih prodavaca. Tu se vide i
+        // trenutno nedostupni omiljeni proizvodi (kupac traži obaveštenje kad budu dostupni); inače samo dostupni.
+        if ((ids?.Count ?? 0) > 0 || (vendorIds?.Count ?? 0) > 0)
+        {
+            var favoriteProducts = ids ?? new List<int>();
+            var favoriteVendors = vendorIds ?? new List<int>();
+            query = query.Where(p => favoriteProducts.Contains(p.Id) || (favoriteVendors.Contains(p.VendorId) && p.IsAvailable));
+        }
+        else
+        {
+            query = query.Where(p => p.IsAvailable);
+        }
 
         // Pretraga je samo po nazivu proizvoda; pijaca, prodavac, tezga i grupa imaju svoje filtere
         if (!string.IsNullOrWhiteSpace(search))
@@ -67,6 +82,8 @@ public class ProductService : IProductService
             .Take(take)
             .Select(p => MapToDto(p))
             .ToListAsync();
+
+        await FillVendorRatings(items);
 
         return new PagedResult<ProductDto>
         {
@@ -128,6 +145,7 @@ public class ProductService : IProductService
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
             ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
 
+        var wasAvailable = product.IsAvailable;
         product.Name = dto.Name;
         product.Price = dto.Price;
         product.Unit = dto.Unit;
@@ -138,6 +156,11 @@ public class ProductService : IProductService
         product.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Proizvod je ponovo u ponudi: javi kupcima koji su tražili obaveštenje
+        if (!wasAvailable && product.IsAvailable)
+            await _favorites.NotifyBackInStock(product, product.Vendor.Name);
+
         return MapToDto(product);
     }
 
@@ -178,6 +201,23 @@ public class ProductService : IProductService
 
         await _images.Delete(oldUrl);
         return newUrl;
+    }
+
+    // Prosečna ocena prodavca (iz ocena porudžbina) za sve proizvode na strani, jednim upitom
+    private async Task FillVendorRatings(List<ProductDto> items)
+    {
+        var vendorIds = items.Select(i => i.VendorId).Distinct().ToList();
+        var ratings = await _context.OrderRatings
+            .Where(r => vendorIds.Contains(r.Order.VendorId))
+            .GroupBy(r => r.Order.VendorId)
+            .Select(g => new { VendorId = g.Key, Average = g.Average(r => (double)r.VendorScore), Count = g.Count() })
+            .ToDictionaryAsync(r => r.VendorId);
+        foreach (var item in items)
+        {
+            if (!ratings.TryGetValue(item.VendorId, out var r)) continue;
+            item.VendorRating = Math.Round(r.Average, 1);
+            item.VendorRatingCount = r.Count;
+        }
     }
 
     // Cena na gram se preračunava u cenu po kg da bi se pri sortiranju poredila sa proizvodima na kg

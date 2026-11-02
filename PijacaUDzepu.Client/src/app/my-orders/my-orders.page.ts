@@ -5,6 +5,7 @@ import { ToastController } from '@ionic/angular/lazy';
 import { TranslateService } from '../services/translate.service';
 import { NotificationService } from '../services/notification.service';
 import { Subscription } from 'rxjs';
+import { OrderActionsService } from '../services/order-actions.service';
 
 @Component({
   selector: 'app-my-orders',
@@ -25,8 +26,20 @@ export class MyOrdersPage implements OnInit, OnDestroy {
     private orderService: OrderService,
     private toastController: ToastController,
     private ts: TranslateService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public orderActions: OrderActionsService
   ) {}
+
+  async rate(order: Order, event: Event) {
+    event.stopPropagation();
+    const rating = await this.orderActions.rate(order);
+    if (rating) order.rating = rating;
+  }
+
+  reorder(order: Order, event: Event) {
+    event.stopPropagation();
+    this.orderActions.reorder(order);
+  }
 
   ngOnInit() {
     this.loadOrders();

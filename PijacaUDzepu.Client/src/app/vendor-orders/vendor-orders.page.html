@@ -62,6 +62,10 @@
           <span *ngIf="!order.courierName">Čeka se kurir</span>
         </div>
 
+        <p *ngIf="order.rating" class="rating">
+          Ocena kupca: <span class="stars">{{ order.rating.vendorScore | stars }}</span>
+          <span *ngIf="order.rating.comment"> – „{{ order.rating.comment }}”</span>
+        </p>
         <p *ngIf="order.vendorMessage" class="vendor-message">
           <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Vaš odgovor: {{ order.vendorMessage }}
         </p>

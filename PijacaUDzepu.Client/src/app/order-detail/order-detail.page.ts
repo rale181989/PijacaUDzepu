@@ -4,6 +4,7 @@ import { OrderService } from '../services/order.service';
 import { Order } from '../models/order.model';
 import { TranslateService } from '../services/translate.service';
 import { NotificationService } from '../services/notification.service';
+import { OrderActionsService } from '../services/order-actions.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -21,8 +22,15 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private orderService: OrderService,
     private ts: TranslateService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public orderActions: OrderActionsService
   ) {}
+
+  async rate() {
+    if (!this.order) return;
+    const rating = await this.orderActions.rate(this.order);
+    if (rating) this.order.rating = rating;
+  }
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));

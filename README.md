@@ -14,6 +14,9 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
 - Moje porudžbine; odbijena porudžbina je precrtana, sa razlogom prodavca
+- Omiljeni proizvodi i prodavci (i bez naloga), filter „Omiljeni” i „Obavesti me kad bude dostupno”
+- Ocena prodavca i kurira posle preuzimanja; prosečna ocena prodavca na karticama proizvoda
+- „Poruči ponovo” – stavke prethodne porudžbine u korpu
 - Jezici: srpski, engleski, ruski
 
 **Prodavac**

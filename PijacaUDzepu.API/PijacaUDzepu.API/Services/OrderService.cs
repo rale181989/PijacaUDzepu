@@ -332,6 +332,31 @@ public class OrderService : IOrderService
         return MapToDto(order);
     }
 
+    // Ocena posle preuzimanja: prijavljeni kupac (customerId) ili gost preko koda za praćenje
+    public async Task<OrderDto> RateOrder(int orderId, int? customerId, string? trackingCode, OrderRatingInputDto dto)
+    {
+        var order = await OrdersWithDetails().FirstOrDefaultAsync(o => o.Id == orderId
+                && (customerId != null ? o.CustomerId == customerId : o.TrackingCode != null && o.TrackingCode == trackingCode))
+            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+
+        if (order.Status != OrderStatus.Completed)
+            throw new InvalidOperationException("Porudžbinu možete oceniti kada je preuzmete.");
+        if (order.Rating != null)
+            throw new InvalidOperationException("Porudžbina je već ocenjena.");
+
+        order.Rating = new OrderRating
+        {
+            OrderId = order.Id,
+            VendorScore = dto.VendorScore,
+            CourierScore = order.CourierId != null ? dto.CourierScore : null,
+            Comment = string.IsNullOrWhiteSpace(dto.Comment) ? null : dto.Comment.Trim()
+        };
+        await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.Group($"vendor_{order.VendorId}").SendAsync("OrderRated", new { orderId = order.Id, vendorScore = dto.VendorScore });
+        return customerId != null ? MapToDto(order) : MapToTrackingDto(order);
+    }
+
     public async Task<List<OrderDto>> GetTrackedOrders(string code)
     {
         var orders = await LoadTrackedOrders(code);
@@ -588,6 +613,7 @@ public class OrderService : IOrderService
 
     private IQueryable<Order> OrdersWithDetails() => _context.Orders
         .Include(o => o.Items)
+        .Include(o => o.Rating)
         .Include(o => o.Vendor).ThenInclude(v => v.Market)
         .Include(o => o.Vendor).ThenInclude(v => v.Stall)
         .Include(o => o.Customer)
@@ -719,6 +745,7 @@ public class OrderService : IOrderService
             Unit = i.Unit,
             UnitPrice = i.UnitPrice,
             TotalPrice = i.TotalPrice
-        }).ToList()
+        }).ToList(),
+        Rating = o.Rating == null ? null : new OrderRatingDto { VendorScore = o.Rating.VendorScore, CourierScore = o.Rating.CourierScore, Comment = o.Rating.Comment, CreatedAt = o.Rating.CreatedAt }
     };
 }

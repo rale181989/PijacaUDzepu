@@ -52,6 +52,11 @@
         class="product-search">
       </ion-searchbar>
 
+      <button class="filter-btn fav-filter" [class.active]="showFavorites" (click)="toggleFavoritesFilter()"
+              [attr.aria-pressed]="showFavorites" [attr.aria-label]="'fav.filter' | t" [title]="'fav.filter' | t">
+        <ion-icon [name]="showFavorites ? 'heart' : 'heart-outline'"></ion-icon>
+      </button>
+
       <button class="filter-btn sort-btn" (click)="openFilterModal('sort')"
               [attr.aria-label]="('home.sortBy' | t) + ': ' + getSortLabel(sortBy)" [title]="getSortLabel(sortBy)">
         <ion-icon name="swap-vertical-outline"></ion-icon>
@@ -258,17 +263,21 @@
   </div>
 
   <div *ngIf="!loading && !connectionError && products.length === 0" class="empty-state">
-    <ion-icon name="leaf-outline" size="large"></ion-icon>
-    <p>{{ 'home.noProducts' | t }}</p>
+    <ion-icon [name]="showFavorites ? 'heart-outline' : 'leaf-outline'" size="large"></ion-icon>
+    <p>{{ (showFavorites ? 'fav.empty' : 'home.noProducts') | t }}</p>
   </div>
 
   <ion-grid *ngIf="products.length > 0">
     <ion-row>
       <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of products">
         <ion-card class="product-card">
-          <div class="product-img-wrap">
+          <div class="product-img-wrap" [class.unavailable]="!product.isAvailable">
             <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img"
                  loading="lazy" (error)="onImageError($event)" />
+            <button class="fav-btn" (click)="toggleFavoriteProduct(product, $event)"
+                    [attr.aria-pressed]="favorites.isProduct(product.id)" [attr.aria-label]="'fav.product' | t">
+              <ion-icon [name]="favorites.isProduct(product.id) ? 'heart' : 'heart-outline'"></ion-icon>
+            </button>
           </div>
           <ion-card-content>
             <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
@@ -276,7 +285,16 @@
             <div class="product-name-row">
               <h3 class="product-name">{{ product.name }}</h3>
             </div>
-            <p class="product-vendor">{{ product.vendorName }}</p>
+            <p class="product-vendor">
+              {{ product.vendorName }}
+              <button class="fav-vendor" (click)="toggleFavoriteVendor(product, $event)"
+                      [attr.aria-pressed]="favorites.isVendor(product.vendorId)" [attr.aria-label]="'fav.vendor' | t">
+                <ion-icon [name]="favorites.isVendor(product.vendorId) ? 'heart' : 'heart-outline'"></ion-icon>
+              </button>
+            </p>
+            <p *ngIf="product.vendorRating" class="product-rating">
+              ★ {{ product.vendorRating | number:'1.1-1' }} <span>({{ product.vendorRatingCount }})</span>
+            </p>
             <p class="product-location">{{ product.marketName }}<span *ngIf="product.stallLabel"> · {{ 'home.stall' | t }} {{ product.stallLabel }}</span></p>
             <p *ngFor="let phone of vendorPhoneCache[product.id]" class="product-phone">
               <ion-icon name="call-outline"></ion-icon>
@@ -284,6 +302,13 @@
             </p>
             <p *ngIf="product.note" class="product-note">{{ product.note }}</p>
             <p class="product-price">{{ product.price | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel(product.unit) }}</p>
+            <div *ngIf="!product.isAvailable" class="out-of-stock">
+              <span>{{ 'fav.outOfStock' | t }}</span>
+              <ion-button size="small" fill="outline" (click)="toggleAlert(product)">
+                <ion-icon slot="start" [name]="favorites.hasAlert(product.id) ? 'notifications' : 'notifications-outline'"></ion-icon>
+                {{ (favorites.hasAlert(product.id) ? 'fav.alertSet' : 'fav.alert') | t }}
+              </ion-button>
+            </div>
             <p *ngIf="product.vendorOpen === false" class="vendor-closed">
               <ion-icon name="time-outline"></ion-icon> {{ closedText(product) }}
             </p>
@@ -293,11 +318,11 @@
                 <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
               </ion-button>
               <span class="qty-value">{{ getSelectedQty(product.id) }}</span>
-              <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false">
+              <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false || !product.isAvailable">
                 <ion-icon name="add-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>
-            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="getSelectedQty(product.id) === 0 || product.vendorOpen === false">
+            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="getSelectedQty(product.id) === 0 || product.vendorOpen === false || !product.isAvailable">
               <ion-icon name="cart-outline" slot="start"></ion-icon>
               {{ 'home.add' | t }}
             </ion-button>

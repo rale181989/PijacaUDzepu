@@ -208,6 +208,43 @@ namespace PijacaUDzepu.API.Migrations
                     b.ToTable("DeviceTokens");
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.Favorite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("VendorId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("VendorId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique()
+                        .HasFilter("\"ProductId\" IS NOT NULL");
+
+                    b.HasIndex("UserId", "VendorId")
+                        .IsUnique()
+                        .HasFilter("\"VendorId\" IS NOT NULL");
+
+                    b.ToTable("Favorites");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.Market", b =>
                 {
                     b.Property<int>("Id")
@@ -367,6 +404,37 @@ namespace PijacaUDzepu.API.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.OrderRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CourierScore")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VendorScore")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("OrderRatings");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.PasswordReset", b =>
                 {
                     b.Property<int>("Id")
@@ -506,6 +574,33 @@ namespace PijacaUDzepu.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Stalls");
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.StockAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("StockAlerts");
                 });
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.SupportRequest", b =>
@@ -866,6 +961,31 @@ namespace PijacaUDzepu.API.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.Favorite", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("PijacaUDzepu.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PijacaUDzepu.API.Models.Vendor", "Vendor")
+                        .WithMany()
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Vendor");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.Order", b =>
                 {
                     b.HasOne("PijacaUDzepu.API.Models.User", "Courier")
@@ -909,6 +1029,17 @@ namespace PijacaUDzepu.API.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("PijacaUDzepu.API.Models.OrderRating", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.Order", "Order")
+                        .WithOne("Rating")
+                        .HasForeignKey("PijacaUDzepu.API.Models.OrderRating", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("PijacaUDzepu.API.Models.PasswordReset", b =>
                 {
                     b.HasOne("PijacaUDzepu.API.Models.User", "User")
@@ -940,6 +1071,25 @@ namespace PijacaUDzepu.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Market");
+                });
+
+            modelBuilder.Entity("PijacaUDzepu.API.Models.StockAlert", b =>
+                {
+                    b.HasOne("PijacaUDzepu.API.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PijacaUDzepu.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.SupportRequest", b =>
@@ -1029,6 +1179,8 @@ namespace PijacaUDzepu.API.Migrations
             modelBuilder.Entity("PijacaUDzepu.API.Models.Order", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Rating");
                 });
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.Role", b =>

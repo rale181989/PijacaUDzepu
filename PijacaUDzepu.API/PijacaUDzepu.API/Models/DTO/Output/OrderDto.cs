@@ -36,6 +36,8 @@ public class OrderDto
     public DateTime? DeliveredAt { get; set; }
 
     public List<OrderItemDto> Items { get; set; } = new();
+    // Ocena kupca posle preuzimanja (null dok nije ocenjena)
+    public OrderRatingDto? Rating { get; set; }
 }
 
 public class OrderItemDto

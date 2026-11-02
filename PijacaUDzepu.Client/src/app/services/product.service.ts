@@ -10,7 +10,8 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(search?: string, vendorId?: number, marketId?: number, category?: ProductCategory, unit?: ProductUnit, sort?: ProductSort, skip = 0, take = 20) {
+  getAll(search?: string, vendorId?: number, marketId?: number, category?: ProductCategory, unit?: ProductUnit, sort?: ProductSort, skip = 0, take = 20,
+         favorites?: { productIds: number[]; vendorIds: number[] }) {
     let params = new HttpParams()
       .set('skip', skip.toString())
       .set('take', take.toString());
@@ -20,6 +21,9 @@ export class ProductService {
     if (category) params = params.set('category', category);
     if (unit) params = params.set('unit', unit);
     if (sort) params = params.set('sort', sort);
+    // Filter "Omiljeni": proizvodi sa liste + proizvodi omiljenih prodavaca
+    favorites?.productIds.forEach(id => params = params.append('ids', id.toString()));
+    favorites?.vendorIds.forEach(id => params = params.append('vendorIds', id.toString()));
     return this.http.get<PagedResult<Product>>(this.baseUrl, { params });
   }
 

@@ -29,6 +29,15 @@ export interface Order {
   pickedUpAt?: string;
   deliveredAt?: string;
   items: OrderItem[];
+  // Ocena kupca posle preuzimanja
+  rating?: OrderRating | null;
+}
+
+export interface OrderRating {
+  vendorScore: number;
+  courierScore?: number | null;
+  comment?: string | null;
+  createdAt: string;
 }
 
 export interface OrderItem {

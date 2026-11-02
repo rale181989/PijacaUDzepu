@@ -17,6 +17,9 @@ export interface Product {
   vendorOpen?: boolean;
   vendorClosedReason?: string | null;
   vendorOpensAt?: string | null;
+  // Prosečna ocena prodavca i broj ocena
+  vendorRating?: number | null;
+  vendorRatingCount?: number;
 }
 
 export interface ProductInput {

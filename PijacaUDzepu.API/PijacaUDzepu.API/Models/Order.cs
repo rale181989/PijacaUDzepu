@@ -43,4 +43,5 @@ public class Order
     public bool IsGuestOrder => CustomerId == null;
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+    public OrderRating? Rating { get; set; }
 }

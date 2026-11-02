@@ -52,6 +52,14 @@ export class OrderService {
     return this.http.put<Order>(`${this.baseUrl}/${id}/status`, { status, message });
   }
 
+  rate(id: number, rating: { vendorScore: number; courierScore?: number; comment?: string }) {
+    return this.http.post<Order>(`${this.baseUrl}/${id}/rating`, rating);
+  }
+
+  rateTracked(code: string, id: number, rating: { vendorScore: number; courierScore?: number; comment?: string }) {
+    return this.http.post<Order>(`${this.baseUrl}/track/${encodeURIComponent(code)}/${id}/rating`, rating);
+  }
+
   cancelOrder(id: number) {
     return this.http.put<Order>(`${this.baseUrl}/${id}/cancel`, {});
   }

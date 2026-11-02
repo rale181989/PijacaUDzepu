@@ -21,5 +21,8 @@ public class ProductDto
     public bool VendorOpen { get; set; } = true;
     public string? VendorClosedReason { get; set; }
     public DateTime? VendorOpensAt { get; set; }
+    // Prosečna ocena prodavca (1–5) i broj ocena; null dok nema ocena
+    public double? VendorRating { get; set; }
+    public int VendorRatingCount { get; set; }
     public bool IsAvailable { get; set; }
 }

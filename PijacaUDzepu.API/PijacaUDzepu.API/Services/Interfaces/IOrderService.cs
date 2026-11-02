@@ -15,6 +15,7 @@ public interface IOrderService
     decimal CourierFee { get; }
     Task<OrderDto> CancelOrder(int orderId, int customerId);
     Task<List<OrderDto>> GetTrackedOrders(string code);
+    Task<OrderDto> RateOrder(int orderId, int? customerId, string? trackingCode, OrderRatingInputDto dto);
     Task<OrderDto> CancelTrackedOrder(string code, int orderId);
     Task<int> GetVendorPendingCount(int vendorId);
     Task<List<OrderDto>> GetAvailableCourierOrders(int courierId);
