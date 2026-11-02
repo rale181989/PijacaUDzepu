@@ -10,6 +10,27 @@ U nazivima env varijabli dvostruka donja crta `__` znači „pod-podešavanje”
 
 ---
 
+## 0. Admin lozinka i test nalozi – HITNO pre sledećeg deploy-a
+
+- [ ] `ADMIN_PASSWORD` dodat na Render
+- [ ] Odlučeno šta sa test nalozima (`DEMO_ACCOUNTS`)
+
+Server od sada **u produkciji ne pravi test naloge** (kupac, kurir1/2, marko… sa lozinkama `kupac1234`, `vendor1234`…),
+a postojeće test naloge koji i dalje imaju te poznate lozinke **zaključava** pri pokretanju.
+Prijava na njih tada javlja „Nalog je onemogućen”.
+
+| Env varijabla | Vrednost |
+|---|---|
+| `ADMIN_PASSWORD` | jaka lozinka za nalog `admin` (najmanje 8 znakova, bar jedno malo slovo). Ako admin i dalje ima `admin1234`, server je zameni ovom. Bez nje u logu stoji kritično upozorenje. |
+| `DEMO_ACCOUNTS` | `true` dok još testiraš sa test nalozima (ostaju aktivni). Pre puštanja pravim korisnicima **obriši** ovu varijablu. |
+
+Pravim prodavcima i kuririma napravi naloge preko admin panela (pozivnica / „Dodaj kurira”), sa pravim lozinkama.
+
+Ostala zaštita radi sama: lozinke najmanje 8 znakova, posle 10 pogrešnih pokušaja nalog je zaključan 15 minuta,
+najviše 10 pokušaja prijave u minuti sa jedne IP adrese.
+
+---
+
 ## 1. Slanje e-mailova (Brevo) – VAŽNO
 
 - [ ] Napravljen Brevo nalog

@@ -75,15 +75,18 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy(SupportController.RateLimitPolicy, context =>
-    {
-        var ip = context.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim();
-        if (string.IsNullOrEmpty(ip)) ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 5,
             Window = TimeSpan.FromMinutes(10)
-        });
-    });
+        }));
+    // Prijava, registracija i zaboravljena lozinka: najviše 10 pokušaja u minuti po IP adresi
+    options.AddPolicy(AuthController.RateLimitPolicy, context =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1)
+        }));
 });
 
 var app = builder.Build();
@@ -126,6 +129,13 @@ app.MapFallback("/api/{**path}", context =>
 });
 app.MapFallbackToFile("index.html");
 
-await Seed.SeedData(app.Services);
+await Seed.SeedData(app.Services, app.Environment.IsDevelopment());
 
 app.Run();
+
+// Render je iza proksija, pa je prava adresa klijenta u X-Forwarded-For
+static string ClientIp(HttpContext context)
+{
+    var ip = context.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim();
+    return string.IsNullOrEmpty(ip) ? context.Connection.RemoteIpAddress?.ToString() ?? "unknown" : ip;
+}

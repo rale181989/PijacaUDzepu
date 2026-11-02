@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,8 @@ namespace PijacaUDzepu.API.Controllers;
 
 public class AuthController : BaseApiController
 {
+    public const string RateLimitPolicy = "auth";
+
     private readonly IAuthService _authService;
 
     public AuthController(IAuthService authService)
@@ -18,6 +21,7 @@ public class AuthController : BaseApiController
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicy)]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
@@ -33,6 +37,7 @@ public class AuthController : BaseApiController
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicy)]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
@@ -130,13 +135,8 @@ public class AuthController : BaseApiController
         return Ok(result);
     }
 
+    // Provera da API radi (Render health check); ne otkriva ništa o korisnicima
     [AllowAnonymous]
     [HttpGet("health")]
-    public async Task<IActionResult> Health(
-        [FromServices] Microsoft.AspNetCore.Identity.UserManager<PijacaUDzepu.API.Models.User> userManager)
-    {
-        var adminExists = await userManager.Users.AnyAsync(u => u.UserName == "admin");
-        var totalUsers = await userManager.Users.CountAsync();
-        return Ok(new { adminExists, totalUsers, timestamp = DateTime.UtcNow });
-    }
+    public IActionResult Health() => Ok(new { status = "ok", timestamp = DateTime.UtcNow });
 }

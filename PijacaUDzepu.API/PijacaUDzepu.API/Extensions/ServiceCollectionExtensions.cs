@@ -55,13 +55,18 @@ public static class ServiceCollectionExtensions
     {
         services.AddIdentityCore<User>(opt =>
         {
-            opt.Password.RequiredLength = 4;
+            opt.Password.RequiredLength = 8;
             opt.Password.RequireNonAlphanumeric = false;
             opt.Password.RequireDigit = false;
             opt.Password.RequireUppercase = false;
             opt.Password.RequireLowercase = true;
             opt.User.RequireUniqueEmail = false;
+            // Posle 10 pogrešnih lozinki nalog je zaključan 15 minuta (zaštita od pogađanja)
+            opt.Lockout.MaxFailedAccessAttempts = 10;
+            opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            opt.Lockout.AllowedForNewUsers = true;
         })
+        .AddErrorDescriber<SerbianIdentityErrorDescriber>()
         .AddRoles<Role>()
         .AddRoleManager<RoleManager<Role>>()
         .AddSignInManager<SignInManager<User>>()

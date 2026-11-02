@@ -5,9 +5,22 @@ using PijacaUDzepu.API.Models.Enums;
 
 namespace PijacaUDzepu.API.DataAccess.SeedData;
 
+// Test nalozi (kupac, kuriri, prodavci) i pijace sa proizvodima prave se samo lokalno (Development)
+// ili kada je DEMO_ACCOUNTS=true. U produkciji se admin pravi iz ADMIN_PASSWORD, a test nalozi koji
+// još imaju poznatu podrazumevanu lozinku se zaključavaju.
 public static class Seed
 {
-    public static async Task SeedData(IServiceProvider serviceProvider)
+    private const string DefaultAdminPassword = "admin1234";
+
+    private static readonly (string UserName, string Password)[] DemoAccounts =
+    {
+        ("kupac", "kupac1234"), ("kurir1", "kurir1234"), ("kurir2", "kurir1234"),
+        ("marko", "vendor1234"), ("jovana", "vendor1234"), ("nikola", "vendor1234"), ("milan", "vendor1234"),
+        ("jelena", "vendor1234"), ("dragan", "vendor1234"), ("ana", "vendor1234"), ("bojan", "vendor1234"),
+        ("ivana", "vendor1234")
+    };
+
+    public static async Task SeedData(IServiceProvider serviceProvider, bool isDevelopment)
     {
         using var scope = serviceProvider.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("SeedData");
@@ -26,31 +39,15 @@ public static class Seed
                 await roleManager.CreateAsync(new Role { Name = roleName });
         }
 
-        if (!await userManager.Users.AnyAsync(u => u.UserName == "admin"))
+        await EnsureAdmin(userManager, isDevelopment, logger);
+
+        var demo = isDevelopment || Environment.GetEnvironmentVariable("DEMO_ACCOUNTS") == "true";
+        if (!demo)
         {
-            logger.LogInformation("Creating admin user...");
-            var admin = new User
-            {
-                UserName = "admin",
-                FirstName = "Super",
-                LastName = "Admin",
-                Email = "admin@pijacaudzepu.rs"
-            };
-            var result = await userManager.CreateAsync(admin, "admin1234");
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(admin, "SuperAdmin");
-                logger.LogInformation("Admin user created successfully.");
-            }
-            else
-            {
-                logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
+            await LockDemoAccounts(userManager, logger);
+            return;
         }
-        else
-        {
-            logger.LogInformation("Admin user already exists.");
-        }
+        await UnlockDemoAccounts(userManager);
 
         if (!await userManager.Users.AnyAsync(u => u.UserName == "kupac"))
         {
@@ -314,6 +311,73 @@ public static class Seed
 
             context.Products.AddRange(products);
             await context.SaveChangesAsync();
+        }
+    }
+
+    private static async Task EnsureAdmin(UserManager<User> userManager, bool isDevelopment, ILogger logger)
+    {
+        var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+        var admin = await userManager.Users.FirstOrDefaultAsync(u => u.UserName == "admin");
+
+        if (admin == null)
+        {
+            var password = isDevelopment ? DefaultAdminPassword : adminPassword;
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                logger.LogWarning("Admin nalog ne postoji, a ADMIN_PASSWORD nije podešen - admin nije napravljen.");
+                return;
+            }
+            admin = new User { UserName = "admin", FirstName = "Super", LastName = "Admin", Email = "admin@pijacaudzepu.rs" };
+            var result = await userManager.CreateAsync(admin, password);
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(admin, "SuperAdmin");
+                logger.LogInformation("Admin nalog je napravljen.");
+            }
+            else
+            {
+                logger.LogError("Admin nalog nije napravljen: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+            return;
+        }
+
+        // U produkciji admin ne sme da ostane sa podrazumevanom lozinkom
+        if (isDevelopment || !await userManager.CheckPasswordAsync(admin, DefaultAdminPassword)) return;
+        if (string.IsNullOrWhiteSpace(adminPassword))
+        {
+            logger.LogCritical("Admin nalog ima podrazumevanu lozinku! Podesite ADMIN_PASSWORD i ponovo pokrenite server.");
+            return;
+        }
+        var token = await userManager.GeneratePasswordResetTokenAsync(admin);
+        var reset = await userManager.ResetPasswordAsync(admin, token, adminPassword);
+        if (reset.Succeeded)
+            logger.LogWarning("Lozinka admin naloga je promenjena na vrednost iz ADMIN_PASSWORD.");
+        else
+            logger.LogError("Lozinka admina nije promenjena: {Errors}", string.Join(", ", reset.Errors.Select(e => e.Description)));
+    }
+
+    // Test nalog sa poznatom lozinkom se zaključava zauvek (LockoutEnd = MaxValue označava da ga je zaključao seed)
+    private static async Task LockDemoAccounts(UserManager<User> userManager, ILogger logger)
+    {
+        foreach (var (userName, password) in DemoAccounts)
+        {
+            var user = await userManager.FindByNameAsync(userName);
+            if (user == null || user.LockoutEnd == DateTimeOffset.MaxValue) continue;
+            if (!await userManager.CheckPasswordAsync(user, password)) continue;
+
+            await userManager.SetLockoutEnabledAsync(user, true);
+            await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+            logger.LogWarning("Test nalog {UserName} ima podrazumevanu lozinku i zaključan je (DEMO_ACCOUNTS=true ga ostavlja aktivnim).", userName);
+        }
+    }
+
+    private static async Task UnlockDemoAccounts(UserManager<User> userManager)
+    {
+        foreach (var (userName, _) in DemoAccounts)
+        {
+            var user = await userManager.FindByNameAsync(userName);
+            if (user?.LockoutEnd == DateTimeOffset.MaxValue)
+                await userManager.SetLockoutEndDateAsync(user, null);
         }
     }
 }

@@ -54,7 +54,7 @@
       </ion-item>
       <ion-item>
         <ion-input label="Nova lozinka" labelPlacement="floating" type="password"
-                   [(ngModel)]="newPassword" name="newPassword" required minlength="4"></ion-input>
+                   [(ngModel)]="newPassword" name="newPassword" required minlength="8"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input label="Potvrdite novu lozinku" labelPlacement="floating" type="password"
@@ -62,7 +62,7 @@
       </ion-item>
       <p *ngIf="confirmPassword && !passwordsMatch" class="error-text">Lozinke se ne poklapaju</p>
       <ion-button expand="block" type="submit"
-                  [disabled]="changingPassword || !currentPassword || !newPassword || !confirmPassword || !passwordsMatch || newPassword.length < 4"
+                  [disabled]="changingPassword || !currentPassword || !newPassword || !confirmPassword || !passwordsMatch || newPassword.length < 8"
                   class="ion-margin-top">
         <ion-spinner *ngIf="changingPassword" name="crescent" slot="start"></ion-spinner>
         Promeni lozinku

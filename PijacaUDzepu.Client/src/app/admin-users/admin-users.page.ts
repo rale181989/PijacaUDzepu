@@ -95,14 +95,14 @@ export class AdminUsersPage implements OnInit {
         { name: 'lastName', placeholder: 'Prezime' },
         { name: 'phoneNumber', placeholder: 'Telefon', type: 'tel' },
         { name: 'userName', placeholder: 'Korisničko ime' },
-        { name: 'password', placeholder: 'Lozinka (min. 4 znaka)', type: 'password' },
+        { name: 'password', placeholder: 'Lozinka (min. 8 znakova)', type: 'password' },
       ],
       buttons: [
         { text: 'Otkaži', role: 'cancel' },
         {
           text: 'Napravi nalog',
           handler: data => {
-            if (!data.firstName?.trim() || !data.lastName?.trim() || !data.userName?.trim() || (data.password ?? '').length < 4) {
+            if (!data.firstName?.trim() || !data.lastName?.trim() || !data.userName?.trim() || (data.password ?? '').length < 8) {
               this.showToast('Popunite ime, prezime, korisničko ime i lozinku', 'warning');
               return false;
             }

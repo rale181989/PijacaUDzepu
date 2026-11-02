@@ -41,6 +41,8 @@ The environments differ only in `apiUrl`:
 
 ## Configuration
 
+Documentation rule: every change also goes into this file, `README.md` and the user manual (`docs/uputstvo/`, a generated PowerPoint for customers, vendors and couriers - see its README).
+
 `PODESAVANJA.md` (in Serbian) is the owner's checklist of features that need activation: Brevo email, Firebase push, Render deploy, courier fee, legal placeholders, and cleartext HTTP for the APK. Update it when adding anything that needs env vars or manual setup.
 
 
@@ -125,13 +127,21 @@ The environments differ only in `apiUrl`:
 
 ## Seed data
 
-`DataAccess/SeedData/SeedData.cs` creates these users:
-- `admin` / `admin1234` (SuperAdmin)
-- `kupac` / `kupac1234` (Customer)
-- `kurir1`, `kurir2` / `kurir1234` (Courier). These are seeded even when markets already exist.
-- nine vendor users (`marko`, `jovana`, `nikola`, `milan`, `jelena`, `dragan`, `ana`, `bojan`, `ivana`) with the password `vendor1234` (VendorAdmin)
+`DataAccess/SeedData/SeedData.cs` (`Seed.SeedData(services, isDevelopment)`) always migrates the database and creates the roles. Everything else depends on the environment:
+- **Development, or `DEMO_ACCOUNTS=true`:** creates the demo accounts if missing, and the four markets with stalls, vendors and products when no market exists yet:
+  - `admin` / `admin1234` (SuperAdmin)
+  - `kupac` / `kupac1234` (Customer)
+  - `kurir1`, `kurir2` / `kurir1234` (Courier)
+  - nine vendor users (`marko`, `jovana`, `nikola`, `milan`, `jelena`, `dragan`, `ana`, `bojan`, `ivana`) / `vendor1234` (VendorAdmin)
+- **Production without `DEMO_ACCOUNTS`:** no demo data. Demo accounts that still have their default password are locked (`LockoutEnd = DateTimeOffset.MaxValue` marks a seed lock; login says the account is disabled). Running in demo mode unlocks them again.
+- **Admin in production:** created from `ADMIN_PASSWORD` if it doesn't exist. If `admin` still has `admin1234` and `ADMIN_PASSWORD` is set, the password is reset to it; without the variable the server logs a critical warning on every start.
 
-It also creates four markets, their stalls, the vendors, and their products. The markets, vendors, and products are seeded only when no market exists yet. Identity passwords are deliberately weak: at least 4 characters with a lowercase letter.
+## Security
+
+- Passwords need at least 8 characters and a lowercase letter (Identity options + `[MinLength(8)]` on the input DTOs + the client forms). Identity error messages are Serbian (`Helpers/SerbianIdentityErrorDescriber`).
+- Login uses lockout: 10 wrong passwords lock the account for 15 minutes (`CheckPasswordSignInAsync(..., lockoutOnFailure: true)`).
+- Rate limits (`Program.cs`, partitioned by the first `X-Forwarded-For` address): `auth` = 10 requests/minute on login and register, `support` = 5 per 10 minutes on the support form.
+- `GET /api/auth/health` is anonymous and returns only `{ status, timestamp }`.
 
 ## Client architecture
 

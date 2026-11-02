@@ -110,7 +110,7 @@ export class VendorProfilePage implements OnInit {
   }
 
   async changePassword() {
-    if (!this.currentPassword || !this.newPassword || !this.passwordsMatch || this.newPassword.length < 4) return;
+    if (!this.currentPassword || !this.newPassword || !this.passwordsMatch || this.newPassword.length < 8) return;
     this.changingPassword = true;
     this.authService.changePassword(this.currentPassword, this.newPassword).subscribe({
       next: async () => {

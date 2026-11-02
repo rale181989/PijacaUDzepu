@@ -39,7 +39,13 @@ public class AuthService : IAuthService
         if (user == null || !user.IsActive)
             throw new UnauthorizedAccessException("Pogrešno korisničko ime ili lozinka.");
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        // Test nalog koji je seed zaključao u produkciji (vidi SeedData.LockDemoAccounts)
+        if (user.LockoutEnd == DateTimeOffset.MaxValue)
+            throw new UnauthorizedAccessException("Nalog je onemogućen. Obratite se administratoru.");
+
+        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: true);
+        if (result.IsLockedOut)
+            throw new UnauthorizedAccessException("Previše pogrešnih pokušaja. Nalog je privremeno zaključan, pokušajte ponovo za 15 minuta.");
         if (!result.Succeeded)
             throw new UnauthorizedAccessException("Pogrešno korisničko ime ili lozinka.");
 

@@ -10,7 +10,7 @@ public class CreateCourierDto
     public string UserName { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(4)]
+    [MinLength(8, ErrorMessage = "Lozinka mora imati najmanje 8 znakova.")]
     public string Password { get; set; } = string.Empty;
 
     [Required]

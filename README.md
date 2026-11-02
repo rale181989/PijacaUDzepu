@@ -1,0 +1,64 @@
+# Pijaca u Džepu
+
+Aplikacija za poručivanje sa novosadskih pijaca. Kupci biraju robu sa tezgi i preuzimaju je sami
+ili je dobijaju na adresu preko Eko kurira. Prodavci vode ponudu i porudžbine, kuriri dostave, a
+administrator nalog prodavaca, kurira i izveštaje.
+
+Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https://pijacaudzepu.onrender.com>.
+
+## Funkcije
+
+**Kupac** (nalog nije obavezan)
+- Katalog sa filterima (pijaca, prodavac, grupa), pretragom bez kvačica i sortiranjem; kod sortiranja po ceni bira se jedinica mere
+- Korpa sa robom više prodavaca; svaki prodavac dobija svoj deo porudžbine
+- Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
+- Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
+- Moje porudžbine; odbijena porudžbina je precrtana, sa razlogom prodavca
+- Jezici: srpski, engleski, ruski
+
+**Prodavac**
+- Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost
+- Porudžbine po stranama; zvono dok ima porudžbina na čekanju
+- Potvrdi / odbij (razlog obavezan, kupac ga dobija i e-mailom) / spremno / kupac preuzeo
+
+**Eko kurir**
+- Smena; zvono za nove dostave dok ih ne prihvati ili odbije
+- Prihvati (prvi dobija dostavu) ili odbij (sklanja se samo njemu)
+- Preuzeo sam robu → isporučeno; završene dostave po stranama
+
+**Administrator**
+- Pijace, tezge, prodavci (pozivnice e-mailom), korisnici (pretraga, po stranama), kuriri
+- Tehnička podrška (pitanja sa sajta)
+- Izveštaji: porudžbine, kupci i kuriri (gde i koliko su vozili), za izabrani period ili sve
+
+**Bezbednost**
+- Lozinke najmanje 8 znakova; zaključavanje naloga posle 10 pogrešnih pokušaja
+- Ograničen broj pokušaja prijave po IP adresi
+- U produkciji nema test naloga; admin lozinka iz `ADMIN_PASSWORD`
+
+## Tehnologije
+- **API:** ASP.NET Core 8, EF Core + PostgreSQL (Neon), ASP.NET Identity + JWT, SignalR, Firebase Cloud Messaging, MailKit (Brevo), Cloudflare R2 za slike
+- **Klijent:** Ionic 8 + Angular 20, Capacitor 8 (Android)
+- **Hosting:** Render (Docker); API servira i web klijent
+
+## Pokretanje lokalno
+Potreban je PostgreSQL na `localhost:5432` (podešavanje u `appsettings.json`), .NET 8 SDK i Node.js.
+
+```
+cd PijacaUDzepu.API/PijacaUDzepu.API
+dotnet run                    # http://localhost:5000, Swagger na /swagger; migracije i test podaci se prave sami
+
+cd PijacaUDzepu.Client
+npm ci --legacy-peer-deps
+npm start                     # http://localhost:4200 (ili: npx ng serve --port 8100)
+```
+
+Test nalozi (samo lokalno, u Development režimu): `admin`/`admin1234`, `kupac`/`kupac1234`,
+`kurir1`/`kurir1234`, `marko`/`vendor1234` (i ostali prodavci sa istom lozinkom).
+
+Android: `npm run build:android`, pa `npm run open:android` (Android Studio).
+
+## Dokumentacija
+- [`CLAUDE.md`](CLAUDE.md) – arhitektura, pravila i komande za razvoj
+- [`PODESAVANJA.md`](PODESAVANJA.md) – šta treba podesiti u produkciji (env varijable, Firebase, Brevo, R2…)
+- [`docs/uputstvo/`](docs/uputstvo/) – korisničko uputstvo (PowerPoint) za kupce, prodavce i kurire, pravi se iz koda
