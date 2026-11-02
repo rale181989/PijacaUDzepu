@@ -100,6 +100,13 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - **"Obavesti me"** (`StockAlerts`, logged-in users only). When `ProductService.UpdateProduct` makes a product available again, `NotifyBackInStock` sends `StockAvailable` (SignalR) and a push, then deletes the alerts.
   - **Ratings** (`OrderRatings`, one per order, 1–5 for the vendor plus the courier on courier orders, optional comment) are allowed only for `Completed` orders, via `POST /api/orders/{id}/rating` or `/api/orders/track/{code}/{id}/rating` for guests. `OrderDto.Rating`; the vendor gets `OrderRated`. `ProductDto.VendorRating`/`VendorRatingCount` are filled for a whole page in one grouped query (`FillVendorRatings`). The client modal is `shared/rating-form`, and `StarsPipe` renders ★★★★☆.
   - **"Poruči ponovo"** is client-only (`OrderActionsService.reorder`): it reloads each item's product and adds only those that are available and whose vendor is open.
+- **Vendor tools:**
+  - **Stock** (`Product.StockQuantity`, null = not tracked): `OrderService.ReserveStock` runs in the same transaction as the order insert, with one conditional `ExecuteUpdate` per product (`StockQuantity >= qty`), so concurrent orders can't oversell. Reaching 0 sets `IsAvailable = false`.
+    - `RestoreStock` gives the quantity back on Rejected or Cancelled. It re-enables only products that were at 0 and unavailable (a product the vendor turned off by hand stays off) and fires the back-in-stock alerts.
+    - The home card shows "Na stanju: X" and the + button stops at the stock.
+  - **Quick edit:** `PATCH /api/products/{id}/quick { price?, stockQuantity?, clearStock?, isAvailable? }` is used by the vendor's product list (price/stock dialog and the availability toggle). The full `PUT` sends every field and would reset the stock.
+    - Gotcha: `vendor-products` rows are `ion-item`s with `routerLink`, which Ionic renders as links, so buttons inside a row need both `stopPropagation()` and `preventDefault()`.
+  - **Pregled dana** (`/vendor-today`, `GET /api/orders/vendor-today`): items to prepare summed across active non-delivery orders, products with stock ≤ 3, and today's counts and revenue in local time.
 - **Guest tracking:**
   - A guest checkout gets a random `TrackingCode`, shared by all orders of that checkout. It is returned only in the guest-create response, never in vendor or courier views.
   - `GET /api/orders/track/{code}` returns the orders with the address and phone partly masked. `PUT .../track/{code}/{id}/cancel` cancels a pending order.

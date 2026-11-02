@@ -13,6 +13,8 @@ export interface Product {
   note?: string;
   imageUrl?: string;
   isAvailable: boolean;
+  // Količina na stanju (null = ne prati se)
+  stockQuantity?: number | null;
   // Da li tezga sada prima porudžbine (radno vreme, neradni dan, pauza)
   vendorOpen?: boolean;
   vendorClosedReason?: string | null;
@@ -30,6 +32,14 @@ export interface ProductInput {
   productClass?: ProductClass | null;
   note?: string;
   isAvailable: boolean;
+  stockQuantity?: number | null;
+}
+
+export interface QuickProductUpdate {
+  price?: number;
+  stockQuantity?: number;
+  clearStock?: boolean;
+  isAvailable?: boolean;
 }
 
 export type ProductUnit = 'Kg' | 'Komad' | 'Veza' | 'Litar' | 'Gram' | 'Pakovanje' | 'Kutija' | 'Flasa';

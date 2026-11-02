@@ -18,6 +18,7 @@ public class ProductDto
     public string? Note { get; set; }
     public string? ImageUrl { get; set; }
     // Da li tezga sada prima porudžbine (vidi VendorDto)
+    public decimal? StockQuantity { get; set; }
     public bool VendorOpen { get; set; } = true;
     public string? VendorClosedReason { get; set; }
     public DateTime? VendorOpensAt { get; set; }

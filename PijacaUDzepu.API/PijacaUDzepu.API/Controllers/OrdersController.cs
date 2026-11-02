@@ -128,6 +128,15 @@ public class OrdersController : BaseApiController
     }
 
     [Authorize(Policy = "RequireVendorAdmin")]
+    [HttpGet("vendor-today")]
+    public async Task<IActionResult> GetVendorToday()
+    {
+        var vendorId = await GetCurrentVendorId();
+        if (vendorId == null) return Forbid();
+        return Ok(await _orderService.GetVendorToday(vendorId.Value));
+    }
+
+    [Authorize(Policy = "RequireVendorAdmin")]
     [HttpGet("vendor-pending-count")]
     public async Task<IActionResult> GetVendorPendingCount()
     {

@@ -4,6 +4,18 @@ import { environment } from '../../environments/environment';
 import { Order, OrderInput, GuestOrderInput, OrderStatus } from '../models/order.model';
 import { PagedResult } from '../models/paged-result.model';
 
+export interface VendorToday {
+  pending: number;
+  confirmed: number;
+  ready: number;
+  inDelivery: number;
+  toPrepare: { productName: string; unit: string; quantity: number; orders: number }[];
+  todayOrders: number;
+  todayCompleted: number;
+  todayGoodsTotal: number;
+  lowStock: { productId: number; name: string; unit: string; stockQuantity: number }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class OrderService {
   private baseUrl = environment.apiUrl + '/orders';
@@ -38,6 +50,10 @@ export class OrderService {
   getVendorOrders(skip = 0, take = 20) {
     const params = new HttpParams().set('skip', skip.toString()).set('take', take.toString());
     return this.http.get<PagedResult<Order>>(`${this.baseUrl}/vendor-orders`, { params });
+  }
+
+  getVendorToday() {
+    return this.http.get<VendorToday>(`${this.baseUrl}/vendor-today`);
   }
 
   getVendorPendingCount() {

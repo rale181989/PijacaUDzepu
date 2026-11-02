@@ -103,6 +103,12 @@ const routes: Routes = [
     data: { roles: ['VendorAdmin', 'SuperAdmin'] }
   },
   {
+    path: 'vendor-today',
+    loadChildren: () => import('./vendor-today/vendor-today.module').then(m => m.VendorTodayPageModule),
+    canActivate: [RoleGuard],
+    data: { roles: ['VendorAdmin'] }
+  },
+  {
     path: 'vendor-orders',
     loadChildren: () => import('./vendor-orders/vendor-orders.module').then(m => m.VendorOrdersPageModule),
     canActivate: [RoleGuard],

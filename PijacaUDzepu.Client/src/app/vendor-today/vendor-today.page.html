@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Pregled dana</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading && !data" name="crescent" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="data" class="today">
+    <div class="stats">
+      <a class="stat warn" routerLink="/vendor-orders"><span class="value">{{ data.pending }}</span><span class="label">na čekanju</span></a>
+      <a class="stat" routerLink="/vendor-orders"><span class="value">{{ data.confirmed }}</span><span class="label">potvrđeno – spremiti</span></a>
+      <a class="stat" routerLink="/vendor-orders"><span class="value">{{ data.ready }}</span><span class="label">spremno – čeka preuzimanje</span></a>
+      <div class="stat"><span class="value">{{ data.inDelivery }}</span><span class="label">kod kurira</span></div>
+    </div>
+
+    <section class="panel">
+      <h3>Šta treba spremiti</h3>
+      <p class="hint">Zbir stavki svih porudžbina na čekanju, potvrđenih i spremnih.</p>
+      <p *ngIf="data.toPrepare.length === 0" class="hint">Trenutno nema porudžbina za spremanje.</p>
+      <div *ngFor="let item of data.toPrepare" class="prepare-row">
+        <span class="name">{{ item.productName }}</span>
+        <strong>{{ item.quantity | number:'1.0-2' }} {{ unit(item.unit) }}</strong>
+        <span class="orders">{{ item.orders }} {{ item.orders === 1 ? 'porudžbina' : 'porudžbina' }}</span>
+      </div>
+    </section>
+
+    <section *ngIf="data.lowStock.length > 0" class="panel low">
+      <h3>Malo na stanju</h3>
+      <a *ngFor="let p of data.lowStock" class="prepare-row" [routerLink]="['/vendor-product-form', p.productId]">
+        <span class="name">{{ p.name }}</span>
+        <strong>{{ p.stockQuantity | number:'1.0-2' }} {{ unit(p.unit) }}</strong>
+      </a>
+    </section>
+
+    <section class="panel">
+      <h3>Danas</h3>
+      <div class="prepare-row"><span class="name">Porudžbina danas</span><strong>{{ data.todayOrders }}</strong></div>
+      <div class="prepare-row"><span class="name">Završeno</span><strong>{{ data.todayCompleted }}</strong></div>
+      <div class="prepare-row"><span class="name">Promet (završene)</span><strong>{{ data.todayGoodsTotal | number:'1.0-0' }} din</strong></div>
+    </section>
+  </div>
+</ion-content>

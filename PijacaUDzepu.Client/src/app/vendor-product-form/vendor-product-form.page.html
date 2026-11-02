@@ -65,6 +65,12 @@
                     placeholder="npr. Bez pesticida, domaće, akcija..."></ion-textarea>
     </ion-item>
 
+    <ion-item>
+      <ion-input label="Količina na stanju (opciono)" labelPlacement="floating" type="number" min="0"
+                 [(ngModel)]="model.stockQuantity" name="stockQuantity"
+                 helperText="Prazno = ne pratite stanje. Porudžbine umanjuju stanje; na nuli proizvod izlazi iz ponude."></ion-input>
+    </ion-item>
+
     <ion-item *ngIf="isEdit">
       <ion-toggle [(ngModel)]="model.isAvailable" name="isAvailable">
         Dostupno

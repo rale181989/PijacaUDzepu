@@ -358,7 +358,10 @@ export class HomePage implements OnInit {
   }
 
   increaseQty(product: Product) {
-    this.selectedQty[product.id] = this.getSelectedQty(product.id) + 1;
+    // Ne više nego što ima na stanju (kad prodavac prati stanje)
+    const next = this.getSelectedQty(product.id) + 1;
+    if (product.stockQuantity != null && next > product.stockQuantity) return;
+    this.selectedQty[product.id] = next;
   }
 
   decreaseQty(product: Product) {

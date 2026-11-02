@@ -503,6 +503,9 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<int?>("ProductClass")
                         .HasColumnType("integer");
 
+                    b.Property<decimal?>("StockQuantity")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("Unit")
                         .HasColumnType("integer");
 

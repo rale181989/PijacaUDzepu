@@ -13,4 +13,5 @@ public interface IProductService
     Task<ProductDto> UpdateProduct(int productId, int vendorId, ProductInputDto dto);
     Task DeleteProduct(int productId, int vendorId);
     Task<string> UpdateProductImage(int productId, int vendorId, IFormFile file);
+    Task<ProductDto> QuickUpdate(int productId, int vendorId, QuickProductUpdateDto dto);
 }

@@ -19,12 +19,13 @@ public class OrderService : IOrderService
     private readonly IHubContext<OrderHub> _hubContext;
     private readonly IHubContext<TrackingHub> _trackingHub;
     private readonly IPushService _pushService;
+    private readonly IFavoriteService _favorites;
     private readonly IEmailService _emailService;
     private readonly ILogger<OrderService> _logger;
     private readonly IConfiguration _config;
 
     public OrderService(DataContext context, IHubContext<OrderHub> hubContext, IHubContext<TrackingHub> trackingHub,
-        IPushService pushService, IEmailService emailService, ILogger<OrderService> logger, IConfiguration config)
+        IPushService pushService, IEmailService emailService, ILogger<OrderService> logger, IConfiguration config, IFavoriteService favorites)
     {
         _emailService = emailService;
         _logger = logger;
@@ -32,6 +33,7 @@ public class OrderService : IOrderService
         _hubContext = hubContext;
         _trackingHub = trackingHub;
         _pushService = pushService;
+        _favorites = favorites;
         _config = config;
     }
 
@@ -55,7 +57,9 @@ public class OrderService : IOrderService
     public async Task<List<OrderDto>> CreateOrders(int customerId, OrderInputDto dto)
     {
         var address = ValidateAddress(dto.Fulfillment, dto.DeliveryAddress);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
         var orders = await BuildOrders(dto.Items, dto.Note, dto.Fulfillment);
+        await ReserveStock(dto.Items);
         foreach (var order in orders)
         {
             order.CustomerId = customerId;
@@ -65,6 +69,7 @@ public class OrderService : IOrderService
 
         _context.Orders.AddRange(orders);
         await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         await NotifyNewOrders(orders);
 
@@ -74,7 +79,9 @@ public class OrderService : IOrderService
     public async Task<List<OrderDto>> CreateGuestOrders(GuestOrderInputDto dto)
     {
         var address = ValidateAddress(dto.Fulfillment, dto.GuestAddress);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
         var orders = await BuildOrders(dto.Items, dto.Note, dto.Fulfillment);
+        await ReserveStock(dto.Items);
         var trackingCode = NewTrackingCode();
         foreach (var order in orders)
         {
@@ -87,6 +94,7 @@ public class OrderService : IOrderService
 
         _context.Orders.AddRange(orders);
         await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         await NotifyNewOrders(orders);
 
@@ -136,6 +144,101 @@ public class OrderService : IOrderService
                 logger.LogError(ex, "Slanje obaveštenja o odbijenoj porudžbini #{OrderId} na {Email} nije uspelo.", order.Id, email);
             }
         });
+    }
+
+    // Proizvodi sa praćenim stanjem: uslovni UPDATE po proizvodu, pa dva kupca ne mogu da kupe isti poslednji
+    // kilogram; na nuli proizvod izlazi iz ponude. Poziva se u transakciji sa upisom porudžbine.
+    private async Task ReserveStock(List<OrderItemInputDto> items)
+    {
+        foreach (var group in items.GroupBy(i => i.ProductId))
+        {
+            var quantity = group.Sum(i => i.Quantity);
+            var tracked = await _context.Products
+                .Where(p => p.Id == group.Key && p.StockQuantity != null)
+                .Select(p => new { p.Name, p.StockQuantity })
+                .FirstOrDefaultAsync();
+            if (tracked == null) continue;
+
+            var updated = await _context.Products
+                .Where(p => p.Id == group.Key && p.StockQuantity >= quantity)
+                .ExecuteUpdateAsync(set => set
+                    .SetProperty(p => p.IsAvailable, p => p.StockQuantity - quantity > 0)
+                    .SetProperty(p => p.StockQuantity, p => p.StockQuantity - quantity));
+            if (updated == 0)
+            {
+                // Stanje se ponovo čita: možda ga je u međuvremenu smanjila druga porudžbina
+                var left = await _context.Products.Where(p => p.Id == group.Key).Select(p => p.StockQuantity).FirstAsync();
+                throw new InvalidOperationException(left > 0
+                    ? $"{tracked.Name}: na stanju je još samo {left:0.##}."
+                    : $"{tracked.Name}: nema više na stanju.");
+            }
+        }
+    }
+
+    // Odbijena/otkazana porudžbina vraća količinu na stanje. Proizvod koji je izašao iz ponude jer je stanje palo
+    // na nulu vraća se u ponudu (ručno isključen proizvod ostaje isključen); kupci koji čekaju dobijaju obaveštenje.
+    private async Task RestoreStock(Order order)
+    {
+        foreach (var group in order.Items.Where(i => i.ProductId != null).GroupBy(i => i.ProductId!.Value))
+        {
+            var quantity = group.Sum(i => i.Quantity);
+            var product = await _context.Products.Include(p => p.Vendor)
+                .FirstOrDefaultAsync(p => p.Id == group.Key && p.StockQuantity != null);
+            if (product == null) continue;
+
+            var backInStock = product.StockQuantity == 0 && !product.IsAvailable;
+            product.StockQuantity += quantity;
+            if (backInStock) product.IsAvailable = true;
+            await _context.SaveChangesAsync();
+            if (backInStock) await _favorites.NotifyBackInStock(product, product.Vendor.Name);
+        }
+    }
+
+    // Pregled dana za prodavca
+    public async Task<VendorTodayDto> GetVendorToday(int vendorId)
+    {
+        var today = LocalTime.Today;
+        var fromUtc = LocalTime.ToUtc(today.ToDateTime(TimeOnly.MinValue));
+        var toUtc = LocalTime.ToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue));
+
+        var active = await _context.Orders
+            .Where(o => o.VendorId == vendorId && ActiveStatuses.Contains(o.Status))
+            .Select(o => new { o.Status, Items = o.Items.Select(i => new { i.ProductName, i.Unit, i.Quantity }) })
+            .ToListAsync();
+        var todays = await _context.Orders
+            .Where(o => o.VendorId == vendorId && o.CreatedAt >= fromUtc && o.CreatedAt < toUtc)
+            .Select(o => new { o.Status, o.TotalAmount })
+            .ToListAsync();
+
+        return new VendorTodayDto
+        {
+            Pending = active.Count(o => o.Status == OrderStatus.Pending),
+            Confirmed = active.Count(o => o.Status == OrderStatus.Confirmed),
+            Ready = active.Count(o => o.Status == OrderStatus.ReadyForPickup),
+            InDelivery = active.Count(o => o.Status == OrderStatus.InDelivery),
+            // Spremaju se porudžbine koje nisu predate (na čekanju, potvrđene, spremne)
+            ToPrepare = active
+                .Where(o => o.Status != OrderStatus.InDelivery)
+                .SelectMany(o => o.Items.Select(i => (i.ProductName, i.Unit, i.Quantity, Order: o)))
+                .GroupBy(x => (x.ProductName, x.Unit))
+                .Select(g => new PrepareItemDto
+                {
+                    ProductName = g.Key.ProductName,
+                    Unit = g.Key.Unit,
+                    Quantity = g.Sum(x => x.Quantity),
+                    Orders = g.Select(x => x.Order).Distinct().Count()
+                })
+                .OrderBy(x => x.ProductName)
+                .ToList(),
+            TodayOrders = todays.Count,
+            TodayCompleted = todays.Count(o => o.Status == OrderStatus.Completed),
+            TodayGoodsTotal = todays.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.TotalAmount),
+            LowStock = await _context.Products
+                .Where(p => p.VendorId == vendorId && p.StockQuantity != null && p.StockQuantity <= 3)
+                .OrderBy(p => p.StockQuantity)
+                .Select(p => new LowStockDto { ProductId = p.Id, Name = p.Name, Unit = p.Unit, StockQuantity = p.StockQuantity!.Value })
+                .ToListAsync()
+        };
     }
 
     private static string? ValidateAddress(FulfillmentType fulfillment, string? address)
@@ -297,6 +400,8 @@ public class OrderService : IOrderService
         await NotifyStatusChanged(order, notifyVendor: false);
         if (wasPending)
             await StopVendorAlarm(order);
+        if (newStatus == OrderStatus.Rejected)
+            await RestoreStock(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue && newStatus == OrderStatus.Rejected)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -326,6 +431,7 @@ public class OrderService : IOrderService
 
         await NotifyStatusChanged(order, notifyCustomer: false);
         await StopVendorAlarm(order);
+        await RestoreStock(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -380,6 +486,7 @@ public class OrderService : IOrderService
 
         await NotifyStatusChanged(order, notifyCustomer: false);
         await StopVendorAlarm(order);
+        await RestoreStock(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue)
             await NotifyCouriersOrderUnavailable(order.Id);
 

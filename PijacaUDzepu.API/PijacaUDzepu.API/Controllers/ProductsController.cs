@@ -108,6 +108,22 @@ public class ProductsController : BaseApiController
     }
 
     [Authorize(Policy = "RequireVendorAdmin")]
+    [HttpPatch("{id}/quick")]
+    public async Task<IActionResult> QuickUpdate(int id, QuickProductUpdateDto dto)
+    {
+        var vendorId = await GetCurrentVendorId();
+        if (vendorId == null) return Forbid();
+        try
+        {
+            return Ok(await _productService.QuickUpdate(id, vendorId.Value, dto));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "RequireVendorAdmin")]
     [HttpPost("{id}/image")]
     public async Task<IActionResult> UploadImage(int id, IFormFile file)
     {

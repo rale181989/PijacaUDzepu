@@ -36,7 +36,7 @@ export class VendorProductFormPage implements OnInit {
       this.loading = true;
       this.productService.getById(this.productId).subscribe({
         next: p => {
-          this.model = { name: p.name, price: p.price, unit: p.unit, category: p.category, productClass: p.productClass, note: p.note, isAvailable: p.isAvailable };
+          this.model = { name: p.name, price: p.price, unit: p.unit, category: p.category, productClass: p.productClass, note: p.note, isAvailable: p.isAvailable, stockQuantity: p.stockQuantity ?? null };
           this.imageUrl = p.imageUrl || null;
           this.loading = false;
         },

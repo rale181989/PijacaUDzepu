@@ -33,11 +33,18 @@
         </ion-thumbnail>
         <ion-label>
           <h2>{{ product.name }}</h2>
-          <p>{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}</p>
+          <p>{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}
+            <span *ngIf="product.stockQuantity != null" class="stock" [class.low]="product.stockQuantity <= 3">
+              · na stanju {{ product.stockQuantity | number:'1.0-2' }} {{ getUnitLabel(product.unit) }}
+            </span>
+          </p>
         </ion-label>
+        <ion-button slot="end" fill="clear" size="small" (click)="quickEdit(product, $event)" title="Brza izmena cene i stanja">
+          <ion-icon name="pricetag-outline" slot="icon-only"></ion-icon>
+        </ion-button>
         <ion-toggle slot="end" [checked]="product.isAvailable"
                     (ionChange)="toggleAvailability(product)"
-                    (click)="$event.stopPropagation()">
+                    (click)="$event.stopPropagation(); $event.preventDefault()">
         </ion-toggle>
       </ion-item>
       <ion-item-options side="end">

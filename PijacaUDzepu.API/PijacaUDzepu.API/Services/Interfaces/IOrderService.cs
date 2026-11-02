@@ -18,6 +18,7 @@ public interface IOrderService
     Task<OrderDto> RateOrder(int orderId, int? customerId, string? trackingCode, OrderRatingInputDto dto);
     Task<OrderDto> CancelTrackedOrder(string code, int orderId);
     Task<int> GetVendorPendingCount(int vendorId);
+    Task<VendorTodayDto> GetVendorToday(int vendorId);
     Task<List<OrderDto>> GetAvailableCourierOrders(int courierId);
     Task<PagedResult<OrderDto>> GetCourierOrders(int courierId, bool finished, int skip = 0, int take = 20);
     Task<OrderDto> AcceptCourierOrder(int orderId, int courierId);

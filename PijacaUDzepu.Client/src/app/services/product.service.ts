@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Product, ProductCategory, ProductInput, ProductSort, ProductUnit } from '../models/product.model';
+import { Product, ProductCategory, ProductInput, QuickProductUpdate, ProductSort, ProductUnit } from '../models/product.model';
 import { PagedResult } from '../models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
@@ -41,6 +41,11 @@ export class ProductService {
 
   update(id: number, dto: ProductInput) {
     return this.http.put<Product>(`${this.baseUrl}/${id}`, dto);
+  }
+
+  // Brza izmena sa liste: cena, stanje ili dostupnost
+  quickUpdate(id: number, dto: QuickProductUpdate) {
+    return this.http.patch<Product>(`${this.baseUrl}/${id}/quick`, dto);
   }
 
   delete(id: number) {

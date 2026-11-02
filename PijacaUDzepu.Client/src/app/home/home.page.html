@@ -312,6 +312,9 @@
             <p *ngIf="product.vendorOpen === false" class="vendor-closed">
               <ion-icon name="time-outline"></ion-icon> {{ closedText(product) }}
             </p>
+            <p *ngIf="product.isAvailable && product.stockQuantity != null" class="product-stock" [class.low]="product.stockQuantity <= 3">
+              {{ 'home.inStock' | t }}: {{ product.stockQuantity | number:'1.0-2' }} {{ getUnitLabel(product.unit) }}
+            </p>
             <p *ngIf="getPricePerKg(product) as perKg" class="product-unit-price">≈ {{ perKg | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel('Kg') }}</p>
             <div class="qty-controls">
               <ion-button fill="outline" size="small" (click)="decreaseQty(product)" [disabled]="getSelectedQty(product.id) === 0">

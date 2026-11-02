@@ -198,8 +198,8 @@ async function build() {
   s.title('Jedna aplikacija, tri uloge');
   const roles = [
     ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko Eko kurira. Nalog nije obavezan.', 'Strane 3–12'],
-    ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 13–19'],
-    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 20–23']
+    ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 13–20'],
+    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 21–24']
   ];
   for (const [i, [ic, col, h, d, pages]] of roles.entries()) {
     const x = 0.6 + i * 4.1;
@@ -390,6 +390,17 @@ async function build() {
   ], 0.6, 1.75, 5.2);
   s.phone('v-products', LEFT_X, PHONE_Y, PHONE_H, 'Spisak proizvoda prodavca', [[1, 0.77, 0.117], [2, 0.72, 0.955]]);
   s.phone('v-product-form', RIGHT_X, PHONE_Y, PHONE_H, 'Izmena proizvoda', [[3, 0.85, 0.128]]);
+
+  // Stanje, brza izmena, pregled dana
+  s = new S('Sadrzaj - dva ekrana', 'Prodavci', 'prodavac');
+  s.title('Stanje, cene i pregled dana');
+  s.steps([
+    { h: 'Brza izmena', d: 'Ikonica cenovnika na listi: nova cena i količina na stanju, bez otvaranja proizvoda.' },
+    { h: 'Količina na stanju', d: 'Opciono. Porudžbine je umanjuju; na nuli proizvod izlazi iz ponude, a odbijena porudžbina je vraća. Kupac ne može da poruči više nego što imate.' },
+    { h: 'Pregled dana', d: 'Meni → Pregled dana: koliko čega treba spremiti za sve porudžbine u toku, šta je pri kraju i današnji promet.' }
+  ], 0.6, 1.75, 5.2);
+  s.phone('v-quick', LEFT_X, PHONE_Y, PHONE_H, 'Brza izmena cene i stanja na listi proizvoda', [[1, 0.88, 0.3], [2, 0.5, 0.56]]);
+  s.phone('v-today', RIGHT_X, PHONE_Y, PHONE_H, 'Pregled dana: šta treba spremiti', [[3, 0.9, 0.32]]);
 
   // 17. Profil tezge
   s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');

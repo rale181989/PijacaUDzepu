@@ -128,7 +128,9 @@ public class ProductService : IProductService
             Category = dto.Category,
             ProductClass = dto.ProductClass,
             Note = dto.Note,
-            IsAvailable = dto.IsAvailable
+            StockQuantity = dto.StockQuantity,
+            // Proizvod bez robe na stanju nije u ponudi
+            IsAvailable = dto.IsAvailable && dto.StockQuantity is null or > 0
         };
 
         _context.Products.Add(product);
@@ -152,7 +154,8 @@ public class ProductService : IProductService
         product.Category = dto.Category;
         product.ProductClass = dto.ProductClass;
         product.Note = dto.Note;
-        product.IsAvailable = dto.IsAvailable;
+        product.StockQuantity = dto.StockQuantity;
+        product.IsAvailable = dto.IsAvailable && dto.StockQuantity is null or > 0;
         product.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -203,6 +206,34 @@ public class ProductService : IProductService
         return newUrl;
     }
 
+    // Brza izmena cene, stanja ili dostupnosti sa liste proizvoda
+    public async Task<ProductDto> QuickUpdate(int productId, int vendorId, QuickProductUpdateDto dto)
+    {
+        var product = await _context.Products
+            .Include(p => p.Vendor)
+            .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
+            ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+
+        var wasAvailable = product.IsAvailable;
+        if (dto.Price.HasValue) product.Price = dto.Price.Value;
+        if (dto.ClearStock) product.StockQuantity = null;
+        else if (dto.StockQuantity.HasValue)
+        {
+            // Nova roba na stanju vraća proizvod u ponudu, nula ga skida
+            if (product.StockQuantity == 0 && !product.IsAvailable && dto.StockQuantity > 0)
+                product.IsAvailable = true;
+            product.StockQuantity = dto.StockQuantity.Value;
+        }
+        if (dto.IsAvailable.HasValue) product.IsAvailable = dto.IsAvailable.Value;
+        if (product.StockQuantity == 0) product.IsAvailable = false;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        if (!wasAvailable && product.IsAvailable)
+            await _favorites.NotifyBackInStock(product, product.Vendor.Name);
+        return MapToDto(product);
+    }
+
     // Prosečna ocena prodavca (iz ocena porudžbina) za sve proizvode na strani, jednim upitom
     private async Task FillVendorRatings(List<ProductDto> items)
     {
@@ -243,6 +274,7 @@ public class ProductService : IProductService
         Note = p.Note,
         ImageUrl = p.ImageUrl,
         IsAvailable = p.IsAvailable,
+        StockQuantity = p.StockQuantity,
         VendorOpen = status?.IsOpen ?? true,
         VendorClosedReason = status?.ClosedReason,
         VendorOpensAt = status?.OpensAt
