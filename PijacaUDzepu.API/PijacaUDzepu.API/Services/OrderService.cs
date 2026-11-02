@@ -120,6 +120,23 @@ public class OrderService : IOrderService
         });
     }
 
+    private void SendRejectionEmailInBackground(string email, Order order)
+    {
+        var emailService = _emailService;
+        var logger = _logger;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await emailService.SendOrderRejected(email, order);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Slanje obaveštenja o odbijenoj porudžbini #{OrderId} na {Email} nije uspelo.", order.Id, email);
+            }
+        });
+    }
+
     private static string? ValidateAddress(FulfillmentType fulfillment, string? address)
     {
         var trimmed = address?.Trim();
@@ -251,6 +268,10 @@ public class OrderService : IOrderService
         ValidateStatusTransition(order.Status, newStatus);
         var wasPending = order.Status == OrderStatus.Pending;
 
+        // Kupac mora da zna zašto je porudžbina odbijena
+        if (newStatus == OrderStatus.Rejected && string.IsNullOrWhiteSpace(message))
+            throw new InvalidOperationException("Upišite razlog odbijanja – kupac će ga dobiti.");
+
         // Kada robu nosi kurir, porudžbinu završava on potvrdom isporuke
         if (newStatus == OrderStatus.Completed && order.Fulfillment == FulfillmentType.Courier)
             throw new InvalidOperationException("Ovu porudžbinu dostavlja kurir i on je završava kada je isporuči.");
@@ -269,6 +290,11 @@ public class OrderService : IOrderService
             await StopVendorAlarm(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue && newStatus == OrderStatus.Rejected)
             await NotifyCouriersOrderUnavailable(order.Id);
+
+        // Razlog odbijanja stiže i e-mailom, da ga vidi i gost koji nema otvorenu stranicu za praćenje
+        var customerEmail = order.GuestEmail ?? order.Customer?.Email;
+        if (newStatus == OrderStatus.Rejected && !string.IsNullOrWhiteSpace(customerEmail))
+            SendRejectionEmailInBackground(customerEmail.Trim(), order);
 
         return MapToDto(order);
     }
@@ -384,14 +410,27 @@ public class OrderService : IOrderService
         return orders.Select(MapToCourierPreview).ToList();
     }
 
-    public async Task<List<OrderDto>> GetCourierOrders(int courierId)
+    // Aktivne dostave kurir vidi sve (ima ih malo); završene/otkazane idu po stranama
+    public async Task<PagedResult<OrderDto>> GetCourierOrders(int courierId, bool finished, int skip = 0, int take = 20)
     {
-        return await OrdersWithDetails()
-            .Where(o => o.CourierId == courierId)
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+
+        var query = OrdersWithDetails().Where(o => o.CourierId == courierId);
+        query = finished
+            ? query.Where(o => !ActiveStatuses.Contains(o.Status))
+            : query.Where(o => ActiveStatuses.Contains(o.Status));
+
+        var totalCount = await query.CountAsync();
+        var items = await query
             .OrderByDescending(o => o.CreatedAt)
-            .Take(100)
+            .ThenByDescending(o => o.Id)
+            .Skip(finished ? skip : 0)
+            .Take(finished ? take : 100)
             .Select(o => MapToDto(o))
             .ToListAsync();
+
+        return new PagedResult<OrderDto> { Items = items, TotalCount = totalCount, HasMore = finished && skip + take < totalCount };
     }
 
     public async Task<OrderDto> AcceptCourierOrder(int orderId, int courierId)

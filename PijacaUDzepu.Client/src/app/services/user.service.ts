@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { User, CreateCourierDto } from '../models/user.model';
+import { PagedResult } from '../models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -9,8 +10,11 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  getAll() {
-    return this.http.get<User[]>(this.baseUrl);
+  // Strana korisnika jedne uloge, uz pretragu po imenu, korisničkom imenu, e-mailu i telefonu
+  getPage(role: string, search: string, skip = 0, take = 20) {
+    let params = new HttpParams().set('role', role).set('skip', String(skip)).set('take', String(take));
+    if (search.trim()) params = params.set('search', search.trim());
+    return this.http.get<PagedResult<User>>(this.baseUrl, { params });
   }
 
   createCourier(dto: CreateCourierDto) {

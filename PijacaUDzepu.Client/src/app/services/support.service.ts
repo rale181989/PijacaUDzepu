@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { PagedResult } from '../models/paged-result.model';
 
 export type SupportCategory = 'Problem' | 'Question' | 'Account' | 'Other';
 
@@ -39,10 +40,10 @@ export class SupportService {
     return this.http.post<void>(this.baseUrl, dto);
   }
 
-  getAll(resolved?: boolean) {
-    let params = new HttpParams();
+  getAll(resolved?: boolean, skip = 0, take = 20) {
+    let params = new HttpParams().set('skip', String(skip)).set('take', String(take));
     if (resolved !== undefined) params = params.set('resolved', String(resolved));
-    return this.http.get<SupportRequest[]>(this.baseUrl, { params });
+    return this.http.get<PagedResult<SupportRequest>>(this.baseUrl, { params });
   }
 
   getOpenCount() {

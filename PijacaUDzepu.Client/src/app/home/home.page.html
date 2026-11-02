@@ -41,11 +41,6 @@
         <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
       </button>
 
-      <button class="filter-btn" (click)="openFilterModal('unit')">
-        <ion-icon name="scale-outline"></ion-icon>
-        <span class="filter-btn-text">{{ selectedUnit ? getUnitFilterLabel(selectedUnit) : ('home.allUnits' | t) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
     </div>
 
     <div class="search-row">
@@ -64,39 +59,19 @@
         <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
       </button>
     </div>
+
+    <!-- Jedinica mere se bira uz sortiranje po ceni; ovde se vidi i uklanja -->
+    <div *ngIf="selectedUnit" class="active-unit">
+      <ion-chip color="primary" (click)="selectUnit(null)">
+        <ion-icon name="scale-outline"></ion-icon>
+        <ion-label>{{ getUnitFilterLabel(selectedUnit) }}</ion-label>
+        <ion-icon name="close-circle"></ion-icon>
+      </ion-chip>
+    </div>
   </div>
 
-  <!-- Unit filter modal -->
-  <ion-modal [isOpen]="showModal === 'unit'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.75, 1]" [initialBreakpoint]="0.75">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar color="primary">
-          <ion-title>{{ 'home.chooseUnit' | t }}</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="showModal = null">{{ 'home.close' | t }}</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content>
-        <ion-list>
-          <ion-item button (click)="selectUnit(null); showModal = null"
-                    [color]="!selectedUnit ? 'light' : ''">
-            <ion-label>{{ 'home.allUnitsShort' | t }}</ion-label>
-            <ion-icon *ngIf="!selectedUnit" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
-          <ion-item *ngFor="let u of unitOptions" button
-                    (click)="selectUnit(u.value); showModal = null"
-                    [color]="selectedUnit === u.value ? 'light' : ''">
-            <ion-label>{{ u.label }}</ion-label>
-            <ion-icon *ngIf="selectedUnit === u.value" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
-        </ion-list>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
-
   <!-- Sort modal -->
-  <ion-modal [isOpen]="showModal === 'sort'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.5, 1]" [initialBreakpoint]="0.5">
+  <ion-modal [isOpen]="showModal === 'sort'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.6, 1]" [initialBreakpoint]="0.6">
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
@@ -109,12 +84,27 @@
       <ion-content>
         <ion-list>
           <ion-item *ngFor="let opt of sortOptions" button
-                    (click)="selectSort(opt.value); showModal = null"
+                    (click)="chooseSort(opt.value)"
                     [color]="sortBy === opt.value ? 'light' : ''">
             <ion-label>{{ opt.label }}</ion-label>
             <ion-icon *ngIf="sortBy === opt.value" name="checkmark" slot="end" color="primary"></ion-icon>
           </ion-item>
         </ion-list>
+
+        <!-- Cene se mogu porediti samo za istu jedinicu mere (kg i g se preračunavaju) -->
+        <div *ngIf="isPriceSort(sortBy)" class="unit-compare">
+          <p class="unit-compare-title">{{ 'home.compareUnit' | t }}</p>
+          <p class="unit-compare-hint">{{ 'home.compareUnitHint' | t }}</p>
+          <div class="unit-chips">
+            <ion-chip [outline]="!!selectedUnit" color="primary" (click)="selectUnit(null)">
+              <ion-label>{{ 'home.allUnitsShort' | t }}</ion-label>
+            </ion-chip>
+            <ion-chip *ngFor="let u of unitOptions" [outline]="selectedUnit !== u.value" color="primary"
+                      (click)="selectUnit(u.value); showModal = null">
+              <ion-label>{{ u.label }}</ion-label>
+            </ion-chip>
+          </div>
+        </div>
       </ion-content>
     </ng-template>
   </ion-modal>
@@ -282,6 +272,7 @@
           </div>
           <ion-card-content>
             <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
+            <span *ngIf="product.productClass" class="product-class-badge">{{ 'productClass.' + product.productClass | t }}</span>
             <div class="product-name-row">
               <h3 class="product-name">{{ product.name }}</h3>
             </div>

@@ -6,5 +6,6 @@ public interface IEmailService
 {
     Task SendVendorInvitation(string toEmail, string vendorName, string inviteToken);
     Task SendTrackingLink(string toEmail, string guestName, string trackingCode, IReadOnlyList<Order> orders);
+    Task SendOrderRejected(string toEmail, Order order);
     Task SendSupportRequest(SupportRequest request);
 }

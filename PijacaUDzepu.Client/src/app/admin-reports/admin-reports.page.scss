@@ -1,0 +1,175 @@
+// Kartice bez velikih slova, da "Porudžbine" stane i na uskom telefonu
+.tabs ion-segment-button {
+  min-width: 0;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  ion-label { text-transform: none; font-size: 15px; letter-spacing: 0; }
+}
+
+.report {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 16px 32px;
+}
+
+.center-spinner { display: block; margin: 40px auto; }
+.muted { color: var(--ion-color-medium); font-size: 13px; }
+.empty { text-align: center; padding: 32px 0; }
+.error { color: var(--ion-color-danger); }
+.danger { color: var(--ion-color-danger); }
+.nowrap { white-space: nowrap; }
+
+// Period: brzi izbor + tačni datumi
+.range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .presets { display: flex; flex-wrap: wrap; gap: 2px; }
+  .presets ion-chip { margin: 2px; }
+
+  .dates {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 14px;
+
+    label { display: flex; align-items: center; gap: 6px; }
+    input {
+      font: inherit;
+      padding: 6px 8px;
+      border: 1px solid var(--ion-color-light-shade);
+      border-radius: 8px;
+      background: var(--ion-background-color, #fff);
+      color: var(--ion-text-color);
+    }
+  }
+}
+
+// Brojke
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(var(--ion-color-primary-rgb, 46, 125, 50), 0.07);
+  }
+  .stat.wide { grid-column: span 1; }
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--ion-color-primary); }
+  .stat-value small { font-size: 13px; font-weight: 600; }
+  .stat-value.danger { color: var(--ion-color-danger); }
+  .stat-label { font-size: 12px; color: var(--ion-color-medium); }
+
+  &.compact .stat-value { font-size: 20px; }
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.panel {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 10px;
+  background: var(--ion-card-background, #fff);
+
+  h3 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+}
+
+// Vodoravne trake
+.bar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+
+  ion-badge { justify-self: start; }
+  strong { text-align: right; }
+}
+
+.bar {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--ion-color-light);
+  overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 5px; background: var(--ion-color-primary); }
+
+.bar-inline {
+  display: grid;
+  grid-template-columns: 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  strong { text-align: right; }
+}
+
+// Tabele (na telefonu se skroluju vodoravno)
+.table-scroll { overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ion-color-medium);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--ion-color-light-shade);
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px;
+    border-bottom: 1px solid var(--ion-color-light);
+    vertical-align: top;
+  }
+  a { color: var(--ion-color-primary); text-decoration: none; }
+  .bar-col { min-width: 160px; }
+
+  tfoot td {
+    border-top: 2px solid var(--ion-color-light-shade);
+    border-bottom: none;
+    background: rgba(var(--ion-color-primary-rgb, 46, 125, 50), 0.05);
+  }
+}
+
+// Zbir svih kurira
+.panel.totals {
+  border-color: var(--ion-color-primary);
+  h3 .muted { font-weight: 400; }
+  .stats { margin-bottom: 0; }
+}
+
+.tag { margin-left: 6px; vertical-align: middle; font-size: 10px; }
+
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  ion-searchbar { flex: 1 1 260px; padding: 0; }
+  .sort-segment { flex: 0 0 300px; }
+}
+
+.courier {
+  .courier-head h3 { display: flex; align-items: center; margin-bottom: 2px; }
+  .courier-head p { margin: 0 0 10px; }
+  .markets { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+}

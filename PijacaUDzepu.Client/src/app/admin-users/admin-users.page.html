@@ -6,7 +6,7 @@
     <ion-title>Korisnici</ion-title>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment [(ngModel)]="selectedTab" (ionChange)="selectedTab = $any($event).detail.value">
+    <ion-segment [value]="selectedTab" (ionChange)="selectTab($any($event).detail.value)">
       <ion-segment-button value="Customer">
         <ion-label>Kupci</ion-label>
       </ion-segment-button>
@@ -20,6 +20,10 @@
         <ion-label>Admini</ion-label>
       </ion-segment-button>
     </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar [(ngModel)]="search" (ionInput)="onSearch()" debounce="400"
+                   placeholder="Ime, korisničko ime, e-mail ili telefon"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
@@ -37,13 +41,13 @@
     </ion-button>
   </div>
 
-  <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
+  <div *ngIf="!loading && users.length === 0" class="empty-state">
     <ion-icon name="people-outline" size="large"></ion-icon>
-    <p>Nema korisnika u ovoj kategoriji</p>
+    <p>{{ search.trim() ? 'Nema korisnika za ovu pretragu' : 'Nema korisnika u ovoj kategoriji' }}</p>
   </div>
 
-  <ion-list *ngIf="!loading && filteredUsers.length > 0">
-    <ion-item *ngFor="let user of filteredUsers">
+  <ion-list *ngIf="!loading && users.length > 0">
+    <ion-item *ngFor="let user of users">
       <ion-label>
         <h2>{{ user.firstName }} {{ user.lastName }}</h2>
         <p>{{ user.userName }}</p>
@@ -65,4 +69,8 @@
       </ion-toggle>
     </ion-item>
   </ion-list>
+
+  <app-pager [page]="page" [pageSize]="pageSize" [totalCount]="totalCount" [disabled]="loading"
+             [storageKey]="pageSizeKey" (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)">
+  </app-pager>
 </ion-content>

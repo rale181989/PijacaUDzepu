@@ -21,19 +21,49 @@ public class UsersController : BaseApiController
         _context = context;
     }
 
+    // Strana korisnika jedne uloge (Customer, VendorAdmin, Courier, SuperAdmin), uz pretragu
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? role, [FromQuery] string? search,
+        [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
-        var users = await _userManager.Users
-            .Include(u => u.VendorUsers).ThenInclude(vu => vu.Vendor)
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+
+        var query = _userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(role))
+            query = query.Where(u => u.UserRoles.Any(ur => ur.Role.Name == role));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(u =>
+                EF.Functions.ILike(u.UserName!, pattern) ||
+                EF.Functions.ILike(u.FirstName, pattern) ||
+                EF.Functions.ILike(u.LastName, pattern) ||
+                EF.Functions.ILike((u.FirstName + " " + u.LastName), pattern) ||
+                (u.Email != null && EF.Functions.ILike(u.Email, pattern)) ||
+                (u.PhoneNumber != null && EF.Functions.ILike(u.PhoneNumber, pattern)));
+        }
+
+        var totalCount = await query.CountAsync();
+        var users = await query
             .OrderBy(u => u.UserName)
+            .ThenBy(u => u.Id)
+            .Skip(skip)
+            .Take(take)
+            .Include(u => u.VendorUsers).ThenInclude(vu => vu.Vendor)
             .ToListAsync();
 
-        var result = new List<UserDto>();
-        foreach (var user in users)
+        // Uloge za celu stranu jednim upitom (ranije: po jedan upit za svakog korisnika)
+        var ids = users.Select(u => u.Id).ToList();
+        var roles = (await _context.UserRoles
+                .Where(ur => ids.Contains(ur.UserId))
+                .Select(ur => new { ur.UserId, ur.Role.Name })
+                .ToListAsync())
+            .ToLookup(r => r.UserId, r => r.Name!);
+
+        return Ok(new PagedResult<UserDto>
         {
-            var roles = await _userManager.GetRolesAsync(user);
-            result.Add(new UserDto
+            Items = users.Select(user => new UserDto
             {
                 Id = user.Id,
                 UserName = user.UserName!,
@@ -42,16 +72,16 @@ public class UsersController : BaseApiController
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 IsActive = user.IsActive,
-                Roles = roles.ToList(),
+                Roles = roles[user.Id].ToList(),
                 Vendors = user.VendorUsers.Select(vu => new VendorShortDto
                 {
                     Id = vu.Vendor.Id,
                     Name = vu.Vendor.Name
                 }).ToList()
-            });
-        }
-
-        return Ok(result);
+            }).ToList(),
+            TotalCount = totalCount,
+            HasMore = skip + take < totalCount
+        });
     }
 
     [HttpPut("{id}/toggle-active")]

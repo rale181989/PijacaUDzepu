@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { Subscription } from 'rxjs';
+import { PagerComponent } from '../shared/pager/pager.component';
 
 @Component({
   selector: 'app-admin-users',
@@ -14,9 +16,13 @@ export class AdminUsersPage implements OnInit {
   loading = false;
   selectedTab: 'Customer' | 'VendorAdmin' | 'Courier' | 'SuperAdmin' = 'Customer';
 
-  get filteredUsers(): User[] {
-    return this.users.filter(u => u.roles.includes(this.selectedTab));
-  }
+  // Server vraća samo jednu stranu korisnika izabrane uloge (kupaca može biti hiljade)
+  search = '';
+  page = 0;
+  totalCount = 0;
+  readonly pageSizeKey = 'adminUsersPageSize';
+  pageSize = PagerComponent.savedSize(this.pageSizeKey);
+  private loadSub?: Subscription;
 
   constructor(
     private userService: UserService,
@@ -28,11 +34,43 @@ export class AdminUsersPage implements OnInit {
   ionViewWillEnter() { this.loadUsers(); }
 
   loadUsers() {
+    this.loadSub?.unsubscribe();
     this.loading = true;
-    this.userService.getAll().subscribe({
-      next: u => { this.users = u; this.loading = false; },
+    this.loadSub = this.userService.getPage(this.selectedTab, this.search, this.page * this.pageSize, this.pageSize).subscribe({
+      next: r => {
+        this.users = r.items;
+        this.totalCount = r.totalCount;
+        this.loading = false;
+        if (this.users.length === 0 && this.page > 0 && this.totalCount > 0) {
+          this.page = Math.ceil(this.totalCount / this.pageSize) - 1;
+          this.loadUsers();
+        }
+      },
       error: () => this.loading = false
     });
+  }
+
+  selectTab(tab: 'Customer' | 'VendorAdmin' | 'Courier' | 'SuperAdmin') {
+    if (tab === this.selectedTab) return;
+    this.selectedTab = tab;
+    this.page = 0;
+    this.loadUsers();
+  }
+
+  onSearch() {
+    this.page = 0;
+    this.loadUsers();
+  }
+
+  goToPage(page: number) {
+    this.page = page;
+    this.loadUsers();
+  }
+
+  setPageSize(size: number) {
+    this.page = PagerComponent.pageAfterResize(this.page, this.pageSize, size);
+    this.pageSize = size;
+    this.loadUsers();
   }
 
   async toggleActive(user: User) {

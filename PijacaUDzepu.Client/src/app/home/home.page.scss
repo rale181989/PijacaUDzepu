@@ -146,6 +146,18 @@
     margin-bottom: 4px;
   }
 
+  // Klasa (I, II, III) - samo ako ju je prodavac izabrao
+  .product-class-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    border: 1px solid var(--ion-color-primary);
+    color: var(--ion-color-primary);
+    margin: 0 0 4px 4px;
+  }
+
   .product-name-row {
     display: flex;
     align-items: center;
@@ -280,4 +292,19 @@ app-footer {
   font-size: 12px;
   word-break: break-all;
   color: var(--ion-color-medium);
+}
+
+// Izabrana jedinica mere za poređenje cena (ispod pretrage)
+.active-unit {
+  margin-top: 6px;
+
+  ion-chip { margin: 0; font-size: 13px; }
+}
+
+.unit-compare {
+  padding: 8px 16px 16px;
+
+  .unit-compare-title { margin: 8px 0 2px; font-weight: 600; }
+  .unit-compare-hint { margin: 0 0 8px; font-size: 13px; color: var(--ion-color-medium); }
+  .unit-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 }

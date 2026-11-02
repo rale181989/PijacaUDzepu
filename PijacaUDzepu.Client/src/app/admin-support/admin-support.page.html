@@ -60,4 +60,8 @@
       </ion-card-content>
     </ion-card>
   </ng-container>
+
+  <app-pager [page]="page" [pageSize]="pageSize" [totalCount]="totalCount" [disabled]="loading"
+             [storageKey]="pageSizeKey" (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)">
+  </app-pager>
 </ion-content>

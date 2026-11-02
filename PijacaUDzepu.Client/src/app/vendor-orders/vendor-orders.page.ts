@@ -1,9 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { NotificationService } from '../services/notification.service';
 import { Order, OrderStatus } from '../models/order.model';
-import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { AlertController, IonContent, ToastController } from '@ionic/angular/lazy';
 import { Subscription } from 'rxjs';
+import { PagerComponent } from '../shared/pager/pager.component';
 
 @Component({
   selector: 'app-vendor-orders',
@@ -12,12 +13,22 @@ import { Subscription } from 'rxjs';
   standalone: false,
 })
 export class VendorOrdersPage implements OnInit, OnDestroy {
+  @ViewChild(IonContent) content?: IonContent;
+
   orders: Order[] = [];
   private sub?: Subscription;
   private loadSub?: Subscription;
   loading = false;
-  hasMore = true;
-  private pageSize = 20;
+
+  // Paginacija: strana (od 0), veličina strane (10 ili 20, pamti se na uređaju) i ukupan broj
+  readonly pageSizeKey = 'vendorOrdersPageSize';
+  pageSize = PagerComponent.savedSize(this.pageSizeKey);
+  page = 0;
+  totalCount = 0;
+
+  get pageCount(): number {
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
+  }
 
   constructor(
     private orderService: OrderService,
@@ -47,28 +58,34 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
     // Novo učitavanje prekida prethodno i zamenjuje listu; inače se dva istovremena
     // učitavanja (ulazak na stranicu + obaveštenje) spoje i porudžbine se prikažu duplo
     this.loadSub?.unsubscribe();
-    this.hasMore = true;
     this.loading = true;
-    this.loadSub = this.orderService.getVendorOrders(0, this.pageSize).subscribe({
+    this.loadSub = this.orderService.getVendorOrders(this.page * this.pageSize, this.pageSize).subscribe({
       next: result => {
         this.orders = result.items;
-        this.hasMore = result.hasMore;
+        this.totalCount = result.totalCount;
         this.loading = false;
+        // Strana je ostala prazna (npr. posle promene veličine strane) - prikaži poslednju
+        if (this.orders.length === 0 && this.page > 0 && this.totalCount > 0) {
+          this.page = this.pageCount - 1;
+          this.loadOrders();
+        }
       },
       error: () => this.loading = false
     });
   }
 
-  loadMore(event: any) {
-    this.orderService.getVendorOrders(this.orders.length, this.pageSize).subscribe({
-      next: result => {
-        this.orders = [...this.orders, ...result.items];
-        this.hasMore = result.hasMore;
-        event.target.complete();
-        if (!result.hasMore) event.target.disabled = true;
-      },
-      error: () => event.target.complete()
-    });
+  goToPage(page: number) {
+    if (page < 0 || page >= this.pageCount || page === this.page) return;
+    this.page = page;
+    this.loadOrders();
+    this.content?.scrollToTop(300);
+  }
+
+  setPageSize(size: number) {
+    // Ostaje na strani koja sadrži prvu porudžbinu koja je bila prikazana
+    this.page = PagerComponent.pageAfterResize(this.page, this.pageSize, size);
+    this.pageSize = size;
+    this.loadOrders();
   }
 
   async updateStatus(order: Order, newStatus: OrderStatus, message?: string) {
@@ -103,14 +120,31 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
       'Rejected': 'npr. Nažalost, nestalo je robe',
       'ReadyForPickup': pickup ? 'npr. Spremno, čeka vas kod tezge' : 'npr. Spremno za kurira',
     };
+    // Kod odbijanja je razlog obavezan: kupac ga dobija u aplikaciji, na stranici za praćenje i e-mailom
+    const reject = status === 'Rejected';
+    const hint = reject ? 'Upišite razlog odbijanja. Kupac će dobiti ovu poruku.' : undefined;
     const alert = await this.alertController.create({
-      header: `${titles[status]} #${order.id}`,
-      inputs: [{ name: 'message', type: 'textarea', placeholder: placeholders[status] + ' (opciono)', attributes: { maxlength: 300 } }],
+      header: reject ? `Razlog odbijanja #${order.id}` : `${titles[status]} #${order.id}`,
+      message: hint,
+      inputs: [{
+        name: 'message', type: 'textarea',
+        placeholder: placeholders[status] + (reject ? '' : ' (opciono)'),
+        attributes: { maxlength: 300 }
+      }],
       buttons: [
         { text: 'Otkaži', role: 'cancel' },
         {
-          text: status === 'Rejected' ? 'Odbij' : 'Pošalji',
-          handler: data => this.updateStatus(order, status, data?.message?.trim() || undefined)
+          text: reject ? 'Odbij' : 'Pošalji',
+          role: reject ? 'destructive' : undefined,
+          handler: data => {
+            const message = data?.message?.trim();
+            if (reject && !message) {
+              alert.message = '⚠ Razlog je obavezan – kupac mora da zna zašto je porudžbina odbijena.';
+              return false;
+            }
+            this.updateStatus(order, status, message || undefined);
+            return true;
+          }
         }
       ]
     });

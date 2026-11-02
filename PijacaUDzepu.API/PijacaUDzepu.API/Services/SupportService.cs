@@ -74,17 +74,25 @@ public class SupportService : ISupportService
         });
     }
 
-    public async Task<List<SupportRequestDto>> GetAll(bool? resolved)
+    public async Task<PagedResult<SupportRequestDto>> GetAll(bool? resolved, int skip = 0, int take = 20)
     {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+
         var query = _context.SupportRequests.Include(r => r.User).AsQueryable();
         if (resolved.HasValue)
             query = query.Where(r => r.IsResolved == resolved.Value);
 
-        return await query
+        var totalCount = await query.CountAsync();
+        var items = await query
             .OrderByDescending(r => r.CreatedAt)
-            .Take(200)
+            .ThenByDescending(r => r.Id)
+            .Skip(skip)
+            .Take(take)
             .Select(r => MapToDto(r))
             .ToListAsync();
+
+        return new PagedResult<SupportRequestDto> { Items = items, TotalCount = totalCount, HasMore = skip + take < totalCount };
     }
 
     public Task<int> GetOpenCount() => _context.SupportRequests.CountAsync(r => !r.IsResolved);

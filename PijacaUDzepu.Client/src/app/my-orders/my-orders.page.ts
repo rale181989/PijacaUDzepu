@@ -94,6 +94,10 @@ export class MyOrdersPage implements OnInit, OnDestroy {
     return this.ts.t('status.' + status) || status;
   }
 
+  getUnitLabel(unit: string): string {
+    return this.ts.t('unit.' + unit) || unit;
+  }
+
   getStatusColor(status: string): string {
     const map: Record<string, string> = {
       'Pending': 'warning',

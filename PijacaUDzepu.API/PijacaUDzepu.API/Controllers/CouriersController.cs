@@ -48,9 +48,9 @@ public class CouriersController : BaseApiController
     }
 
     [HttpGet("my-orders")]
-    public async Task<IActionResult> GetMyOrders()
+    public async Task<IActionResult> GetMyOrders([FromQuery] bool finished = false, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
-        var orders = await _orderService.GetCourierOrders(User.GetUserId());
+        var orders = await _orderService.GetCourierOrders(User.GetUserId(), finished, skip, take);
         return Ok(orders);
     }
 

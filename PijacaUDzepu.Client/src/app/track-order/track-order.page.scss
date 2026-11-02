@@ -54,7 +54,21 @@ ion-card-header {
   background: rgba(var(--ion-color-primary-rgb, 46, 125, 50), 0.06);
 
   strong { display: flex; align-items: center; gap: 6px; color: var(--ion-color-primary); }
-  p { margin: 4px 0 0; color: var(--ion-text-color); }
+  p { margin: 4px 0 0; color: var(--ion-text-color); white-space: pre-line; }
+
+  &.rejected {
+    border-left-color: var(--ion-color-danger);
+    background: rgba(var(--ion-color-danger-rgb), 0.08);
+    strong { color: var(--ion-color-danger); }
+  }
+}
+
+// Odbijena porudžbina: stavke i iznos precrtani
+.struck {
+  text-decoration: line-through;
+  color: var(--ion-color-medium);
+
+  p, ion-note, strong { text-decoration: line-through; color: var(--ion-color-medium); }
 }
 
 .courier {

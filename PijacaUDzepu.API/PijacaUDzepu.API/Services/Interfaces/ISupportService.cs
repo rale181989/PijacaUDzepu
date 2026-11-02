@@ -6,7 +6,7 @@ namespace PijacaUDzepu.API.Services.Interfaces;
 public interface ISupportService
 {
     Task Create(SupportRequestInputDto dto, int? userId);
-    Task<List<SupportRequestDto>> GetAll(bool? resolved);
+    Task<PagedResult<SupportRequestDto>> GetAll(bool? resolved, int skip = 0, int take = 20);
     Task<int> GetOpenCount();
     Task<SupportRequestDto> SetResolved(int id, bool resolved);
 }

@@ -7,6 +7,7 @@ import * as signalR from '@microsoft/signalr';
 import { OrderService } from '../services/order.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
 import { SoundService } from '../services/sound.service';
+import { rejectionText } from '../services/notification.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, CUSTOMER_CANCEL_ENABLED } from '../models/order.model';
 import { environment } from '../../environments/environment';
@@ -87,13 +88,19 @@ export class TrackOrderPage implements OnInit, OnDestroy {
       .withAutomaticReconnect()
       .build();
 
-    const onChange = async (data: { message?: string; vendorName?: string; courierName?: string }) => {
+    const onChange = async (data: { orderId: number; status?: string; message?: string; vendorName?: string; courierName?: string }) => {
       this.sound.play('update');
       this.load();
-      const text = data.message ? `${data.vendorName}: ${data.message}`
+      // Odbijanje je crveno i ostaje dok ga gost ne zatvori
+      const rejected = data.status === 'Rejected';
+      const text = rejected ? rejectionText(this.ts, data)
+        : data.message ? `${data.vendorName}: ${data.message}`
         : data.courierName ? `${this.ts.t('order.courier')}: ${data.courierName}`
         : this.ts.t('track.updated');
-      const toast = await this.toastController.create({ message: text, duration: 4000, position: 'top', color: 'primary' });
+      const toast = await this.toastController.create({
+        message: text, duration: rejected ? 10000 : 4000, position: 'top', color: rejected ? 'danger' : 'primary',
+        buttons: rejected ? [{ text: 'OK', role: 'cancel' }] : undefined
+      });
       await toast.present();
     };
     this.hub.on('OrderStatusChanged', onChange);

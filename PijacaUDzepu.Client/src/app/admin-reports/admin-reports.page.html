@@ -1,0 +1,272 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Izveštaji</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment class="tabs" [value]="tab" (ionChange)="selectTab($any($event).detail.value)">
+      <ion-segment-button value="orders">
+        <ion-label>Porudžbine</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="customers">
+        <ion-label>Kupci</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="couriers">
+        <ion-label>Kuriri</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="report">
+    <!-- Period -->
+    <div class="range">
+      <div class="presets">
+        <ion-chip *ngFor="let p of presets" [outline]="preset !== p.value" color="primary" (click)="applyPreset(p.value)">
+          <ion-label>{{ p.label }}</ion-label>
+        </ion-chip>
+      </div>
+      <div class="dates">
+        <label>Od <input type="date" [(ngModel)]="from" [max]="to" (change)="onDateChange()" /></label>
+        <label>Do <input type="date" [(ngModel)]="to" [min]="from" (change)="onDateChange()" /></label>
+      </div>
+    </div>
+
+    <p *ngIf="error" class="error">{{ error }}</p>
+    <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+
+    <!-- ===== Porudžbine ===== -->
+    <ng-container *ngIf="tab === 'orders' && ordersReport && !loading">
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-value">{{ ordersReport.totalOrders }}</span>
+          <span class="stat-label">porudžbina ukupno</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ ordersReport.completedOrders }}</span>
+          <span class="stat-label">završeno</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ ordersReport.activeOrders }}</span>
+          <span class="stat-label">u toku</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value danger">{{ ordersReport.rejectedOrders }}</span>
+          <span class="stat-label">odbijeno</span>
+        </div>
+        <div class="stat wide">
+          <span class="stat-value">{{ ordersReport.goodsTotal | number:'1.0-0' }} <small>din</small></span>
+          <span class="stat-label">promet robe (završene)</span>
+        </div>
+        <div class="stat wide">
+          <span class="stat-value">{{ ordersReport.deliveryFeesTotal | number:'1.0-0' }} <small>din</small></span>
+          <span class="stat-label">naplaćena dostava</span>
+        </div>
+        <div class="stat wide">
+          <span class="stat-value">{{ ordersReport.averageOrderValue | number:'1.0-0' }} <small>din</small></span>
+          <span class="stat-label">prosečna završena porudžbina</span>
+        </div>
+      </div>
+
+      <div class="panels">
+        <section class="panel">
+          <h3>Po statusu</h3>
+          <p *ngIf="ordersReport.byStatus.length === 0" class="muted">Nema porudžbina u periodu.</p>
+          <div *ngFor="let s of ordersReport.byStatus" class="bar-row">
+            <ion-badge [color]="statusColor(s.status)">{{ statusLabel(s.status) }}</ion-badge>
+            <div class="bar"><div class="bar-fill" [style.width.%]="percent(s.count, maxStatusCount)"></div></div>
+            <strong>{{ s.count }}</strong>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>Način preuzimanja</h3>
+          <p *ngIf="ordersReport.byFulfillment.length === 0" class="muted">Nema porudžbina u periodu.</p>
+          <div class="table-scroll">
+          <table *ngIf="ordersReport.byFulfillment.length > 0" class="table">
+            <thead><tr><th></th><th>Porudžbina</th><th>Završeno</th><th>Promet</th><th>Dostava</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let f of ordersReport.byFulfillment">
+                <td>{{ fulfillmentLabel(f.fulfillment) }}</td>
+                <td>{{ f.orders }}</td>
+                <td>{{ f.completed }}</td>
+                <td>{{ f.goodsTotal | number:'1.0-0' }} din</td>
+                <td>{{ f.deliveryFeesTotal | number:'1.0-0' }} din</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h3>Po danima</h3>
+        <p *ngIf="ordersReport.byDay.length === 0" class="muted">Nema porudžbina u periodu.</p>
+        <div class="table-scroll">
+          <table *ngIf="ordersReport.byDay.length > 0" class="table">
+            <thead><tr><th>Datum</th><th class="bar-col">Porudžbina</th><th>Završeno</th><th>Promet</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let d of pagedDays">
+                <td class="nowrap"><span class="muted">{{ dayName(d.date) }}</span> {{ d.date | date:'dd.MM.yyyy' }}</td>
+                <td class="bar-col">
+                  <div class="bar-inline">
+                    <div class="bar"><div class="bar-fill" [style.width.%]="percent(d.orders, maxDayOrders)"></div></div>
+                    <strong>{{ d.orders }}</strong>
+                  </div>
+                </td>
+                <td>{{ d.completed }}</td>
+                <td class="nowrap">{{ d.goodsTotal | number:'1.0-0' }} din</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pager [page]="daysPage" [pageSize]="tablePageSize" [pageSizes]="tablePageSizes" [totalCount]="ordersReport.byDay.length"
+                 [storageKey]="pageSizeKey" (pageChange)="daysPage = $event" (pageSizeChange)="setTablePageSize($event, 'days')">
+      </app-pager>
+      </section>
+    </ng-container>
+
+    <!-- ===== Kupci ===== -->
+    <ng-container *ngIf="tab === 'customers' && !loading && !error">
+      <div class="toolbar-row">
+        <ion-searchbar [(ngModel)]="customerSearch" (ionInput)="resetCustomersPage()" placeholder="Ime, telefon ili korisničko ime" debounce="0"></ion-searchbar>
+        <ion-segment [(ngModel)]="customerSort" (ionChange)="resetCustomersPage()" class="sort-segment">
+          <ion-segment-button value="orders"><ion-label>Po broju</ion-label></ion-segment-button>
+          <ion-segment-button value="goods"><ion-label>Po prometu</ion-label></ion-segment-button>
+        </ion-segment>
+      </div>
+      <p class="muted">
+        {{ customers.length }} kupaca u periodu ({{ guestCount }} gostiju bez naloga). Gosti se prepoznaju po broju telefona.
+      </p>
+
+      <div class="table-scroll">
+        <table *ngIf="filteredCustomers.length > 0" class="table">
+          <thead>
+            <tr><th>#</th><th>Kupac</th><th>Telefon</th><th>Porudžbina</th><th>Završeno</th><th>Odbijeno</th><th>Promet</th><th>Poslednja</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of pagedCustomers; let i = index">
+              <td class="muted">{{ customersPage * tablePageSize + i + 1 }}</td>
+              <td>
+                <strong>{{ c.name }}</strong>
+                <ion-badge *ngIf="c.isGuest" color="medium" class="tag">gost</ion-badge>
+                <div *ngIf="!c.isGuest && c.userName" class="muted">{{ c.userName }}</div>
+              </td>
+              <td class="nowrap"><a *ngIf="c.phone" [href]="'tel:' + c.phone">{{ c.phone }}</a></td>
+              <td><strong>{{ c.orders }}</strong></td>
+              <td>{{ c.completed }}</td>
+              <td [class.danger]="c.rejected > 0">{{ c.rejected }}</td>
+              <td class="nowrap">{{ c.goodsTotal | number:'1.0-0' }} din</td>
+              <td class="nowrap muted">{{ c.lastOrderAt | date:'dd.MM.yyyy HH:mm' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr *ngIf="customerTotals as t">
+              <td></td>
+              <td><strong>Ukupno</strong> <span class="muted">({{ t.customers }} kupaca)</span></td>
+              <td></td>
+              <td><strong>{{ t.orders }}</strong></td>
+              <td><strong>{{ t.completed }}</strong></td>
+              <td [class.danger]="t.rejected > 0"><strong>{{ t.rejected }}</strong></td>
+              <td class="nowrap"><strong>{{ t.goodsTotal | number:'1.0-0' }} din</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <app-pager [page]="customersPage" [pageSize]="tablePageSize" [pageSizes]="tablePageSizes" [totalCount]="filteredCustomers.length"
+                 [storageKey]="pageSizeKey" (pageChange)="customersPage = $event" (pageSizeChange)="setTablePageSize($event, 'customers')">
+      </app-pager>
+      <p *ngIf="filteredCustomers.length === 0" class="muted empty">Nema kupaca za izabrani period ili pretragu.</p>
+    </ng-container>
+
+    <!-- ===== Kuriri ===== -->
+    <ng-container *ngIf="tab === 'couriers' && !loading && !error">
+      <p *ngIf="couriers.length === 0" class="muted empty">Nema kurira.</p>
+
+      <section *ngIf="couriers.length > 0 && courierTotals as t" class="panel totals">
+        <h3>Svi kuriri ukupno <span class="muted">({{ t.couriers }} kurira, {{ t.onShift }} na smeni)</span></h3>
+        <div class="stats compact">
+          <div class="stat"><span class="stat-value">{{ t.delivered }}</span><span class="stat-label">isporučeno</span></div>
+          <div class="stat"><span class="stat-value">{{ t.inProgress }}</span><span class="stat-label">u toku</span></div>
+          <div class="stat"><span class="stat-value">{{ t.feesTotal | number:'1.0-0' }} <small>din</small></span><span class="stat-label">zarada od dostave</span></div>
+          <div class="stat"><span class="stat-value">{{ t.cashCollected | number:'1.0-0' }} <small>din</small></span><span class="stat-label">naplaćeno od kupaca</span></div>
+          <div class="stat"><span class="stat-value">{{ t.averageDeliveryMinutes != null ? t.averageDeliveryMinutes : '–' }} <small>min</small></span><span class="stat-label">prosečno od preuzimanja do isporuke</span></div>
+        </div>
+      </section>
+
+      <section *ngFor="let c of couriers" class="panel courier">
+        <div class="courier-head">
+          <div>
+            <h3>{{ c.name }}
+              <ion-badge [color]="c.isOnShift ? 'success' : 'medium'" class="tag">{{ c.isOnShift ? 'na smeni' : 'van smene' }}</ion-badge>
+            </h3>
+            <p class="muted">
+              <a *ngIf="c.phone" [href]="'tel:' + c.phone">{{ c.phone }}</a>
+              <span *ngIf="c.vehicle"> · {{ c.vehicle }}</span><span *ngIf="c.licensePlate"> {{ c.licensePlate }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="stats compact">
+          <div class="stat"><span class="stat-value">{{ c.delivered }}</span><span class="stat-label">isporučeno</span></div>
+          <div class="stat"><span class="stat-value">{{ c.inProgress }}</span><span class="stat-label">u toku</span></div>
+          <div class="stat"><span class="stat-value">{{ c.feesTotal | number:'1.0-0' }} <small>din</small></span><span class="stat-label">zarada od dostave</span></div>
+          <div class="stat"><span class="stat-value">{{ c.cashCollected | number:'1.0-0' }} <small>din</small></span><span class="stat-label">naplaćeno od kupaca</span></div>
+          <div class="stat"><span class="stat-value">{{ c.averageDeliveryMinutes != null ? (c.averageDeliveryMinutes | number:'1.0-0') : '–' }} <small>min</small></span><span class="stat-label">prosečno od preuzimanja do isporuke</span></div>
+        </div>
+
+        <div *ngIf="c.markets.length > 0" class="markets">
+          <span class="muted">Preuzimao na:</span>
+          <ion-chip *ngFor="let m of c.markets" outline color="primary">
+            <ion-icon name="storefront-outline"></ion-icon>
+            <ion-label>{{ m.name }} × {{ m.count }}</ion-label>
+          </ion-chip>
+        </div>
+
+        <ion-button *ngIf="c.deliveries.length > 0" fill="clear" size="small" (click)="toggleCourier(c.courierId)">
+          <ion-icon [name]="expandedCourier === c.courierId ? 'chevron-up-outline' : 'chevron-down-outline'" slot="start"></ion-icon>
+          {{ expandedCourier === c.courierId ? 'Sakrij vožnje' : 'Prikaži vožnje (' + c.deliveries.length + ')' }}
+        </ion-button>
+        <p *ngIf="c.deliveries.length === 0" class="muted">Nema vožnji u periodu.</p>
+
+        <div *ngIf="expandedCourier === c.courierId" class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr><th>Porudžbina</th><th>Datum</th><th>Odakle</th><th>Kuda</th><th>Status</th><th>Trajanje</th><th>Naknada</th><th>Naplata</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of pagedDeliveries(c)">
+                <td>#{{ d.orderId }}</td>
+                <td class="nowrap">{{ d.createdAt | date:'dd.MM. HH:mm' }}</td>
+                <td>
+                  {{ d.vendorName }}
+                  <div class="muted">{{ d.marketName }}<span *ngIf="d.stallLabel"> · tezga {{ d.stallLabel }}</span></div>
+                </td>
+                <td>
+                  <a *ngIf="d.deliveryAddress" [href]="mapsUrl(d.deliveryAddress)" target="_blank" rel="noopener">{{ d.deliveryAddress }}</a>
+                  <span *ngIf="!d.deliveryAddress" class="muted">–</span>
+                </td>
+                <td><ion-badge [color]="statusColor(d.status)">{{ statusLabel(d.status) }}</ion-badge></td>
+                <td class="nowrap">{{ d.minutes != null ? d.minutes + ' min' : '–' }}</td>
+                <td class="nowrap">{{ d.deliveryFee | number:'1.0-0' }} din</td>
+                <td class="nowrap">{{ d.amountToPay | number:'1.0-0' }} din</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <app-pager *ngIf="expandedCourier === c.courierId" [page]="deliveriesPage" [pageSize]="tablePageSize" [pageSizes]="tablePageSizes"
+                   [totalCount]="c.deliveries.length" [storageKey]="pageSizeKey"
+                   (pageChange)="deliveriesPage = $event" (pageSizeChange)="setTablePageSize($event, 'deliveries')">
+        </app-pager>
+      </section>
+    </ng-container>
+  </div>
+</ion-content>

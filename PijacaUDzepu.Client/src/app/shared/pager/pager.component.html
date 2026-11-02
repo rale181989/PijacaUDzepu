@@ -1,0 +1,21 @@
+<div *ngIf="visible" class="pager">
+  <div class="pager-nav">
+    <ion-button fill="outline" size="small" [attr.aria-label]="'pager.prev' | t"
+                [disabled]="page === 0 || disabled" (click)="go(page - 1)">
+      <ion-icon name="chevron-back-outline" slot="start"></ion-icon><span class="pager-label">{{ 'pager.prev' | t }}</span>
+    </ion-button>
+    <span class="pager-info">{{ 'pager.page' | t }} {{ page + 1 }} {{ 'pager.of' | t }} {{ pageCount }}</span>
+    <ion-button fill="outline" size="small" [attr.aria-label]="'pager.next' | t"
+                [disabled]="page >= pageCount - 1 || disabled" (click)="go(page + 1)">
+      <span class="pager-label">{{ 'pager.next' | t }}</span><ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+    </ion-button>
+  </div>
+  <div class="pager-size">
+    <span>{{ 'pager.total' | t }} {{ totalCount }} · {{ 'pager.perPage' | t }}</span>
+    <ion-segment [value]="pageSize" (ionChange)="setSize(+$any($event).detail.value)">
+      <ion-segment-button *ngFor="let size of pageSizes" [value]="size">
+        <ion-label>{{ size }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+</div>

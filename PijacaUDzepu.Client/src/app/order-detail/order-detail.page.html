@@ -29,7 +29,14 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-card *ngIf="order.vendorMessage" class="vendor-message-card">
+    <ion-card *ngIf="order.status === 'Rejected'" class="vendor-message-card rejected">
+      <ion-card-content>
+        <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>
+        <p *ngIf="order.vendorMessage">{{ order.vendorMessage }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="order.vendorMessage && order.status !== 'Rejected'" class="vendor-message-card">
       <ion-card-content>
         <strong><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ 'order.vendorMessage' | t }}</strong>
         <p>{{ order.vendorMessage }}</p>
@@ -53,7 +60,7 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-list>
+    <ion-list [class.struck]="order.status === 'Rejected'">
       <ion-list-header>
         <ion-label>{{ 'order.items' | t }}</ion-label>
       </ion-list-header>
@@ -68,7 +75,7 @@
       </ion-item>
     </ion-list>
 
-    <div class="total-row">
+    <div class="total-row" [class.struck]="order.status === 'Rejected'">
       <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
       <ng-container *ngIf="order.deliveryFee > 0">
         <p>{{ 'order.deliveryFee' | t }}: {{ order.deliveryFee | number:'1.0-0' }} {{ 'din' | t }}</p>

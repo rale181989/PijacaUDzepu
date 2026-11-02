@@ -120,6 +120,12 @@ const routes: Routes = [
     data: { roles: ['SuperAdmin'] }
   },
   {
+    path: 'admin-reports',
+    loadChildren: () => import('./admin-reports/admin-reports.module').then(m => m.AdminReportsPageModule),
+    canActivate: [RoleGuard],
+    data: { roles: ['SuperAdmin'] }
+  },
+  {
     path: 'admin-users',
     loadChildren: () => import('./admin-users/admin-users.module').then(m => m.AdminUsersPageModule),
     canActivate: [RoleGuard],

@@ -6,8 +6,15 @@ import * as signalR from '@microsoft/signalr';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from './auth.service';
 import { SoundService } from './sound.service';
+import { TranslateService } from './translate.service';
 import { Order } from '../models/order.model';
 import { environment } from '../../environments/environment';
+
+// Tekst obaveštenja o odbijenoj porudžbini (kupac u aplikaciji i gost na stranici za praćenje)
+export function rejectionText(ts: TranslateService, data: { orderId: number; vendorName?: string; message?: string }): string {
+  const head = `${ts.t('orders.order')} #${data.orderId} ${ts.t('order.rejectedToast')}`;
+  return data.message ? `${head}. ${data.vendorName}: ${data.message}` : `${head}.`;
+}
 
 export type CourierEvent =
   | { type: 'new'; order: Order }
@@ -70,7 +77,8 @@ export class NotificationService {
     private http: HttpClient,
     private ngZone: NgZone,
     private toastController: ToastController,
-    private sound: SoundService
+    private sound: SoundService,
+    private ts: TranslateService
   ) {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
@@ -218,9 +226,13 @@ export class NotificationService {
     this.hubConnection.on('OrderStatusChanged', (data: any) => {
       this.ngZone.run(async () => {
         this.sound.play('update');
-        // Kupac odmah vidi odgovor prodavca
-        if (data.message && this.authService.hasRole('Customer')) {
-          await this.showToast(`${data.vendorName}: ${data.message}`, 'primary');
+        // Kupac odmah vidi odgovor prodavca; odbijanje je crveno i ostaje dok ga ne zatvori
+        if (this.authService.hasRole('Customer')) {
+          if (data.status === 'Rejected') {
+            await this.showToast(rejectionText(this.ts, data), 'danger', 10000);
+          } else if (data.message) {
+            await this.showToast(`${data.vendorName}: ${data.message}`, 'primary');
+          }
         }
         this.courierEventsSubject.next({ type: 'status', orderId: data.orderId, status: data.status });
         this.orderUpdatedSubject.next(data.orderId);
@@ -304,8 +316,11 @@ export class NotificationService {
     this.supportOpenSubject.next(0);
   }
 
-  private async showToast(message: string, color: string) {
-    const toast = await this.toastController.create({ message, duration: 4000, position: 'top', color });
+  private async showToast(message: string, color: string, duration = 4000) {
+    const toast = await this.toastController.create({
+      message, duration, position: 'top', color,
+      buttons: duration > 4000 ? [{ text: 'OK', role: 'cancel' }] : undefined
+    });
     await toast.present();
   }
 }

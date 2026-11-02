@@ -73,6 +73,34 @@ public class EmailService : IEmailService
         await Send(toEmail, $"Porudžbina primljena - Pijaca u Džepu", body);
     }
 
+    public async Task SendOrderRejected(string toEmail, Order order)
+    {
+        if (!IsConfigured)
+        {
+            _logger.LogWarning("Email nije podešen (Email:SmtpUser/SmtpPass) - obaveštenje o odbijenoj porudžbini #{Id} nije poslato na {Email}.", order.Id, toEmail);
+            return;
+        }
+
+        // Gost porudžbinu vidi preko linka za praćenje, prijavljeni kupac u svom nalogu
+        var link = order.TrackingCode != null
+            ? $"{_frontendUrl}/prati/{order.TrackingCode}"
+            : $"{_frontendUrl}/order-detail/{order.Id}";
+        var name = order.Customer != null ? order.Customer.FirstName : order.GuestName;
+        var what = order.Fulfillment == FulfillmentType.Pickup ? "rezervaciju" : "porudžbinu";
+
+        var body = $@"
+        <h2>Porudžbina #{order.Id} je odbijena</h2>
+        <p>{(string.IsNullOrWhiteSpace(name) ? "Poštovani" : $"Poštovani/a {Encode(name)}")}, prodavac <strong>{Encode(order.Vendor.Name)}</strong> nije mogao da prihvati vašu {what}.</p>
+        <div style=""background: white; padding: 16px; border-left: 4px solid #c62828; border-radius: 6px;"">
+            <strong>Razlog:</strong><br>{Encode(order.VendorMessage)}
+        </div>
+        <p style=""color: #666; font-size: 13px;"">{string.Join(", ", order.Items.Select(i => Encode(i.ProductName)))} · {order.TotalAmount + order.DeliveryFee:0} din</p>
+        {Button(link, "Pogledaj porudžbinu")}
+        <p>Istu robu možete potražiti kod drugih prodavaca u aplikaciji.</p>";
+
+        await Send(toEmail, $"Porudžbina #{order.Id} je odbijena - Pijaca u Džepu", body);
+    }
+
     public async Task SendSupportRequest(SupportRequest request)
     {
         var supportEmail = _config["Support:Email"] ?? "zivkovic_kac@live.com";

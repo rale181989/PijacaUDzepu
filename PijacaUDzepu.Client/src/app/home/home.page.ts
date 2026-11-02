@@ -51,7 +51,7 @@ export class HomePage implements OnInit {
   vendorPhoneCache: Record<number, string[]> = {};
   connectionError: string | null = null;
 
-  showModal: 'market' | 'vendor' | 'stall' | 'category' | 'unit' | 'sort' | null = null;
+  showModal: 'market' | 'vendor' | 'stall' | 'category' | 'sort' | null = null;
   filterSearch = { market: '', vendor: '', stall: '', category: '' };
 
   get filteredVendors(): Vendor[] {
@@ -202,7 +202,7 @@ export class HomePage implements OnInit {
     return this.categories.filter(c => this.normalize(c.label).includes(term));
   }
 
-  openFilterModal(type: 'market' | 'vendor' | 'stall' | 'category' | 'unit' | 'sort') {
+  openFilterModal(type: 'market' | 'vendor' | 'stall' | 'category' | 'sort') {
     this.filterSearch = { market: '', vendor: '', stall: '', category: '' };
     this.showModal = type;
   }
@@ -266,7 +266,19 @@ export class HomePage implements OnInit {
   selectSort(sort: ProductSort) {
     if (this.sortBy === sort) return;
     this.sortBy = sort;
+    // Jedinica mere služi samo za poređenje cena; uz druge redoslede se ne zadržava
+    if (!this.isPriceSort(sort)) this.selectedUnit = null;
     this.loadProducts();
+  }
+
+  // Kod sortiranja po ceni prozor ostaje otvoren da kupac izabere jedinicu za poređenje
+  chooseSort(sort: ProductSort) {
+    this.selectSort(sort);
+    if (!this.isPriceSort(sort)) this.showModal = null;
+  }
+
+  isPriceSort(sort: ProductSort): boolean {
+    return sort === 'PriceAsc' || sort === 'PriceDesc';
   }
 
   getSortLabel(value: ProductSort): string {

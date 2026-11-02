@@ -23,7 +23,7 @@
   </div>
 
   <ion-list *ngIf="!loading">
-    <ion-card *ngFor="let order of orders" [routerLink]="['/order-detail', order.id]">
+    <ion-card *ngFor="let order of orders" [routerLink]="['/order-detail', order.id]" [class.rejected]="order.status === 'Rejected'">
       <ion-card-header>
         <ion-card-subtitle>
           {{ 'orders.order' | t }} #{{ order.id }} — {{ order.vendorName }}
@@ -33,10 +33,21 @@
         </ion-badge>
       </ion-card-header>
       <ion-card-content>
-        <p>{{ order.items.length }} {{ 'cart.items' | t }}</p>
-        <p class="total">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}<span *ngIf="order.deliveryFee > 0"> ({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span></p>
+        <!-- Odbijena porudžbina: stavke i iznos precrtani, ispod razlog koji je napisao prodavac -->
+        <ng-container *ngIf="order.status === 'Rejected'; else regular">
+          <p *ngFor="let item of order.items" class="struck">{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p>
+          <p class="total struck">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</p>
+          <div class="reject-reason">
+            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>
+            <p *ngIf="order.vendorMessage">{{ order.vendorMessage }}</p>
+          </div>
+        </ng-container>
+        <ng-template #regular>
+          <p>{{ order.items.length }} {{ 'cart.items' | t }}</p>
+          <p class="total">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}<span *ngIf="order.deliveryFee > 0"> ({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span></p>
+          <p *ngIf="order.vendorMessage" class="date"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ order.vendorMessage }}</p>
+        </ng-template>
         <p *ngIf="order.fulfillment === 'Pickup'" class="date"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}</p>
-        <p *ngIf="order.vendorMessage" class="date"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ order.vendorMessage }}</p>
         <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
         <p *ngIf="order.courierName" class="date">
           <ion-icon name="bicycle-outline"></ion-icon> {{ 'order.courier' | t }}: {{ order.courierName }}

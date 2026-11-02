@@ -35,9 +35,9 @@ public class SupportController : BaseApiController
 
     [Authorize(Policy = "RequireSuperAdmin")]
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] bool? resolved)
+    public async Task<IActionResult> GetAll([FromQuery] bool? resolved, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
-        return Ok(await _supportService.GetAll(resolved));
+        return Ok(await _supportService.GetAll(resolved, skip, take));
     }
 
     [Authorize(Policy = "RequireSuperAdmin")]

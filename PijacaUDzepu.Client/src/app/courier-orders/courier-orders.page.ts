@@ -5,6 +5,7 @@ import { CourierService } from '../services/courier.service';
 import { NotificationService } from '../services/notification.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, OrderStatus } from '../models/order.model';
+import { PagerComponent } from '../shared/pager/pager.component';
 
 @Component({
   selector: 'app-courier-orders',
@@ -18,6 +19,12 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
   mine: Order[] = [];
   loading = false;
   acceptingId: number | null = null;
+  // Završene dostave se učitavaju po stranama (vremenom ih ima mnogo)
+  finished: Order[] = [];
+  finishedPage = 0;
+  finishedTotal = 0;
+  readonly pageSizeKey = 'courierFinishedPageSize';
+  finishedPageSize = PagerComponent.savedSize(this.pageSizeKey);
   decliningId: number | null = null;
   busyId: number | null = null;
   isOnShift = false;
@@ -70,8 +77,9 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
       next: orders => { this.available = orders; done(); },
       error: () => done()
     });
+    this.loadFinished();
     this.courierService.getMyOrders().subscribe({
-      next: orders => { this.mine = orders; done(); },
+      next: r => { this.mine = r.items; done(); },
       error: () => done()
     });
     this.notificationService.loadCourierAvailableCount();
@@ -169,12 +177,35 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  loadFinished() {
+    this.courierService.getMyOrders(true, this.finishedPage * this.finishedPageSize, this.finishedPageSize).subscribe({
+      next: r => {
+        this.finished = r.items;
+        this.finishedTotal = r.totalCount;
+      },
+      error: () => {}
+    });
+  }
+
+  goToFinishedPage(page: number) {
+    this.finishedPage = page;
+    this.loadFinished();
+  }
+
+  setFinishedPageSize(size: number) {
+    this.finishedPage = PagerComponent.pageAfterResize(this.finishedPage, this.finishedPageSize, size);
+    this.finishedPageSize = size;
+    this.loadFinished();
+  }
+
   get activeMine(): Order[] {
     return this.mine.filter(o => this.isActive(o.status));
   }
 
+  // Upravo isporučena dostava ostaje vidljiva dok se lista ne osveži
   get finishedMine(): Order[] {
-    return this.mine.filter(o => !this.isActive(o.status));
+    const justFinished = this.mine.filter(o => !this.isActive(o.status) && !this.finished.some(f => f.id === o.id));
+    return [...justFinished, ...this.finished];
   }
 
   private isActive(status: OrderStatus): boolean {
