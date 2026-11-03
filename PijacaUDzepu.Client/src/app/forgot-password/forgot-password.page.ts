@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { TranslateService } from '../services/translate.service';
 
 // "Zaboravili ste lozinku?" - šalje link za novu lozinku na e-mail naloga
 @Component({
@@ -14,7 +15,7 @@ export class ForgotPasswordPage {
   sent = false;
   error = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private ts: TranslateService) {}
 
   submit() {
     if (!this.login.trim()) return;
@@ -24,7 +25,7 @@ export class ForgotPasswordPage {
       next: () => { this.loading = false; this.sent = true; },
       error: err => {
         this.loading = false;
-        this.error = err.error?.message || (err.status === 429 ? 'Previše pokušaja, sačekajte minut.' : 'Greška. Pokušajte ponovo.');
+        this.error = err.error?.message || this.ts.t('error.generic');
       }
     });
   }

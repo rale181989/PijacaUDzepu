@@ -210,7 +210,7 @@ async function build() {
     s.text(pages, x + 0.35, 5.15, 3.1, 0.3, { size: 12, color: 'muted' });
   }
   await s.icon('MdLanguage', 0.6, 6.0, 0.5, 'forest');
-  s.text([{ text: 'Gde radi: ', bold: true }, { text: 'u browseru na pijacaudzepu.onrender.com i kao Android aplikacija. Jezik (SR · EN · RU) birate u meniju ☰.' }], 1.25, 6.0, 11.3, 0.5, { size: 15, valign: 'middle' });
+  s.text([{ text: 'Gde radi: ', bold: true }, { text: 'u browseru na pijacaudzepu.onrender.com i kao Android aplikacija. Jezik (SR · EN · RU) birate u meniju ☰, a na njemu stižu i poruke o greškama.' }], 1.25, 6.0, 11.3, 0.5, { size: 15, valign: 'middle' });
 
   // 3. Odeljak: kupci
   const section = async (num, title, sub, ic, col, sectionName, iconColor) => {
@@ -228,7 +228,7 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Pronađite proizvode');
   s.steps([
-    { h: 'Filteri', d: 'Suzite izbor po pijaci, prodavcu i grupi proizvoda (voće, povrće…).' },
+    { h: 'Filteri', d: 'Suzite izbor po pijaci, prodavcu i grupi proizvoda (voće, povrće, začinsko bilje, med…).' },
     { h: 'Pretraga po nazivu', d: 'Upišite deo naziva proizvoda. Kvačice nisu obavezne: „sljive“ nalazi i „šljive“.' },
     { h: 'Redosled', d: 'Dugme sa strelicama: po nazivu, po ceni ili najnovije prvo. Kod cene birate i jedinicu mere (kg, komad, veza…), jer se cene porede samo za istu jedinicu.' },
     { h: 'Meni ☰', d: 'Početna strana, vaše porudžbine, prijava, registracija i izbor jezika.' }
@@ -317,7 +317,7 @@ async function build() {
   s = new S('Sadrzaj - dva ekrana', 'Kupci', 'kupac');
   s.title('Omiljeni, ocene i ponovo');
   s.steps([
-    { h: 'Omiljeni', d: 'Srce na slici čuva proizvod, a srce uz ime prodavca celu tezgu. Dugme ♥ pored pretrage prikazuje samo omiljene.' },
+    { h: 'Omiljeni', d: 'Srce na slici proizvoda čuva ga među omiljenima. Dugme ♥ pored pretrage prikazuje samo omiljene proizvode.' },
     { h: 'Obavesti me', d: 'Omiljeni proizvod kojeg trenutno nema: „Obavesti me” i javićemo vam kad se vrati u ponudu (uz nalog).' },
     { h: 'Ocena', d: 'Posle preuzimanja ocenite prodavca (i kurira) zvezdicama. Prosečna ocena se vidi uz ime prodavca.' },
     { h: 'Poruči ponovo', d: 'U detaljima porudžbine: iste stavke idu u korpu (samo one koje su i dalje dostupne).' }

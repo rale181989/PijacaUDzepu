@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Controllers;
 
@@ -64,7 +65,7 @@ public class ReportsController : BaseApiController
     {
         var t = to ?? DateOnly.FromDateTime(DateTime.UtcNow);
         if (from > t)
-            return (default, default, "Početni datum mora biti pre krajnjeg.");
+            return (default, default, L.T("Početni datum mora biti pre krajnjeg."));
 
         // Bez početnog datuma: od prve porudžbine (ako je posle krajnjeg datuma, izveštaj je prazan)
         var f = from ?? await _reportService.GetFirstOrderDate();

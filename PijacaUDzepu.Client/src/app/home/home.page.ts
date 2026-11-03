@@ -4,7 +4,7 @@ import { CartService } from '../services/cart.service';
 import { VendorService } from '../services/vendor.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
-import { Product, ProductCategory, ProductSort, ProductUnit } from '../models/product.model';
+import { Product, ProductCategory, PRODUCT_CATEGORIES, ProductSort, ProductUnit } from '../models/product.model';
 import { vendorClosedText } from '../services/vendor-status';
 import { FavoritesService } from '../services/favorites.service';
 import { AuthService } from '../services/auth.service';
@@ -37,15 +37,7 @@ export class HomePage implements OnInit {
   unitOptions: { value: ProductUnit; label: string }[] = [];
   sortBy: ProductSort = 'NameAsc';
   sortOptions: { value: ProductSort; label: string }[] = [];
-  categories: { value: ProductCategory; label: string }[] = [
-    { value: 'Voce', label: 'Voće' },
-    { value: 'Povrce', label: 'Povrće' },
-    { value: 'MlecniProizvodi', label: 'Mlečni proizvodi' },
-    { value: 'MesniProizvodi', label: 'Mesni proizvodi' },
-    { value: 'Konditori', label: 'Konditori' },
-    { value: 'KucnaHemija', label: 'Kućna hemija' },
-    { value: 'Ostalo', label: 'Ostalo' },
-  ];
+  categories: { value: ProductCategory; label: string }[] = [];
   loading = false;
   hasMore = true;
   private pageSize = 20;
@@ -107,15 +99,7 @@ export class HomePage implements OnInit {
   }
 
   private rebuildCategories() {
-    this.categories = [
-      { value: 'Voce', label: this.ts.t('cat.Voce') },
-      { value: 'Povrce', label: this.ts.t('cat.Povrce') },
-      { value: 'MlecniProizvodi', label: this.ts.t('cat.MlecniProizvodi') },
-      { value: 'MesniProizvodi', label: this.ts.t('cat.MesniProizvodi') },
-      { value: 'Konditori', label: this.ts.t('cat.Konditori') },
-      { value: 'KucnaHemija', label: this.ts.t('cat.KucnaHemija') },
-      { value: 'Ostalo', label: this.ts.t('cat.Ostalo') },
-    ];
+    this.categories = PRODUCT_CATEGORIES.map(value => ({ value, label: this.ts.t('cat.' + value) }));
     this.unitOptions = (['Kg', 'Komad', 'Veza', 'Litar', 'Pakovanje', 'Kutija', 'Flasa'] as ProductUnit[])
       .map(value => ({ value, label: this.ts.t('unitFilter.' + value) }));
     this.sortOptions = [
@@ -207,7 +191,7 @@ export class HomePage implements OnInit {
   showFavorites = false;
 
   private favoritesFilter() {
-    return this.showFavorites ? { productIds: this.favorites.productIds, vendorIds: this.favorites.vendorIds } : undefined;
+    return this.showFavorites ? { productIds: this.favorites.productIds, vendorIds: [] } : undefined;
   }
 
   toggleFavoritesFilter() {
@@ -226,11 +210,6 @@ export class HomePage implements OnInit {
     if (this.showFavorites) this.loadProducts();
   }
 
-  toggleFavoriteVendor(product: Product, event: Event) {
-    event.stopPropagation();
-    this.favorites.toggleVendor(product.vendorId);
-    if (this.showFavorites) this.loadProducts();
-  }
 
   async toggleAlert(product: Product) {
     if (!this.favorites.toggleAlert(product.id)) {

@@ -45,15 +45,15 @@ public static class VendorAvailability
         return new(false, closedToday ? ReasonClosedDay : ReasonHours, NextOpening(today, now, closedDates, hours), null);
     }
 
-    // Poruka za kupca kada pokuša da poruči od zatvorene tezge
+    // Poruka za kupca kada pokuša da poruči od zatvorene tezge (na jeziku zahteva, vidi L)
     public static string ClosedMessage(Vendor vendor, Status status) => status.ClosedReason switch
     {
-        ReasonPaused => $"{vendor.Name} trenutno ne prima porudžbine.",
-        ReasonInactive => $"{vendor.Name} trenutno ne radi.",
+        ReasonPaused => L.T("{0} trenutno ne prima porudžbine.", vendor.Name),
+        ReasonInactive => L.T("{0} trenutno ne radi.", vendor.Name),
         // Bez radnog vremena (samo neradni dan) tezga radi od početka dana - vreme se ne navodi
-        _ when status.OpensAt is { } at && at.TimeOfDay == TimeSpan.Zero => $"{vendor.Name} danas ne radi – otvara se {DescribeDay(at)}.",
-        _ when status.OpensAt is { } at => $"{vendor.Name} je sada zatvoren(a) – otvara se {DescribeDay(at)} u {at:HH\\:mm}.",
-        _ => $"{vendor.Name} je sada zatvoren(a)."
+        _ when status.OpensAt is { } at && at.TimeOfDay == TimeSpan.Zero => L.T("{0} danas ne radi – otvara se {1}.", vendor.Name, DescribeDay(at)),
+        _ when status.OpensAt is { } at => L.T("{0} je sada zatvoren(a) – otvara se {1} u {2}.", vendor.Name, DescribeDay(at), at.ToString("HH:mm")),
+        _ => L.T("{0} je sada zatvoren(a).", vendor.Name)
     };
 
     public static bool IsValid(DeliveryScheduleEntry h) =>
@@ -79,9 +79,9 @@ public static class VendorAvailability
     {
         var today = LocalTime.Today;
         var date = DateOnly.FromDateTime(at);
-        if (date == today) return "danas";
-        if (date == today.AddDays(1)) return "sutra";
-        return DayNames[IsoDay(date)];
+        if (date == today) return L.T("danas");
+        if (date == today.AddDays(1)) return L.T("sutra");
+        return L.T(DayNames[IsoDay(date)]);
     }
 
     private static int IsoDay(DateOnly date) => date.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)date.DayOfWeek;

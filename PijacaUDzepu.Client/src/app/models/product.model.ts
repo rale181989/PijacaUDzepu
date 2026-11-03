@@ -44,7 +44,14 @@ export interface QuickProductUpdate {
 
 export type ProductUnit = 'Kg' | 'Komad' | 'Veza' | 'Litar' | 'Gram' | 'Pakovanje' | 'Kutija' | 'Flasa';
 
-export type ProductCategory = 'Voce' | 'Povrce' | 'MlecniProizvodi' | 'MesniProizvodi' | 'Konditori' | 'KucnaHemija' | 'Ostalo';
+export type ProductCategory = 'Voce' | 'Povrce' | 'ZacinskoBilje' | 'Mahunarke' | 'Pecurke' | 'MlecniProizvodi' | 'Jaja'
+  | 'MesniProizvodi' | 'PcelinjiProizvodi' | 'Zimnica' | 'SuvoVoceIOrasasti' | 'Konditori' | 'KucnaHemija' | 'Ostalo';
+
+// Redosled kategorija u filteru, formi prodavca i izveštajima (nazivi su u prevodima: 'cat.' + kategorija)
+export const PRODUCT_CATEGORIES: ProductCategory[] = [
+  'Voce', 'Povrce', 'ZacinskoBilje', 'Mahunarke', 'Pecurke', 'MlecniProizvodi', 'Jaja', 'MesniProizvodi',
+  'PcelinjiProizvodi', 'Zimnica', 'SuvoVoceIOrasasti', 'Konditori', 'KucnaHemija', 'Ostalo'
+];
 
 export type ProductClass = 'Prva' | 'Druga' | 'Treca';
 

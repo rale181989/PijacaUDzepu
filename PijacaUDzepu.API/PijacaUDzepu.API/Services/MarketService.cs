@@ -4,6 +4,7 @@ using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Services;
 
@@ -40,7 +41,7 @@ public class MarketService : IMarketService
         var market = await _context.Markets
             .Include(m => m.Vendors)
             .FirstOrDefaultAsync(m => m.Id == id)
-            ?? throw new KeyNotFoundException("Pijaca nije pronađena");
+            ?? throw new KeyNotFoundException(L.T("Pijaca nije pronađena"));
         return MapToDto(market);
     }
 
@@ -61,7 +62,7 @@ public class MarketService : IMarketService
     public async Task<MarketDto> Update(int id, MarketInputDto dto)
     {
         var market = await _context.Markets.FindAsync(id)
-            ?? throw new KeyNotFoundException("Pijaca nije pronađena");
+            ?? throw new KeyNotFoundException(L.T("Pijaca nije pronađena"));
 
         market.Name = dto.Name;
         market.Description = dto.Description;
@@ -74,7 +75,7 @@ public class MarketService : IMarketService
     public async Task ToggleActive(int id)
     {
         var market = await _context.Markets.FindAsync(id)
-            ?? throw new KeyNotFoundException("Pijaca nije pronađena");
+            ?? throw new KeyNotFoundException(L.T("Pijaca nije pronađena"));
 
         market.IsActive = !market.IsActive;
         await _context.SaveChangesAsync();

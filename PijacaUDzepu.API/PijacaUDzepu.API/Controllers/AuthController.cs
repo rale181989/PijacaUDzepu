@@ -6,6 +6,7 @@ using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.Extensions;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Controllers;
 
@@ -89,7 +90,7 @@ public class AuthController : BaseApiController
         try
         {
             await _authService.InviteVendor(dto);
-            return Ok(new { message = "Pozivnica poslata." });
+            return Ok(new { message = L.T("Pozivnica poslata.") });
         }
         catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
         {
@@ -119,7 +120,7 @@ public class AuthController : BaseApiController
         {
             var userId = User.GetUserId();
             await _authService.ChangePassword(userId, dto.CurrentPassword, dto.NewPassword);
-            return Ok(new { message = "Lozinka promenjena." });
+            return Ok(new { message = L.T("Lozinka promenjena.") });
         }
         catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
         {
@@ -133,7 +134,7 @@ public class AuthController : BaseApiController
     public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
     {
         await _authService.RequestPasswordReset(dto.Login);
-        return Ok(new { message = "Ako nalog postoji i ima e-mail adresu, poslali smo link za novu lozinku." });
+        return Ok(new { message = L.T("Ako nalog postoji i ima e-mail adresu, poslali smo link za novu lozinku.") });
     }
 
     [AllowAnonymous]
@@ -144,7 +145,7 @@ public class AuthController : BaseApiController
         try
         {
             await _authService.ResetPassword(dto.Token, dto.NewPassword);
-            return Ok(new { message = "Lozinka je promenjena. Možete se prijaviti." });
+            return Ok(new { message = L.T("Lozinka je promenjena. Možete se prijaviti.") });
         }
         catch (InvalidOperationException ex)
         {
@@ -158,7 +159,7 @@ public class AuthController : BaseApiController
         try
         {
             await _authService.DeleteAccount(User.GetUserId(), dto.Password);
-            return Ok(new { message = "Nalog je obrisan." });
+            return Ok(new { message = L.T("Nalog je obrisan.") });
         }
         catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
         {

@@ -6,6 +6,7 @@ using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.DataAccess;
 using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Output;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Controllers;
 
@@ -106,7 +107,7 @@ public class UsersController : BaseApiController
     public async Task<IActionResult> ToggleActive(int id)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null) return NotFound(new { message = "Korisnik nije pronađen." });
+        if (user == null) return NotFound(new { message = L.T("Korisnik nije pronađen.") });
 
         user.IsActive = !user.IsActive;
         await _userManager.UpdateAsync(user);

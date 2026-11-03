@@ -6,6 +6,7 @@ using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Services;
 
@@ -100,7 +101,7 @@ public class SupportService : ISupportService
     public async Task<SupportRequestDto> SetResolved(int id, bool resolved)
     {
         var request = await _context.SupportRequests.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == id)
-            ?? throw new KeyNotFoundException("Pitanje nije pronađeno.");
+            ?? throw new KeyNotFoundException(L.T("Pitanje nije pronađeno."));
 
         request.IsResolved = resolved;
         request.ResolvedAt = resolved ? DateTime.UtcNow : null;

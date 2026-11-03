@@ -14,7 +14,7 @@ public static class ImageResizer
         memoryStream.Position = 0;
 
         using var original = SKBitmap.Decode(memoryStream)
-            ?? throw new InvalidOperationException("Neispravan format slike.");
+            ?? throw new InvalidOperationException(L.T("Neispravan format slike."));
 
         var bitmap = original;
         if (original.Width > maxWidth || original.Height > maxHeight)

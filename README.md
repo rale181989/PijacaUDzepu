@@ -10,14 +10,15 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 
 **Kupac** (nalog nije obavezan)
 - Katalog sa filterima (pijaca, prodavac, grupa), pretragom bez kvačica i sortiranjem; kod sortiranja po ceni bira se jedinica mere
+- Grupe proizvoda: voće, povrće, začinsko bilje, mahunarke, pečurke, mlečni proizvodi, jaja, meso, med i pčelinji proizvodi, zimnica, suvo voće i orašasti plodovi, kolači, kućna hemija, ostalo
 - Korpa sa robom više prodavaca; svaki prodavac dobija svoj deo porudžbine
 - Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
 - Moje porudžbine; odbijena porudžbina je precrtana, sa razlogom prodavca
-- Omiljeni proizvodi i prodavci (i bez naloga), filter „Omiljeni” i „Obavesti me kad bude dostupno”
+- Omiljeni proizvodi – srce na slici (i bez naloga), filter „Omiljeni” i „Obavesti me kad bude dostupno”
 - Ocena prodavca i kurira posle preuzimanja; prosečna ocena prodavca na karticama proizvoda
 - „Poruči ponovo” – stavke prethodne porudžbine u korpu
-- Jezici: srpski, engleski, ruski
+- Jezici: srpski, engleski, ruski – i poruke o greškama sa servera stižu na izabranom jeziku
 
 **Prodavac**
 - Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost
@@ -88,3 +89,5 @@ Ako je na serveru podešen `SENTRY_DSN`, greške iz produkcije stižu u Sentry (
 - [`CLAUDE.md`](CLAUDE.md) – arhitektura, pravila i komande za razvoj
 - [`PODESAVANJA.md`](PODESAVANJA.md) – šta treba podesiti u produkciji (env varijable, Firebase, Brevo, R2…)
 - [`docs/uputstvo/`](docs/uputstvo/) – korisničko uputstvo (PowerPoint) za kupce, prodavce i kurire, pravi se iz koda
+
+Fotografije demo proizvoda: izvori, autori i licence su u [docs/slike-proizvoda.md](docs/slike-proizvoda.md).

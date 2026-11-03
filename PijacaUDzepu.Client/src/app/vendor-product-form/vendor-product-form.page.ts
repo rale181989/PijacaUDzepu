@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { ProductService } from '../services/product.service';
-import { ProductInput } from '../models/product.model';
+import { PRODUCT_CATEGORIES, ProductInput } from '../models/product.model';
+import { TranslateService } from '../services/translate.service';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -19,6 +20,7 @@ export class VendorProductFormPage implements OnInit {
   loading = false;
   saving = false;
   apiUrl = environment.apiUrl.replace('/api', '');
+  categories = PRODUCT_CATEGORIES.map(value => ({ value, label: this.ts.t('cat.' + value) }));
 
   get isEdit(): boolean { return this.productId !== null; }
 
@@ -26,7 +28,8 @@ export class VendorProductFormPage implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private ts: TranslateService
   ) {}
 
   ngOnInit() {

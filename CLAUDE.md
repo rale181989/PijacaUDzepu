@@ -28,7 +28,7 @@ dotnet test PijacaUDzepu.API.Tests          # integration tests against a real l
 - `ApiFactory` (a `WebApplicationFactory<Program>`) drops and recreates the `PijacaUDzepu_Test` database on every run, then starts the whole API in Development, so migrations and the demo data run too. Use the `TEST_DATABASE_URL` env var to point it at another server.
 - Each request gets its own `X-Forwarded-For`, so the login rate limit doesn't interfere.
 - All test classes share the `api` collection, so they run sequentially on one database. Pick different vendors or products per test so tests don't affect each other.
-- The covered flows are: the checkout split and fees, the courier accept race, stock overselling and its restore, a paused vendor, the mandatory reject reason, report totals, password rules, lockout, forgot password, account deletion and the health endpoint.
+- The covered flows are: the checkout split and fees, the courier accept race, stock overselling and its restore, a paused vendor, the mandatory reject reason, report totals, password rules, lockout, forgot password, account deletion, the health endpoint and message translation (every `L.T` key has a translation; errors follow `Accept-Language`).
 - The Dockerfile publishes only the API project, so the test project never reaches the image.
 
 ### Client (run from `PijacaUDzepu.Client`)
@@ -81,11 +81,15 @@ Documentation rule: every change also goes into this file, `README.md` and the u
 - **Vendor identity:** a vendor user is linked to a `Vendor` through the `VendorUsers` join table. Vendor endpoints resolve the current vendor with `IVendorService.GetVendorIdForUser(User.GetUserId())`, and services scope every query by that `vendorId`.
 - **Services** (`Services/` with interfaces in `Services/Interfaces/`) contain all business logic and are registered as scoped in `AddApplicationServices`. Register any new service there.
 - **Error handling:**
-  - Services throw `KeyNotFoundException`, `InvalidOperationException`, or `UnauthorizedAccessException` with Serbian messages.
+  - Services throw `KeyNotFoundException`, `InvalidOperationException`, or `UnauthorizedAccessException` with Serbian messages wrapped in `L.T(...)`.
+  - **Message language:** `Helpers/L.cs` translates every user-facing API message (errors, Identity errors, validation, the 429 and 500 bodies, and confirmations such as "Lozinka promenjena.") into the app's language. The client's `TokenInterceptor` sends `Accept-Language: sr|en|ru` from `TranslateService.lang`; a middleware at the top of `Program.cs` stores it in `L.Lang` (an AsyncLocal, default `sr`). The dictionary is keyed by the Serbian text; dynamic parts use `{0}` placeholders (`L.T("{0}: nema više na stanju.", name)`). Any new message needs `L.T` and an `en`/`ru` entry; `LocalizationTests` fails on a missing one. Emails and push notifications stay in Serbian.
+  - The interceptor also fills in a translated `message` when the server sent none (no connection, 429, 5xx: keys `error.network`, `error.tooMany`, `error.generic`).
   - Controllers catch these and return `NotFound`/`BadRequest(new { message })`. The client reads `err.error?.message`.
   - `Middleware/ExceptionMiddleware` handles anything uncaught.
 - **DTOs** live in `Models/DTO/Input` (with validation attributes) and `Models/DTO/Output`. Services map entities to DTOs with a private static `MapToDto`.
 - **Enums** are serialized as strings (`JsonStringEnumConverter`) but stored as integers. The client mirrors them as TypeScript string-literal unions in `src/app/models/*.model.ts`. When you add or rename an enum value, update both sides.
+- **Product categories** (`ProductCategory`): Voce, Povrce, ZacinskoBilje, Mahunarke, Pecurke, MlecniProizvodi, Jaja, MesniProizvodi, PcelinjiProizvodi, Zimnica, SuvoVoceIOrasasti, Konditori, KucnaHemija, Ostalo. New values go at the end of the enum (stored as integers). The display order and the single list for the home filter, the vendor form and the reports is `PRODUCT_CATEGORIES` in `product.model.ts`; labels are the `cat.*` translation keys (sr/en/ru).
+  - Gotcha: migration `AddProductCategory` added the column with default 0 = Voce, so products created before it became "fruit". `Seed.FixDemoData` repairs demo products on every start (see Seed data).
 - **Orders:**
   - A cart checkout is split into one `Order` per vendor, for both logged-in and guest orders (`CreateGuestOrders`).
   - `OrderItem` snapshots the product name, unit, and price.
@@ -106,7 +110,7 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - `OrderService.BuildOrders` rejects an order containing items from a closed vendor, with a message that says when the vendor opens.
   - `AcceptsReservations`, `OffersDelivery`, `MinOrderAmount`, `DeliveryRadiusKm` and `DeliverySchedule` on `Vendor` are leftovers from an earlier plan in which vendors delivered themselves. Nothing reads them. The minimum order amount is deliberately not enforced (owner's decision). The delivery radius would need geocoding.
 - **Customer extras** (`FavoriteService`, `FavoritesController`, `OrderService.RateOrder`, client `FavoritesService` and `OrderActionsService`):
-  - **Favorites** (`Favorites` table, one row per product or vendor). Guests keep them in `localStorage.favorites`; on login they are merged into the account (`POST /api/favorites/sync`). The home ♥ filter passes `ids`/`vendorIds` to `GET /api/products`. With those parameters, unavailable favorite products are returned too; without them, only available products.
+  - **Favorites** (`Favorites` table): the client offers favorite products only, as a heart on the product picture. The server also supports favorite vendors (`vendorIds`), but the UI dropped them because two hearts on one card confused users. Guests keep favorites in `localStorage.favorites`; on login they are merged into the account (`POST /api/favorites/sync`). The home ♥ filter passes `ids` to `GET /api/products`. With those parameters, unavailable favorite products are returned too; without them, only available products.
   - **"Obavesti me"** (`StockAlerts`, logged-in users only). When `ProductService.UpdateProduct` makes a product available again, `NotifyBackInStock` sends `StockAvailable` (SignalR) and a push, then deletes the alerts.
   - **Ratings** (`OrderRatings`, one per order, 1–5 for the vendor plus the courier on courier orders, optional comment) are allowed only for `Completed` orders, via `POST /api/orders/{id}/rating` or `/api/orders/track/{code}/{id}/rating` for guests. `OrderDto.Rating`; the vendor gets `OrderRated`. `ProductDto.VendorRating`/`VendorRatingCount` are filled for a whole page in one grouped query (`FillVendorRatings`). The client modal is `shared/rating-form`, and `StarsPipe` renders ★★★★☆.
   - **"Poruči ponovo"** is client-only (`OrderActionsService.reorder`): it reloads each item's product and adds only those that are available and whose vendor is open.
@@ -167,6 +171,7 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - `kurir1`, `kurir2` / `kurir1234` (Courier)
   - nine vendor users (`marko`, `jovana`, `nikola`, `milan`, `jelena`, `dragan`, `ana`, `bojan`, `ivana`) / `vendor1234` (VendorAdmin)
 - **Production without `DEMO_ACCOUNTS`:** no demo data. Demo accounts that still have their default password are locked (`LockoutEnd = DateTimeOffset.MaxValue` marks a seed lock; login says the account is disabled). Running in demo mode unlocks them again.
+- **Demo data fix-up (`FixDemoData`, every start, every environment):** demo products and markets get the corrected image and category, but only rows that still hold the old seed value (`DemoProductImageFixes`, `DemoMarketImageFixes`, `DemoCategoryFixes`), so a vendor's own changes stay. Product images come from Wikimedia Commons (absolute `upload.wikimedia.org` 500px thumbnails) or Unsplash; authors and licenses are listed in `docs/slike-proizvoda.md`. When you change a seed image, check that it really shows the product and add the old→new pair to the fix-up table.
 - **Admin in production:** created from `ADMIN_PASSWORD` if it doesn't exist. If `admin` still has `admin1234` and `ADMIN_PASSWORD` is set, the password is reset to it; without the variable the server logs a critical warning on every start.
 
 ## Error tracking

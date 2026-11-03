@@ -8,5 +8,13 @@ public enum ProductCategory
     MesniProizvodi,
     Konditori,
     KucnaHemija,
-    Ostalo
+    Ostalo,
+    // Dodato kasnije - nove vrednosti samo na kraj, jer se kategorija čuva kao broj
+    ZacinskoBilje,
+    Mahunarke,
+    Pecurke,
+    PcelinjiProizvodi,
+    Jaja,
+    Zimnica,
+    SuvoVoceIOrasasti
 }

@@ -4,6 +4,7 @@ using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.Extensions;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Controllers;
 
@@ -91,7 +92,7 @@ public class VendorsController : BaseApiController
     {
         var userId = User.GetUserId();
         var vendorId = await _vendorService.GetVendorIdForUser(userId);
-        if (vendorId == null) return NotFound(new { message = "Niste dodeljeni prodavcu." });
+        if (vendorId == null) return NotFound(new { message = L.T("Niste dodeljeni prodavcu.") });
 
         var vendor = await _vendorService.GetVendorById(vendorId.Value);
         return Ok(vendor);
@@ -103,7 +104,7 @@ public class VendorsController : BaseApiController
     public async Task<IActionResult> UpdateMyAvailability(VendorAvailabilityDto dto)
     {
         var vendorId = await _vendorService.GetVendorIdForUser(User.GetUserId());
-        if (vendorId == null) return NotFound(new { message = "Niste dodeljeni prodavcu." });
+        if (vendorId == null) return NotFound(new { message = L.T("Niste dodeljeni prodavcu.") });
 
         try
         {
@@ -121,7 +122,7 @@ public class VendorsController : BaseApiController
     {
         var userId = User.GetUserId();
         var vendorId = await _vendorService.GetVendorIdForUser(userId);
-        if (vendorId == null) return NotFound(new { message = "Niste dodeljeni prodavcu." });
+        if (vendorId == null) return NotFound(new { message = L.T("Niste dodeljeni prodavcu.") });
 
         try
         {
@@ -138,12 +139,12 @@ public class VendorsController : BaseApiController
     [HttpPost("{id}/image")]
     public async Task<IActionResult> UploadImage(int id, IFormFile file)
     {
-        if (file.Length == 0) return BadRequest(new { message = "Fajl je prazan." });
-        if (file.Length > 5 * 1024 * 1024) return BadRequest(new { message = "Maksimalna veličina fajla je 5MB." });
+        if (file.Length == 0) return BadRequest(new { message = L.T("Fajl je prazan.") });
+        if (file.Length > 5 * 1024 * 1024) return BadRequest(new { message = L.T("Maksimalna veličina fajla je 5MB.") });
 
         var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
         var ext = Path.GetExtension(file.FileName).ToLower();
-        if (!allowed.Contains(ext)) return BadRequest(new { message = "Dozvoljeni formati: jpg, jpeg, png, webp." });
+        if (!allowed.Contains(ext)) return BadRequest(new { message = L.T("Dozvoljeni formati: jpg, jpeg, png, webp.") });
 
         try
         {

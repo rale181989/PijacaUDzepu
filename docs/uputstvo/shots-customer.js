@@ -31,8 +31,7 @@ const call = async (method, url, body, token) => {
   // gost: srce na prvom proizvodu (Beli Luk ili sl.) i prodavcu drugog
   const names = await page.evaluate(() => [...document.querySelectorAll('.product-name')].slice(0, 2).map(e => e.textContent.trim()));
   await page.evaluate(() => document.querySelectorAll('.fav-btn')[0].click());
-  await page.evaluate(() => document.querySelectorAll('.fav-vendor')[1].click());
-  console.log('gost označio:', names[0], '+ prodavac drugog proizvoda; localStorage:', await page.evaluate(() => localStorage.getItem('favorites')));
+  console.log('gost označio:', names[0], '; localStorage:', await page.evaluate(() => localStorage.getItem('favorites')));
 
   // prijava -> sinhronizacija
   await page.evaluate(a => { localStorage.setItem('token', a.token); localStorage.setItem('user', JSON.stringify(a.user)); }, kupac);

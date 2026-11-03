@@ -35,7 +35,7 @@ public class VendorService : IVendorService
     {
         var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall)
             .FirstOrDefaultAsync(v => v.Id == id)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
         return MapToDto(vendor);
     }
 
@@ -69,7 +69,7 @@ public class VendorService : IVendorService
     {
         var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall)
             .FirstOrDefaultAsync(v => v.Id == id)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         vendor.MarketId = dto.MarketId;
         vendor.StallId = dto.StallId;
@@ -94,7 +94,7 @@ public class VendorService : IVendorService
     public async Task ToggleVendorActive(int id)
     {
         var vendor = await _context.Vendors.FindAsync(id)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         vendor.IsActive = !vendor.IsActive;
         vendor.UpdatedAt = DateTime.UtcNow;
@@ -117,11 +117,11 @@ public class VendorService : IVendorService
     public async Task<VendorDto> UpdateAvailability(int vendorId, VendorAvailabilityDto dto)
     {
         var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall).FirstOrDefaultAsync(v => v.Id == vendorId)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         var invalid = dto.OpeningHours.FirstOrDefault(h => !VendorAvailability.IsValid(h));
         if (invalid != null)
-            throw new InvalidOperationException("Radno vreme nije ispravno: početak mora biti pre kraja (npr. 07:00 – 14:00).");
+            throw new InvalidOperationException(L.T("Radno vreme nije ispravno: početak mora biti pre kraja (npr. 07:00 – 14:00)."));
 
         vendor.OrdersPaused = dto.OrdersPaused;
         // Jedan unos po danu; prošli neradni dani se ne čuvaju
@@ -135,7 +135,7 @@ public class VendorService : IVendorService
     public async Task<string> UpdateVendorImage(int vendorId, IFormFile file)
     {
         var vendor = await _context.Vendors.FindAsync(vendorId)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         var jpeg = await ImageResizer.ToJpeg(file);
         var newUrl = await _images.Save(jpeg, $"vendors/vendor_{vendorId}_{Guid.NewGuid()}.jpg", ImageResizer.ContentType);

@@ -4,6 +4,7 @@ using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Services;
 
@@ -55,7 +56,7 @@ public class CourierService : ICourierService
         await _context.Users
             .Include(u => u.CourierProfile)
             .FirstOrDefaultAsync(u => u.Id == userId)
-        ?? throw new KeyNotFoundException("Kurir nije pronađen.");
+        ?? throw new KeyNotFoundException(L.T("Kurir nije pronađen."));
 
     private static CourierProfileDto MapToDto(User u) => new()
     {

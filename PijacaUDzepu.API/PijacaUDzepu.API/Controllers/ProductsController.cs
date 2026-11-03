@@ -5,6 +5,7 @@ using PijacaUDzepu.API.Extensions;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.Enums;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Controllers;
 
@@ -130,12 +131,12 @@ public class ProductsController : BaseApiController
         var vendorId = await GetCurrentVendorId();
         if (vendorId == null) return Forbid();
 
-        if (file.Length == 0) return BadRequest(new { message = "Fajl je prazan." });
-        if (file.Length > 5 * 1024 * 1024) return BadRequest(new { message = "Maksimalna veličina fajla je 5MB." });
+        if (file.Length == 0) return BadRequest(new { message = L.T("Fajl je prazan.") });
+        if (file.Length > 5 * 1024 * 1024) return BadRequest(new { message = L.T("Maksimalna veličina fajla je 5MB.") });
 
         var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
         var ext = Path.GetExtension(file.FileName).ToLower();
-        if (!allowed.Contains(ext)) return BadRequest(new { message = "Dozvoljeni formati: jpg, jpeg, png, webp." });
+        if (!allowed.Contains(ext)) return BadRequest(new { message = L.T("Dozvoljeni formati: jpg, jpeg, png, webp.") });
 
         try
         {

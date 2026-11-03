@@ -14,6 +14,18 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter());
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Neispravan unos (validacioni atributi): uz standardne greške i "message" na jeziku korisnika,
+        // kada je poruka naša (npr. dužina lozinke) - klijent prikazuje err.error.message
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var problem = new Microsoft.AspNetCore.Mvc.ValidationProblemDetails(context.ModelState);
+            var known = context.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).FirstOrDefault(L.Has);
+            if (known != null) problem.Extensions["message"] = L.T(known);
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(problem);
+        };
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -74,6 +86,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, token) => new ValueTask(context.HttpContext.Response.WriteAsJsonAsync(
+        new { message = L.T("Previše pokušaja. Sačekajte malo pa pokušajte ponovo.") }, token));
     options.AddPolicy(SupportController.RateLimitPolicy, context =>
         RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => new FixedWindowRateLimiterOptions
         {
@@ -104,6 +118,12 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
 
 var app = builder.Build();
 
+// Jezik poruka (L.T) iz Accept-Language; mora pre ExceptionMiddleware-a da bi važio i za njegovu poruku
+app.Use((context, next) =>
+{
+    L.Lang = L.FromHeader(context.Request.Headers.AcceptLanguage);
+    return next(context);
+});
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())

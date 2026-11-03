@@ -38,13 +38,7 @@
     <ion-item>
       <ion-select label="Kategorija" labelPlacement="floating"
                   [(ngModel)]="model.category" name="category" interface="popover">
-        <ion-select-option value="Voce">Voće</ion-select-option>
-        <ion-select-option value="Povrce">Povrće</ion-select-option>
-        <ion-select-option value="MlecniProizvodi">Mlečni proizvodi</ion-select-option>
-        <ion-select-option value="MesniProizvodi">Mesni proizvodi</ion-select-option>
-        <ion-select-option value="Konditori">Konditori</ion-select-option>
-        <ion-select-option value="KucnaHemija">Kućna hemija</ion-select-option>
-        <ion-select-option value="Ostalo">Ostalo</ion-select-option>
+        <ion-select-option *ngFor="let c of categories" [value]="c.value">{{ c.label }}</ion-select-option>
       </ion-select>
     </ion-item>
 

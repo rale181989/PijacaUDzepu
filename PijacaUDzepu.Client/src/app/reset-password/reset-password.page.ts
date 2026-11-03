@@ -49,7 +49,7 @@ export class ResetPasswordPage {
       },
       error: err => {
         this.loading = false;
-        this.error = err.error?.message || err.error?.errors?.NewPassword?.[0] || 'Greška. Pokušajte ponovo.';
+        this.error = err.error?.message || err.error?.errors?.NewPassword?.[0] || this.ts.t('error.generic');
       }
     });
   }

@@ -8,6 +8,7 @@ using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Models.Enums;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Services;
 
@@ -47,17 +48,17 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.NormalizedUserName == dto.UserName.ToUpper());
 
         if (user == null || !user.IsActive)
-            throw new UnauthorizedAccessException("Pogrešno korisničko ime ili lozinka.");
+            throw new UnauthorizedAccessException(L.T("Pogrešno korisničko ime ili lozinka."));
 
         // Test nalog koji je seed zaključao u produkciji (vidi SeedData.LockDemoAccounts)
         if (user.LockoutEnd == DateTimeOffset.MaxValue)
-            throw new UnauthorizedAccessException("Nalog je onemogućen. Obratite se administratoru.");
+            throw new UnauthorizedAccessException(L.T("Nalog je onemogućen. Obratite se administratoru."));
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: true);
         if (result.IsLockedOut)
-            throw new UnauthorizedAccessException("Previše pogrešnih pokušaja. Nalog je privremeno zaključan, pokušajte ponovo za 15 minuta.");
+            throw new UnauthorizedAccessException(L.T("Previše pogrešnih pokušaja. Nalog je privremeno zaključan, pokušajte ponovo za 15 minuta."));
         if (!result.Succeeded)
-            throw new UnauthorizedAccessException("Pogrešno korisničko ime ili lozinka.");
+            throw new UnauthorizedAccessException(L.T("Pogrešno korisničko ime ili lozinka."));
 
         return new AuthResponseDto
         {
@@ -69,7 +70,7 @@ public class AuthService : IAuthService
     public async Task<AuthResponseDto> Register(RegisterDto dto)
     {
         if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
-            throw new InvalidOperationException("Korisničko ime je zauzeto.");
+            throw new InvalidOperationException(L.T("Korisničko ime je zauzeto."));
 
         var user = new User
         {
@@ -96,10 +97,10 @@ public class AuthService : IAuthService
     public async Task<UserDto> CreateVendorAdmin(CreateVendorAdminDto dto)
     {
         var vendor = await _context.Vendors.FindAsync(dto.VendorId)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
-            throw new InvalidOperationException("Korisničko ime je zauzeto.");
+            throw new InvalidOperationException(L.T("Korisničko ime je zauzeto."));
 
         var user = new User
         {
@@ -125,7 +126,7 @@ public class AuthService : IAuthService
     public async Task<UserDto> CreateCourier(CreateCourierDto dto)
     {
         if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
-            throw new InvalidOperationException("Korisničko ime je zauzeto.");
+            throw new InvalidOperationException(L.T("Korisničko ime je zauzeto."));
 
         var user = new User
         {
@@ -148,12 +149,12 @@ public class AuthService : IAuthService
     public async Task InviteVendor(InviteVendorDto dto)
     {
         var vendor = await _context.Vendors.FindAsync(dto.VendorId)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         var existing = await _context.VendorInvitations
             .AnyAsync(vi => vi.VendorId == dto.VendorId && !vi.IsUsed && vi.ExpiresAt > DateTime.UtcNow);
         if (existing)
-            throw new InvalidOperationException("Aktivna pozivnica za ovog prodavca već postoji.");
+            throw new InvalidOperationException(L.T("Aktivna pozivnica za ovog prodavca već postoji."));
 
         var invitation = new VendorInvitation
         {
@@ -174,10 +175,10 @@ public class AuthService : IAuthService
         var invitation = await _context.VendorInvitations
             .Include(vi => vi.Vendor)
             .FirstOrDefaultAsync(vi => vi.Token == dto.Token && !vi.IsUsed && vi.ExpiresAt > DateTime.UtcNow)
-            ?? throw new InvalidOperationException("Pozivnica nije validna ili je istekla.");
+            ?? throw new InvalidOperationException(L.T("Pozivnica nije validna ili je istekla."));
 
         if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
-            throw new InvalidOperationException("Korisničko ime je zauzeto.");
+            throw new InvalidOperationException(L.T("Korisničko ime je zauzeto."));
 
         var user = new User
         {
@@ -207,13 +208,13 @@ public class AuthService : IAuthService
     public async Task ChangePassword(int userId, string currentPassword, string newPassword)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString())
-            ?? throw new KeyNotFoundException("Korisnik nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Korisnik nije pronađen."));
 
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
         if (!result.Succeeded)
             throw new InvalidOperationException(
                 result.Errors.Any(e => e.Code == "PasswordMismatch")
-                    ? "Pogrešna trenutna lozinka."
+                    ? L.T("Pogrešna trenutna lozinka.")
                     : string.Join("; ", result.Errors.Select(e => e.Description)));
     }
 
@@ -252,7 +253,7 @@ public class AuthService : IAuthService
         var reset = await _context.PasswordResets.Include(r => r.User)
             .FirstOrDefaultAsync(r => r.TokenHash == hash);
         if (reset == null || reset.UsedAt != null || reset.ExpiresAt < DateTime.UtcNow)
-            throw new InvalidOperationException("Link je istekao ili je već iskorišćen. Zatražite novi.");
+            throw new InvalidOperationException(L.T("Link je istekao ili je već iskorišćen. Zatražite novi."));
 
         var user = reset.User;
         var identityToken = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -278,18 +279,18 @@ public class AuthService : IAuthService
     public async Task DeleteAccount(int userId, string password)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString())
-            ?? throw new KeyNotFoundException("Korisnik nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Korisnik nije pronađen."));
         if (!await _userManager.CheckPasswordAsync(user, password))
-            throw new InvalidOperationException("Pogrešna lozinka.");
+            throw new InvalidOperationException(L.T("Pogrešna lozinka."));
 
         if (await _userManager.IsInRoleAsync(user, "SuperAdmin")
             && (await _userManager.GetUsersInRoleAsync("SuperAdmin")).Count <= 1)
-            throw new InvalidOperationException("Ovo je jedini administratorski nalog i ne može se obrisati.");
+            throw new InvalidOperationException(L.T("Ovo je jedini administratorski nalog i ne može se obrisati."));
 
         if (await _context.Orders.AnyAsync(o => o.CustomerId == userId && ActiveStatuses.Contains(o.Status)))
-            throw new InvalidOperationException("Imate porudžbine u toku. Nalog možete obrisati kada budu završene.");
+            throw new InvalidOperationException(L.T("Imate porudžbine u toku. Nalog možete obrisati kada budu završene."));
         if (await _context.Orders.AnyAsync(o => o.CourierId == userId && ActiveStatuses.Contains(o.Status)))
-            throw new InvalidOperationException("Imate dostave u toku. Nalog možete obrisati kada ih završite.");
+            throw new InvalidOperationException(L.T("Imate dostave u toku. Nalog možete obrisati kada ih završite."));
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -315,7 +316,7 @@ public class AuthService : IAuthService
     public async Task<string> AdminResetPassword(int userId)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString())
-            ?? throw new KeyNotFoundException("Korisnik nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Korisnik nije pronađen."));
 
         const string chars = "abcdefghijkmnpqrstuvwxyz23456789";
         var password = new string(Enumerable.Range(0, 10).Select(_ => chars[RandomNumberGenerator.GetInt32(chars.Length)]).ToArray());
@@ -338,7 +339,7 @@ public class AuthService : IAuthService
         var user = await _userManager.Users
             .Include(u => u.VendorUsers).ThenInclude(vu => vu.Vendor)
             .FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new KeyNotFoundException("Korisnik nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Korisnik nije pronađen."));
 
         return await MapToUserDto(user);
     }

@@ -110,14 +110,14 @@ public class ProductService : IProductService
             .Include(p => p.Vendor).ThenInclude(v => v.Market)
             .Include(p => p.Vendor).ThenInclude(v => v.Stall)
             .FirstOrDefaultAsync(p => p.Id == id)
-            ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
         return MapToDto(product);
     }
 
     public async Task<ProductDto> CreateProduct(int vendorId, ProductInputDto dto)
     {
         var vendor = await _context.Vendors.FindAsync(vendorId)
-            ?? throw new KeyNotFoundException("Prodavac nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
         var product = new Product
         {
@@ -145,7 +145,7 @@ public class ProductService : IProductService
         var product = await _context.Products
             .Include(p => p.Vendor)
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
-            ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
 
         var wasAvailable = product.IsAvailable;
         product.Name = dto.Name;
@@ -171,7 +171,7 @@ public class ProductService : IProductService
     {
         var product = await _context.Products
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
-            ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
@@ -183,7 +183,7 @@ public class ProductService : IProductService
     {
         var product = await _context.Products
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
-            ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
 
         var jpeg = await ImageResizer.ToJpeg(file);
         var newUrl = await _images.Save(jpeg, $"products/product_{productId}_{Guid.NewGuid()}.jpg", ImageResizer.ContentType);
@@ -212,7 +212,7 @@ public class ProductService : IProductService
         var product = await _context.Products
             .Include(p => p.Vendor)
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
-            ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+            ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
 
         var wasAvailable = product.IsAvailable;
         if (dto.Price.HasValue) product.Price = dto.Price.Value;

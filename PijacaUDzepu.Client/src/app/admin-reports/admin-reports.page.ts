@@ -4,6 +4,7 @@ import { CourierReport, CustomerReport, OrdersReport, ProductsReport, ReportServ
 import { downloadCsv } from '../shared/csv';
 import { FulfillmentType, OrderStatus } from '../models/order.model';
 import { PagerComponent, pageOf } from '../shared/pager/pager.component';
+import { TranslateService } from '../services/translate.service';
 
 type Tab = 'orders' | 'customers' | 'couriers' | 'vendors' | 'products';
 type Preset = 'today' | '7' | '30' | 'month' | 'lastMonth' | 'year' | 'all';
@@ -57,7 +58,7 @@ export class AdminReportsPage {
   daysPage = 0;
   deliveriesPage = 0;
 
-  constructor(private reportService: ReportService) {}
+  constructor(private reportService: ReportService, private ts: TranslateService) {}
 
   ionViewWillEnter() {
     // Podaci se menjaju, pa se pri svakom ulasku na stranicu ponovo učitavaju
@@ -292,11 +293,7 @@ export class AdminReportsPage {
   }
 
   categoryLabel(c?: string | null): string {
-    const labels: Record<string, string> = {
-      Voce: 'Voće', Povrce: 'Povrće', MlecniProizvodi: 'Mlečni proizvodi', MesniProizvodi: 'Mesni proizvodi',
-      Konditori: 'Konditori', KucnaHemija: 'Kućna hemija', Ostalo: 'Ostalo'
-    };
-    return c ? labels[c] ?? c : 'Obrisan proizvod';
+    return c ? this.ts.t('cat.' + c) : 'Obrisan proizvod';
   }
 
   unitLabel(u: string): string {

@@ -285,13 +285,7 @@
             <div class="product-name-row">
               <h3 class="product-name">{{ product.name }}</h3>
             </div>
-            <p class="product-vendor">
-              {{ product.vendorName }}
-              <button class="fav-vendor" (click)="toggleFavoriteVendor(product, $event)"
-                      [attr.aria-pressed]="favorites.isVendor(product.vendorId)" [attr.aria-label]="'fav.vendor' | t">
-                <ion-icon [name]="favorites.isVendor(product.vendorId) ? 'heart' : 'heart-outline'"></ion-icon>
-              </button>
-            </p>
+            <p class="product-vendor">{{ product.vendorName }}</p>
             <p *ngIf="product.vendorRating" class="product-rating">
               ★ {{ product.vendorRating | number:'1.1-1' }} <span>({{ product.vendorRatingCount }})</span>
             </p>

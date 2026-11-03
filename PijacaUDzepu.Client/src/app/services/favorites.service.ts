@@ -12,7 +12,8 @@ interface FavoritesState {
 
 const STORAGE_KEY = 'favorites';
 
-// Omiljeni proizvodi i prodavci. Gost ih čuva na uređaju (localStorage), prijavljeni korisnik na nalogu;
+// Omiljeni proizvodi (srce na kartici). Gost ih čuva na uređaju (localStorage), prijavljeni korisnik na nalogu;
+// server podržava i omiljene prodavce, ali ih aplikacija više ne nudi (dva srca na kartici su zbunjivala).
 // pri prijavi se omiljeni sa uređaja prenose na nalog. "Obavesti me kad bude dostupno" radi samo uz nalog.
 @Injectable({ providedIn: 'root' })
 export class FavoritesService {
@@ -29,22 +30,15 @@ export class FavoritesService {
 
   get productIds(): number[] { return this.state.value.productIds; }
   get vendorIds(): number[] { return this.state.value.vendorIds; }
-  get isEmpty(): boolean { return this.productIds.length === 0 && this.vendorIds.length === 0; }
+  get isEmpty(): boolean { return this.productIds.length === 0; }
 
   isProduct(id: number): boolean { return this.state.value.productIds.includes(id); }
-  isVendor(id: number): boolean { return this.state.value.vendorIds.includes(id); }
   hasAlert(id: number): boolean { return this.state.value.alertProductIds.includes(id); }
 
   toggleProduct(id: number) {
     const on = !this.isProduct(id);
     this.update({ productIds: toggle(this.productIds, id, on) });
     if (this.authService.isLoggedIn) this.call(on, `${this.baseUrl}/products/${id}`);
-  }
-
-  toggleVendor(id: number) {
-    const on = !this.isVendor(id);
-    this.update({ vendorIds: toggle(this.vendorIds, id, on) });
-    if (this.authService.isLoggedIn) this.call(on, `${this.baseUrl}/vendors/${id}`);
   }
 
   // Vraća false kada korisnik nije prijavljen (obaveštenje traži nalog)

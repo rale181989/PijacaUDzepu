@@ -146,7 +146,7 @@
     margin-bottom: 4px;
   }
 
-  // Omiljeni: srce na slici i uz naziv prodavca
+  // Omiljeni: srce na slici proizvoda
   .product-img-wrap { position: relative; }
   .product-img-wrap.unavailable img { opacity: 0.45; filter: grayscale(0.6); }
   .fav-btn {
@@ -163,14 +163,6 @@
     justify-content: center;
     cursor: pointer;
     ion-icon { font-size: 18px; color: var(--ion-color-danger); }
-  }
-  .fav-vendor {
-    background: none;
-    border: none;
-    padding: 0 2px;
-    cursor: pointer;
-    vertical-align: middle;
-    ion-icon { font-size: 13px; color: var(--ion-color-danger); }
   }
   .product-stock {
     margin: 0 0 2px;

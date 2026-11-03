@@ -5,6 +5,7 @@ using PijacaUDzepu.API.Hubs;
 using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Services;
 
@@ -40,7 +41,7 @@ public class FavoriteService : IFavoriteService
         if (favorite && existing == null)
         {
             if (!await _context.Products.AnyAsync(p => p.Id == productId))
-                throw new KeyNotFoundException("Proizvod nije pronađen.");
+                throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
             _context.Favorites.Add(new Favorite { UserId = userId, ProductId = productId });
         }
         else if (!favorite && existing != null)
@@ -56,7 +57,7 @@ public class FavoriteService : IFavoriteService
         if (favorite && existing == null)
         {
             if (!await _context.Vendors.AnyAsync(v => v.Id == vendorId))
-                throw new KeyNotFoundException("Prodavac nije pronađen.");
+                throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
             _context.Favorites.Add(new Favorite { UserId = userId, VendorId = vendorId });
         }
         else if (!favorite && existing != null)
@@ -87,9 +88,9 @@ public class FavoriteService : IFavoriteService
         if (enabled && existing == null)
         {
             var product = await _context.Products.FindAsync(productId)
-                ?? throw new KeyNotFoundException("Proizvod nije pronađen.");
+                ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
             if (product.IsAvailable)
-                throw new InvalidOperationException("Proizvod je već dostupan.");
+                throw new InvalidOperationException(L.T("Proizvod je već dostupan."));
             _context.StockAlerts.Add(new StockAlert { UserId = userId, ProductId = productId });
         }
         else if (!enabled && existing != null)

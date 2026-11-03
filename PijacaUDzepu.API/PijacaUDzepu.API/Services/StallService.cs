@@ -4,6 +4,7 @@ using PijacaUDzepu.API.Models;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Models.DTO.Output;
 using PijacaUDzepu.API.Services.Interfaces;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Services;
 
@@ -54,7 +55,7 @@ public class StallService : IStallService
     {
         var stall = await _context.Stalls.Include(s => s.Market)
             .FirstOrDefaultAsync(s => s.Id == id)
-            ?? throw new KeyNotFoundException("Tezga nije pronađena");
+            ?? throw new KeyNotFoundException(L.T("Tezga nije pronađena"));
 
         stall.MarketId = dto.MarketId;
         stall.Label = dto.Label;
@@ -68,7 +69,7 @@ public class StallService : IStallService
     public async Task Delete(int id)
     {
         var stall = await _context.Stalls.FindAsync(id)
-            ?? throw new KeyNotFoundException("Tezga nije pronađena");
+            ?? throw new KeyNotFoundException(L.T("Tezga nije pronađena"));
 
         stall.IsActive = false;
         await _context.SaveChangesAsync();

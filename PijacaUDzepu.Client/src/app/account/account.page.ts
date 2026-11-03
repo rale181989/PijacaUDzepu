@@ -44,7 +44,7 @@ export class AccountPage {
       },
       error: async err => {
         this.changing = false;
-        await this.toast(err.error?.message || err.error?.errors?.NewPassword?.[0] || 'Greška', 'danger');
+        await this.toast(err.error?.message || err.error?.errors?.NewPassword?.[0] || this.ts.t('error.generic'), 'danger');
       }
     });
   }
@@ -67,7 +67,7 @@ export class AccountPage {
                 await this.toast(this.ts.t('account.deleted'), 'medium');
                 this.router.navigateByUrl('/home', { replaceUrl: true });
               },
-              error: async err => this.toast(err.error?.message || 'Greška', 'danger')
+              error: async err => this.toast(err.error?.message || this.ts.t('error.generic'), 'danger')
             });
             return true;
           }

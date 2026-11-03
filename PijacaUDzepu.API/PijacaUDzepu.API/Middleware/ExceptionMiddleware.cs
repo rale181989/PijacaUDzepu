@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using PijacaUDzepu.API.Models.Errors;
+using PijacaUDzepu.API.Helpers;
 
 namespace PijacaUDzepu.API.Middleware;
 
@@ -38,7 +39,7 @@ public class ExceptionMiddleware
                 Title = "Internal Server Error",
                 Errors = _env.IsDevelopment()
                     ? new List<string> { ex.Message, ex.StackTrace ?? "" }
-                    : new List<string> { "Došlo je do greške. Pokušajte ponovo." }
+                    : new List<string> { L.T("Došlo je do greške. Pokušajte ponovo.") }
             };
 
             var json = JsonSerializer.Serialize(response, new JsonSerializerOptions

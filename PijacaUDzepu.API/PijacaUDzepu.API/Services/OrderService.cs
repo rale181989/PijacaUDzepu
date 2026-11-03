@@ -169,8 +169,8 @@ public class OrderService : IOrderService
                 // Stanje se ponovo čita: možda ga je u međuvremenu smanjila druga porudžbina
                 var left = await _context.Products.Where(p => p.Id == group.Key).Select(p => p.StockQuantity).FirstAsync();
                 throw new InvalidOperationException(left > 0
-                    ? $"{tracked.Name}: na stanju je još samo {left:0.##}."
-                    : $"{tracked.Name}: nema više na stanju.");
+                    ? L.T("{0}: na stanju je još samo {1}.", tracked.Name, left.Value.ToString("0.##"))
+                    : L.T("{0}: nema više na stanju.", tracked.Name));
             }
         }
     }
@@ -246,7 +246,7 @@ public class OrderService : IOrderService
         var trimmed = address?.Trim();
         // Oblik adrese se ne proverava (postoje i kratki nazivi ulica, brojevi sa slovom, "bb"...)
         if (fulfillment == FulfillmentType.Courier && string.IsNullOrEmpty(trimmed))
-            throw new InvalidOperationException("Za dostavu kurirom unesite adresu.");
+            throw new InvalidOperationException(L.T("Za dostavu kurirom unesite adresu."));
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
@@ -262,11 +262,11 @@ public class OrderService : IOrderService
         var unavailable = products.Where(p => !p.IsAvailable || !p.Vendor.IsActive).ToList();
         if (unavailable.Any())
             throw new InvalidOperationException(
-                $"Sledeći proizvodi nisu dostupni: {string.Join(", ", unavailable.Select(p => p.Name))}");
+                L.T("Sledeći proizvodi nisu dostupni: {0}", string.Join(", ", unavailable.Select(p => p.Name))));
 
         var missingIds = productIds.Except(products.Select(p => p.Id)).ToList();
         if (missingIds.Any())
-            throw new KeyNotFoundException($"Proizvodi sa ID {string.Join(", ", missingIds)} nisu pronađeni.");
+            throw new KeyNotFoundException(L.T("Proizvodi sa ID {0} nisu pronađeni.", string.Join(", ", missingIds)));
 
         // Pauza, neradni dan ili van radnog vremena: porudžbina se ne prima (poruka kaže kad se tezga otvara)
         var closed = products.Select(p => p.Vendor).DistinctBy(v => v.Id)
@@ -368,7 +368,7 @@ public class OrderService : IOrderService
     {
         var order = await OrdersWithDetails()
             .FirstOrDefaultAsync(o => o.Id == orderId)
-            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
         return MapToDto(order);
     }
@@ -377,18 +377,18 @@ public class OrderService : IOrderService
     {
         var order = await OrdersWithDetails()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.VendorId == vendorId)
-            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
         ValidateStatusTransition(order.Status, newStatus);
         var wasPending = order.Status == OrderStatus.Pending;
 
         // Kupac mora da zna zašto je porudžbina odbijena
         if (newStatus == OrderStatus.Rejected && string.IsNullOrWhiteSpace(message))
-            throw new InvalidOperationException("Upišite razlog odbijanja – kupac će ga dobiti.");
+            throw new InvalidOperationException(L.T("Upišite razlog odbijanja – kupac će ga dobiti."));
 
         // Kada robu nosi kurir, porudžbinu završava on potvrdom isporuke
         if (newStatus == OrderStatus.Completed && order.Fulfillment == FulfillmentType.Courier)
-            throw new InvalidOperationException("Ovu porudžbinu dostavlja kurir i on je završava kada je isporuči.");
+            throw new InvalidOperationException(L.T("Ovu porudžbinu dostavlja kurir i on je završava kada je isporuči."));
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
@@ -419,14 +419,14 @@ public class OrderService : IOrderService
     public async Task<OrderDto> CancelOrder(int orderId, int customerId)
     {
         if (!CustomerCancelEnabled)
-            throw new InvalidOperationException(CancelDisabledMessage);
+            throw new InvalidOperationException(L.T(CancelDisabledMessage));
 
         var order = await OrdersWithDetails()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId)
-            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
         if (order.Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Samo porudžbine na čekanju mogu biti otkazane.");
+            throw new InvalidOperationException(L.T("Samo porudžbine na čekanju mogu biti otkazane."));
 
         order.Status = OrderStatus.Cancelled;
         order.UpdatedAt = DateTime.UtcNow;
@@ -446,12 +446,12 @@ public class OrderService : IOrderService
     {
         var order = await OrdersWithDetails().FirstOrDefaultAsync(o => o.Id == orderId
                 && (customerId != null ? o.CustomerId == customerId : o.TrackingCode != null && o.TrackingCode == trackingCode))
-            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
         if (order.Status != OrderStatus.Completed)
-            throw new InvalidOperationException("Porudžbinu možete oceniti kada je preuzmete.");
+            throw new InvalidOperationException(L.T("Porudžbinu možete oceniti kada je preuzmete."));
         if (order.Rating != null)
-            throw new InvalidOperationException("Porudžbina je već ocenjena.");
+            throw new InvalidOperationException(L.T("Porudžbina je već ocenjena."));
 
         order.Rating = new OrderRating
         {
@@ -475,13 +475,13 @@ public class OrderService : IOrderService
     public async Task<OrderDto> CancelTrackedOrder(string code, int orderId)
     {
         if (!CustomerCancelEnabled)
-            throw new InvalidOperationException(CancelDisabledMessage);
+            throw new InvalidOperationException(L.T(CancelDisabledMessage));
 
         var order = (await LoadTrackedOrders(code)).FirstOrDefault(o => o.Id == orderId)
-            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
         if (order.Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Samo porudžbine na čekanju mogu biti otkazane.");
+            throw new InvalidOperationException(L.T("Samo porudžbine na čekanju mogu biti otkazane."));
 
         order.Status = OrderStatus.Cancelled;
         order.UpdatedAt = DateTime.UtcNow;
@@ -499,7 +499,7 @@ public class OrderService : IOrderService
     private async Task<List<Order>> LoadTrackedOrders(string code)
     {
         if (string.IsNullOrWhiteSpace(code) || code.Length > 64)
-            throw new KeyNotFoundException("Link za praćenje nije ispravan.");
+            throw new KeyNotFoundException(L.T("Link za praćenje nije ispravan."));
 
         var orders = await OrdersWithDetails()
             .Where(o => o.TrackingCode == code)
@@ -508,7 +508,7 @@ public class OrderService : IOrderService
 
         var stillActive = orders.Any(o => ActiveStatuses.Contains(o.Status) || o.Status == OrderStatus.InDelivery);
         if (orders.Count == 0 || (!stillActive && orders.Max(o => o.UpdatedAt) < DateTime.UtcNow - TrackingValidity))
-            throw new KeyNotFoundException("Link za praćenje nije ispravan ili je istekao.");
+            throw new KeyNotFoundException(L.T("Link za praćenje nije ispravan ili je istekao."));
 
         return orders;
     }
@@ -580,7 +580,7 @@ public class OrderService : IOrderService
     public async Task<OrderDto> AcceptCourierOrder(int orderId, int courierId)
     {
         if (!await _context.CourierProfiles.AnyAsync(c => c.UserId == courierId && c.IsOnShift))
-            throw new UnauthorizedAccessException("Uključite smenu da biste prihvatali porudžbine.");
+            throw new UnauthorizedAccessException(L.T("Uključite smenu da biste prihvatali porudžbine."));
 
         var now = DateTime.UtcNow;
 
@@ -595,8 +595,8 @@ public class OrderService : IOrderService
         if (updated == 0)
         {
             if (!await _context.Orders.AnyAsync(o => o.Id == orderId))
-                throw new KeyNotFoundException("Porudžbina nije pronađena.");
-            throw new InvalidOperationException("Porudžbinu je već preuzeo drugi kurir ili više nije dostupna.");
+                throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
+            throw new InvalidOperationException(L.T("Porudžbinu je već preuzeo drugi kurir ili više nije dostupna."));
         }
 
         var order = await OrdersWithDetails().FirstAsync(o => o.Id == orderId);
@@ -623,7 +623,7 @@ public class OrderService : IOrderService
     public async Task DeclineCourierOrder(int orderId, int courierId)
     {
         var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.Fulfillment == FulfillmentType.Courier)
-            ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
         if (!await _context.CourierDeclines.AnyAsync(d => d.OrderId == orderId && d.CourierId == courierId))
         {
@@ -646,7 +646,7 @@ public class OrderService : IOrderService
             .Select(o => o.Id)
             .ToListAsync();
         if (ids.Count == 0)
-            throw new InvalidOperationException("Ove porudžbine su već preuzete ili više nisu dostupne.");
+            throw new InvalidOperationException(L.T("Ove porudžbine su već preuzete ili više nisu dostupne."));
 
         var accepted = new List<OrderDto>();
         foreach (var id in ids)
@@ -655,7 +655,7 @@ public class OrderService : IOrderService
             catch (InvalidOperationException) { }
         }
         if (accepted.Count == 0)
-            throw new InvalidOperationException("Ove porudžbine su već preuzete ili više nisu dostupne.");
+            throw new InvalidOperationException(L.T("Ove porudžbine su već preuzete ili više nisu dostupne."));
         return accepted;
     }
 
@@ -704,7 +704,7 @@ public class OrderService : IOrderService
     {
         var order = await LoadCourierOrder(orderId, courierId);
         if (order.Status is not (OrderStatus.Confirmed or OrderStatus.ReadyForPickup))
-            throw new InvalidOperationException("Robu možete preuzeti tek kada prodavac potvrdi porudžbinu.");
+            throw new InvalidOperationException(L.T("Robu možete preuzeti tek kada prodavac potvrdi porudžbinu."));
 
         order.Status = OrderStatus.InDelivery;
         order.PickedUpAt = DateTime.UtcNow;
@@ -719,7 +719,7 @@ public class OrderService : IOrderService
     {
         var order = await LoadCourierOrder(orderId, courierId);
         if (order.Status != OrderStatus.InDelivery)
-            throw new InvalidOperationException("Isporuku možete potvrditi tek nakon što preuzmete robu.");
+            throw new InvalidOperationException(L.T("Isporuku možete potvrditi tek nakon što preuzmete robu."));
 
         order.Status = OrderStatus.Completed;
         order.DeliveredAt = DateTime.UtcNow;
@@ -732,7 +732,7 @@ public class OrderService : IOrderService
 
     private async Task<Order> LoadCourierOrder(int orderId, int courierId) =>
         await OrdersWithDetails().FirstOrDefaultAsync(o => o.Id == orderId && o.CourierId == courierId)
-        ?? throw new KeyNotFoundException("Porudžbina nije pronađena.");
+        ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
 
     private Task<List<int>> VendorUserIds(int vendorId) =>
         _context.VendorUsers.Where(vu => vu.VendorId == vendorId).Select(vu => vu.UserId).ToListAsync();
@@ -877,7 +877,7 @@ public class OrderService : IOrderService
 
         if (!valid)
             throw new InvalidOperationException(
-                $"Nije moguć prelaz statusa iz '{current}' u '{next}'.");
+                L.T("Nije moguć prelaz statusa iz '{0}' u '{1}'.", current, next));
     }
 
     private static OrderDto MapToDto(Order o) => new()
