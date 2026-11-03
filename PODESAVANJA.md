@@ -10,24 +10,58 @@ U nazivima env varijabli dvostruka donja crta `__` znači „pod-podešavanje”
 
 ---
 
-## 0. Admin lozinka i test nalozi – HITNO pre sledećeg deploy-a
+## 0. Trenutno: DEMO faza
 
-- [ ] `ADMIN_PASSWORD` dodat na Render
-- [ ] Odlučeno šta sa test nalozima (`DEMO_ACCOUNTS`)
+Aplikacija je za sada demo: test nalozi i demo prodavci/proizvodi ostaju, admin može da ostane sa `admin1234`.
+Na Render-u je za to potrebna **samo jedna** varijabla:
 
-Server od sada **u produkciji ne pravi test naloge** (kupac, kurir1/2, marko… sa lozinkama `kupac1234`, `vendor1234`…),
-a postojeće test naloge koji i dalje imaju te poznate lozinke **zaključava** pri pokretanju.
-Prijava na njih tada javlja „Nalog je onemogućen”.
+- [ ] `DEMO_ACCOUNTS` = `true` dodat na Render (pre sledećeg deploy-a)
 
-| Env varijabla | Vrednost |
-|---|---|
-| `ADMIN_PASSWORD` | jaka lozinka za nalog `admin` (najmanje 8 znakova, bar jedno malo slovo). Ako admin i dalje ima `admin1234`, server je zameni ovom. Bez nje u logu stoji kritično upozorenje. |
-| `DEMO_ACCOUNTS` | `true` dok još testiraš sa test nalozima (ostaju aktivni). Pre puštanja pravim korisnicima **obriši** ovu varijablu. |
+Bez nje server u produkciji **zaključava** test naloge koji imaju poznate lozinke (kupac, kurir1/2, marko… –
+`kupac1234`, `kurir1234`, `vendor1234`) i prijava na njih javlja „Nalog je onemogućen”. Admin se ne zaključava.
 
-Pravim prodavcima i kuririma napravi naloge preko admin panela (pozivnica / „Dodaj kurira”), sa pravim lozinkama.
+`ADMIN_PASSWORD` u demo fazi nije obavezan. Bez njega admin radi sa `admin1234`, a u Render logu pri svakom
+pokretanju stoji upozorenje – to je očekivano dok traje demo. Imaj na umu da je `admin1234` zapisan u README-u,
+pa ko zna adresu aplikacije može da uđe kao admin; u demo podacima nema ničeg pravog, pa to sada nije problem.
 
-Ostala zaštita radi sama: lozinke najmanje 8 znakova, posle 10 pogrešnih pokušaja nalog je zaključan 15 minuta,
-najviše 10 pokušaja prijave u minuti sa jedne IP adrese.
+Ostala zaštita radi i u demo fazi: lozinke najmanje 8 znakova, posle 10 pogrešnih pokušaja nalog je zaključan
+15 minuta, najviše 10 pokušaja prijave u minuti sa jedne IP adrese.
+
+---
+
+## 0a. Prelazak u produkciju – kada javiš „ide u produkciju”
+
+Redom, pre nego što aplikaciju dobiju pravi kupci i prodavci. Stavke označene sa 🤖 radi Claude u kodu
+(javi mu kad kreće), ostalo se podešava na Render-u i u spoljnim servisima.
+
+**Nalozi i demo podaci**
+- [ ] `ADMIN_PASSWORD` na Render-u = jaka lozinka (najmanje 8 znakova, bar jedno malo slovo).
+      Pri pokretanju server zameni `admin1234` ovom lozinkom; posle se prijavljuješ njom.
+- [ ] **Obriši** `DEMO_ACCOUNTS` sa Render-a. Test nalozi se pri pokretanju sami zaključaju.
+- [ ] 🤖 Uklanjanje demo prodavaca, tezgi, proizvoda i test porudžbina iz baze (četiri pijace ostaju).
+      Uradi backup/granu baze na Neon-u pre toga (odeljak 9).
+- [ ] 🤖 Iz README-a izbaciti demo lozinke.
+- [ ] Pravi prodavci: Admin → Prodavci → napravi prodavca i pošalji pozivnicu (traži e-mail, odeljak 1).
+- [ ] Pravi kuriri: Admin → Korisnici → „Dodaj kurira”, sa pravim lozinkama.
+
+**Obavezni servisi**
+- [ ] E-mail (Brevo) – odeljak 1. Bez njega ne rade pozivnice, zaboravljena lozinka i e-mail o odbijenoj porudžbini.
+- [ ] Slike u Cloudflare R2 – odeljak 7. Bez toga slike prodavaca nestaju pri svakom deploy-u.
+- [ ] Backup baze (Neon) – odeljak 9.
+
+**Preporučeno**
+- [ ] Push obaveštenja (Firebase) – odeljak 3 (🤖 uključuje `pushEnabled` i pravi novi APK kad je `google-services.json` tu).
+- [ ] Praćenje grešaka (Sentry) – odeljak 8.
+- [ ] Cena Eko kurira – odeljak 4.
+
+**Pravno i objava**
+- [ ] Podaci o firmi u pravnim tekstovima – odeljak 5 (🤖 upisuje kad dobije podatke).
+- [ ] 🤖 APK za objavu: bez `http://` (odeljak 6), potpisan ključem za Google Play.
+
+**Provera posle deploy-a**
+- [ ] Prijava kao `admin` novom lozinkom radi, a `admin1234` više ne.
+- [ ] Prijava kao `kupac` / `kupac1234` javlja „Nalog je onemogućen”.
+- [ ] Probna porudžbina od početka do kraja (kupac → prodavac → kurir), pa je otkaži/odbij.
 
 ---
 
