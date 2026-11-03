@@ -193,3 +193,31 @@ Lokalno (bez R2 varijabli) slike se i dalje čuvaju u `wwwroot/Resources/Images`
 
 > Slike ubačene na Render pre ovoga su već izgubljene (ili će biti pri sledećem deploy-u) –
 > prodavci treba da ih ponovo ubace. Seed slike (Unsplash) nisu pogođene.
+
+---
+
+## 8. Praćenje grešaka (Sentry) – preporučeno
+
+- [ ] Napravljen Sentry projekat
+- [ ] `SENTRY_DSN` dodat na Render
+
+Bez ovoga greške iz produkcije vidiš samo u Render logovima (i to kratko). Sa Sentry-jem stižu na e-mail,
+sa detaljima i brojem korisnika koje su pogodile.
+
+1. <https://sentry.io> → besplatan nalog (Developer plan) → **Create Project** → platforma **ASP.NET Core**.
+2. Kopiraj **DSN** (izgleda kao `https://…@o….ingest.sentry.io/…`).
+3. Na Render-u dodaj `SENTRY_DSN` = taj DSN i pokreni deploy.
+4. U Sentry-ju podesi **Alerts** (npr. e-mail za svaku novu grešku).
+
+---
+
+## 9. Backup baze (Neon) – proveri jednom
+
+- [ ] Proveren period čuvanja istorije (point-in-time restore) na Neon planu
+- [ ] Probno vraćanje urađeno
+
+1. Neon konzola → projekat → **Settings → Storage / History retention**: vidi koliko dana unazad može da se vrati baza
+   (besplatan plan ima kratak period – za prave porudžbine preporučen je plaćeni plan sa dužim).
+2. Probaj vraćanje bez rizika: **Branches → Create branch** od stanja „pre sat vremena” i pogledaj podatke u njoj.
+   Glavna baza se ne dira; posle obriši probnu granu.
+3. Zapiši gde je uputstvo, da u hitnom slučaju ne tražiš.

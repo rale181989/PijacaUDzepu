@@ -89,6 +89,19 @@ builder.Services.AddRateLimiter(options =>
         }));
 });
 
+// Praćenje grešaka (Sentry): uključuje se samo kada je SENTRY_DSN podešen
+var sentryDsn = Environment.GetEnvironmentVariable("SENTRY_DSN");
+if (!string.IsNullOrWhiteSpace(sentryDsn))
+{
+    builder.WebHost.UseSentry(o =>
+    {
+        o.Dsn = sentryDsn;
+        o.Environment = builder.Environment.EnvironmentName;
+        o.SendDefaultPii = false;
+        o.TracesSampleRate = 0;
+    });
+}
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>();
@@ -139,3 +152,6 @@ static string ClientIp(HttpContext context)
     var ip = context.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim();
     return string.IsNullOrEmpty(ip) ? context.Connection.RemoteIpAddress?.ToString() ?? "unknown" : ip;
 }
+
+// Za integracione testove (WebApplicationFactory<Program>)
+public partial class Program { }

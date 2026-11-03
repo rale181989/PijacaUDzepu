@@ -19,7 +19,17 @@ dotnet build
 dotnet ef migrations add <Name>             # dotnet-ef 9.x is installed globally
 dotnet ef migrations remove
 ```
-Migrations are applied automatically on startup: `Seed.SeedData` calls `Database.MigrateAsync()` and then seeds the data. No backend test project exists.
+Migrations are applied automatically on startup: `Seed.SeedData` calls `Database.MigrateAsync()` and then seeds the data.
+
+### API tests (run from `PijacaUDzepu.API`)
+```
+dotnet test PijacaUDzepu.API.Tests          # integration tests against a real local Postgres
+```
+- `ApiFactory` (a `WebApplicationFactory<Program>`) drops and recreates the `PijacaUDzepu_Test` database on every run, then starts the whole API in Development, so migrations and the demo data run too. Use the `TEST_DATABASE_URL` env var to point it at another server.
+- Each request gets its own `X-Forwarded-For`, so the login rate limit doesn't interfere.
+- All test classes share the `api` collection, so they run sequentially on one database. Pick different vendors or products per test so tests don't affect each other.
+- The covered flows are: the checkout split and fees, the courier accept race, stock overselling and its restore, a paused vendor, the mandatory reject reason, report totals, password rules, lockout, forgot password, account deletion and the health endpoint.
+- The Dockerfile publishes only the API project, so the test project never reaches the image.
 
 ### Client (run from `PijacaUDzepu.Client`)
 ```
@@ -158,6 +168,10 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - nine vendor users (`marko`, `jovana`, `nikola`, `milan`, `jelena`, `dragan`, `ana`, `bojan`, `ivana`) / `vendor1234` (VendorAdmin)
 - **Production without `DEMO_ACCOUNTS`:** no demo data. Demo accounts that still have their default password are locked (`LockoutEnd = DateTimeOffset.MaxValue` marks a seed lock; login says the account is disabled). Running in demo mode unlocks them again.
 - **Admin in production:** created from `ADMIN_PASSWORD` if it doesn't exist. If `admin` still has `admin1234` and `ADMIN_PASSWORD` is set, the password is reset to it; without the variable the server logs a critical warning on every start.
+
+## Error tracking
+
+Sentry (`Sentry.AspNetCore`) is enabled only when `SENTRY_DSN` is set (`Program.cs`, no PII, no tracing). `ExceptionMiddleware` handles exceptions before Sentry's middleware sees them, so it calls `SentrySdk.CaptureException` itself; without a DSN that call does nothing.
 
 ## Security
 

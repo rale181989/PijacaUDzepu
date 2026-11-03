@@ -26,6 +26,8 @@ public class ExceptionMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+            // Greška ovde ne stiže do Sentry middleware-a (već je obrađena), pa se šalje ručno; bez SENTRY_DSN ne radi ništa
+            Sentry.SentrySdk.CaptureException(ex);
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

@@ -73,6 +73,17 @@ Test nalozi (samo lokalno, u Development režimu): `admin`/`admin1234`, `kupac`/
 
 Android: `npm run build:android`, pa `npm run open:android` (Android Studio).
 
+## Testovi
+```
+cd PijacaUDzepu.API
+dotnet test PijacaUDzepu.API.Tests     # pokreće ceo API nad posebnom bazom PijacaUDzepu_Test (lokalni Postgres)
+```
+Pokrivaju: podelu korpe po prodavcima i iznose, „prvi kurir dobija porudžbinu”, stanje (bez prodaje preko stanja),
+zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku i brisanje naloga.
+
+## Praćenje grešaka
+Ako je na serveru podešen `SENTRY_DSN`, greške iz produkcije stižu u Sentry (sa detaljima, bez ličnih podataka).
+
 ## Dokumentacija
 - [`CLAUDE.md`](CLAUDE.md) – arhitektura, pravila i komande za razvoj
 - [`PODESAVANJA.md`](PODESAVANJA.md) – šta treba podesiti u produkciji (env varijable, Firebase, Brevo, R2…)
