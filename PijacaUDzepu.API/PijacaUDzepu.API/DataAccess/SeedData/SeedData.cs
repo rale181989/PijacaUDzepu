@@ -42,7 +42,11 @@ public static class Seed
         await EnsureAdmin(userManager, isDevelopment, logger);
         await FixDemoData(context);
 
-        var demo = isDevelopment || Environment.GetEnvironmentVariable("DEMO_ACCOUNTS") == "true";
+        // "true", "True", " 1 ", "yes"... da razmak ili veliko slovo na Render-u ne zaključaju test naloge
+        var demoSetting = Environment.GetEnvironmentVariable("DEMO_ACCOUNTS")?.Trim().ToLowerInvariant();
+        var demo = isDevelopment || demoSetting is "true" or "1" or "yes" or "da";
+        logger.LogWarning("Test nalozi: {State} (DEMO_ACCOUNTS={Value}).",
+            demo ? "uključeni" : "zaključani", demoSetting ?? "nije postavljen");
         if (!demo)
         {
             await LockDemoAccounts(userManager, logger);
@@ -57,7 +61,11 @@ public static class Seed
                 UserName = "kupac",
                 FirstName = "Petar",
                 LastName = "Petrović",
-                Email = "petar@example.com"
+                Email = "petar@example.com",
+                PhoneNumber = "060 123 4567",
+                Address = "Dunavska 5",
+                Floor = "2",
+                Apartment = "7"
             };
             var result = await userManager.CreateAsync(customer, "kupac1234");
             if (result.Succeeded)

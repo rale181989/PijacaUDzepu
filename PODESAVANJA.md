@@ -20,6 +20,12 @@ Na Render-u je za to potrebna **samo jedna** varijabla:
 Bez nje server u produkciji **zaključava** test naloge koji imaju poznate lozinke (kupac, kurir1/2, marko… –
 `kupac1234`, `kurir1234`, `vendor1234`) i prijava na njih javlja „Nalog je onemogućen”. Admin se ne zaključava.
 
+Kako se dodaje: Render → servis → **Environment** → **Add Environment Variable** → Key `DEMO_ACCOUNTS`,
+Value `true` → **Save Changes** (Render sam restartuje servis). Pri pokretanju server otključa test naloge.
+Provera: u Render **Logs** posle restarta stoji `Test nalozi: uključeni (DEMO_ACCOUNTS=true)`;
+ako piše `zaključani (DEMO_ACCOUNTS=nije postavljen)`, varijabla nije sačuvana na pravom servisu.
+Prihvata se i `True`, `1`, `yes`, `da`.
+
 `ADMIN_PASSWORD` u demo fazi nije obavezan. Bez njega admin radi sa `admin1234`, a u Render logu pri svakom
 pokretanju stoji upozorenje – to je očekivano dok traje demo. Imaj na umu da je `admin1234` zapisan u README-u,
 pa ko zna adresu aplikacije može da uđe kao admin; u demo podacima nema ničeg pravog, pa to sada nije problem.

@@ -9,6 +9,7 @@ import { FulfillmentType } from '../models/order.model';
 import { environment } from '../../environments/environment';
 import { TranslateService } from '../services/translate.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
+import { deliveryAddressOf } from '../models/user.model';
 
 @Component({
   selector: 'app-cart',
@@ -42,6 +43,17 @@ export class CartPage implements OnInit {
   ngOnInit() {
     this.cartService.cart$.subscribe(items => this.items = items);
     this.phone = this.authService.currentUser?.phoneNumber ?? '';
+    this.address = deliveryAddressOf(this.authService.currentUser);
+    // Sačuvani korisnik je možda od pre nego što je adresa postojala; ne prepisuje ono što je već upisano
+    if (this.authService.isLoggedIn) {
+      this.authService.loadCurrentUser().subscribe({
+        next: user => {
+          if (!this.phone.trim()) this.phone = user.phoneNumber ?? '';
+          if (!this.address.trim()) this.address = deliveryAddressOf(user);
+        },
+        error: () => {}
+      });
+    }
     this.orderService.getDeliveryOptions().subscribe({ next: o => this.courierFee = o.courierFee, error: () => {} });
   }
 
@@ -154,7 +166,7 @@ export class CartPage implements OnInit {
         this.cartService.clearCart();
         this.note = '';
         this.guestName = '';
-        this.address = '';
+        this.address = deliveryAddressOf(this.authService.currentUser);
         const toast = await this.toastController.create({
           message: fulfillment === 'Pickup' ? this.ts.t('cart.reserveSuccess') : this.ts.t('cart.orderSuccess'),
           duration: 3000,

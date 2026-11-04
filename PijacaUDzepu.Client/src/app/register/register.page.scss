@@ -7,4 +7,16 @@
     margin-bottom: 12px;
     --border-radius: 8px;
   }
+
+  .row {
+    display: flex;
+    gap: 12px;
+    ion-item { flex: 1; }
+  }
+
+  .hint {
+    margin: -4px 4px 0;
+    font-size: 13px;
+    color: var(--ion-color-medium);
+  }
 }

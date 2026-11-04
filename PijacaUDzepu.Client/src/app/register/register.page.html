@@ -31,10 +31,26 @@
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.phone' | t" labelPlacement="floating" type="tel"
-                   [(ngModel)]="model.phoneNumber" name="phoneNumber"></ion-input>
+                   [(ngModel)]="model.phoneNumber" name="phoneNumber" required></ion-input>
       </ion-item>
+      <ion-item>
+        <ion-input [label]="'register.address' | t" labelPlacement="floating"
+                   [placeholder]="'cart.addressPlaceholder' | t"
+                   [(ngModel)]="model.address" name="address" required></ion-input>
+      </ion-item>
+      <div class="row">
+        <ion-item>
+          <ion-input [label]="'register.floor' | t" labelPlacement="floating"
+                     [(ngModel)]="model.floor" name="floor" maxlength="20"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'register.apartment' | t" labelPlacement="floating"
+                     [(ngModel)]="model.apartment" name="apartment" maxlength="20"></ion-input>
+        </ion-item>
+      </div>
+      <p class="hint">{{ 'register.addressHint' | t }}</p>
 
-      <ion-button expand="block" type="submit" [disabled]="loading" class="ion-margin-top">
+      <ion-button expand="block" type="submit" [disabled]="!canSubmit" class="ion-margin-top">
         <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
         {{ 'register.submit' | t }}
       </ion-button>

@@ -69,6 +69,11 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> Register(RegisterDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            throw new InvalidOperationException(L.T("Unesite broj telefona."));
+        if (string.IsNullOrWhiteSpace(dto.Address))
+            throw new InvalidOperationException(L.T("Unesite adresu."));
+
         if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
             throw new InvalidOperationException(L.T("Korisničko ime je zauzeto."));
 
@@ -78,7 +83,10 @@ public class AuthService : IAuthService
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber
+            PhoneNumber = dto.PhoneNumber.Trim(),
+            Address = dto.Address.Trim(),
+            Floor = Clean(dto.Floor),
+            Apartment = Clean(dto.Apartment)
         };
 
         var result = await _userManager.CreateAsync(user, dto.Password);
@@ -204,6 +212,25 @@ public class AuthService : IAuthService
             User = await MapToUserDto(user)
         };
     }
+
+    public async Task<UserDto> UpdateProfile(int userId, UpdateProfileDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            throw new InvalidOperationException(L.T("Unesite broj telefona."));
+
+        var user = await _userManager.FindByIdAsync(userId.ToString())
+            ?? throw new KeyNotFoundException(L.T("Korisnik nije pronađen."));
+
+        user.PhoneNumber = dto.PhoneNumber.Trim();
+        user.Address = Clean(dto.Address);
+        user.Floor = Clean(dto.Floor);
+        user.Apartment = Clean(dto.Apartment);
+        await _userManager.UpdateAsync(user);
+
+        return await MapToUserDto(user);
+    }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     public async Task ChangePassword(int userId, string currentPassword, string newPassword)
     {
@@ -366,6 +393,9 @@ public class AuthService : IAuthService
             LastName = user.LastName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
+            Address = user.Address,
+            Floor = user.Floor,
+            Apartment = user.Apartment,
             IsActive = user.IsActive,
             Roles = roles.ToList(),
             Vendors = user.VendorUsers.Select(vu => new VendorShortDto

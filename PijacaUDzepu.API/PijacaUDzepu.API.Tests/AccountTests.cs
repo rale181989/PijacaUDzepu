@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Net;
 
 namespace PijacaUDzepu.API.Tests;
@@ -17,7 +18,7 @@ public class AccountTests
         var res = await api.Send(HttpMethod.Post, "/api/auth/register", new
         {
             userName, password = "lozinka123", firstName = "Test", lastName = "Korisnik",
-            email = $"{userName}@example.com", phoneNumber = "0600000000"
+            email = $"{userName}@example.com", phoneNumber = "0600000000", address = "Dunavska 5"
         });
         res.EnsureSuccessStatusCode();
         return userName;
@@ -29,9 +30,39 @@ public class AccountTests
         var api = await _factory.As();
         var res = await api.Send(HttpMethod.Post, "/api/auth/register", new
         {
-            userName = "kratka" + Random.Shared.Next(100000), password = "abc12", firstName = "A", lastName = "B", phoneNumber = "060"
+            userName = "kratka" + Random.Shared.Next(100000), password = "abc12", firstName = "A", lastName = "B", phoneNumber = "060", address = "Dunavska 5"
         });
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    private record Profile(string? PhoneNumber, string? Address, string? Floor, string? Apartment);
+    private record Auth(Profile User);
+
+    [Fact]
+    public async Task Registration_requires_phone_and_address_and_keeps_floor_and_apartment()
+    {
+        var api = await _factory.As();
+        var noAddress = await api.Send(HttpMethod.Post, "/api/auth/register", new
+        {
+            userName = $"noaddr{Guid.NewGuid():N}"[..20], password = "lozinka123", firstName = "A", lastName = "B", phoneNumber = "0601234567"
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, noAddress.StatusCode);
+        Assert.Equal("Unesite adresu.", await Api.Message(noAddress));
+
+        var userName = $"addr{Guid.NewGuid():N}"[..20];
+        var res = await api.Send(HttpMethod.Post, "/api/auth/register", new
+        {
+            userName, password = "lozinka123", firstName = "A", lastName = "B",
+            phoneNumber = " 0601234567 ", address = " Bulevar oslobođenja 10 ", floor = "3", apartment = ""
+        });
+        res.EnsureSuccessStatusCode();
+        var created = (await res.Content.ReadFromJsonAsync<Auth>())!.User;
+        Assert.Equal(new Profile("0601234567", "Bulevar oslobođenja 10", "3", null), created);
+
+        var user = await _factory.As(userName, "lozinka123");
+        var update = await user.Send(HttpMethod.Put, "/api/auth/profile", new { phoneNumber = "0611111111", address = "Dunavska 5", floor = "", apartment = "12" });
+        update.EnsureSuccessStatusCode();
+        Assert.Equal(new Profile("0611111111", "Dunavska 5", null, "12"), await user.Get<Profile>("/api/auth/me"));
     }
 
     [Fact]

@@ -294,11 +294,11 @@ async function build() {
   s = new S('Sadrzaj - dva ekrana', 'Kupci', 'kupac');
   s.title('Nalog kupca');
   s.steps([
-    { h: 'Prijava i registracija', d: 'Nalog nije obavezan, ali sa njim vidite sve porudžbine na svakom uređaju.' },
+    { h: 'Registracija', d: 'Nalog nije obavezan. Pri registraciji upisujete telefon i adresu (sprat i stan po želji); oni se sami upisuju u korpu.' },
     { h: 'Moje porudžbine', d: 'Spisak sa statusom, iznosom, načinom preuzimanja, porukom prodavca i imenom kurira.' },
     { h: 'Detalji', n: '→', d: 'Dodir na porudžbinu otvara detalje (sledeća strana).' }
   ], 0.6, 1.75, 5.2);
-  s.phone('c-login', LEFT_X, PHONE_Y, PHONE_H, 'Ekran za prijavu', [[1, 0.5, 0.465]]);
+  s.phone('c-register', LEFT_X, PHONE_Y, PHONE_H, 'Registracija sa telefonom i adresom', [[1, 0.93, 0.56]]);
   s.phone('c-my-orders', RIGHT_X, PHONE_Y, PHONE_H, 'Spisak porudžbina kupca', [[2, 0.85, 0.137]]);
 
   // 10. Detalji porudžbine
@@ -481,11 +481,11 @@ async function build() {
   s.steps([
     { h: 'Zaboravljena lozinka', d: 'Na prijavi: „Zaboravili ste lozinku?”. Link za novu lozinku stiže na e-mail naloga i važi 2 sata.' },
     { h: 'Bez e-maila na nalogu', n: '✓', d: 'Kuriri i prodavci bez e-maila traže novu lozinku od administratora.' },
-    { h: 'Moj nalog', d: 'U meniju ☰ (ili klik na svoje ime): promena lozinke.' },
+    { h: 'Moj nalog', d: 'U meniju ☰ (ili klik na svoje ime): telefon i adresa za dostavu, promena lozinke.' },
     { h: 'Brisanje naloga', d: 'Briše nalog i lične podatke; porudžbine ostaju prodavcu bez vašeg imena, telefona i adrese. Nije moguće dok traje porudžbina ili dostava.' }
   ], 0.6, 1.75, 5.2);
   s.phone('a-forgot', LEFT_X, PHONE_Y, PHONE_H, 'Zahtev za novu lozinku', [[1, 0.95, 0.27]]);
-  s.phone('a-account', RIGHT_X, PHONE_Y, PHONE_H, 'Moj nalog: promena lozinke i brisanje naloga', [[3, 0.93, 0.23], [4, 0.93, 0.565]]);
+  s.phone('a-account', RIGHT_X, PHONE_Y, PHONE_H, 'Moj nalog: adresa za dostavu, lozinka i brisanje naloga', [[3, 0.93, 0.22], [4, 0.93, 0.965]]);
 
   // 23. Pomoć
   s = new S('Sadrzaj - jedan ekran', 'Pomoć');

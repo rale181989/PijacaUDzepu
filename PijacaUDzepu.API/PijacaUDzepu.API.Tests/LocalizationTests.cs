@@ -49,7 +49,7 @@ public class LocalizationTests
         api.Http.DefaultRequestHeaders.Add("Accept-Language", "en");
         var res = await api.Send(HttpMethod.Post, "/api/auth/register", new
         {
-            userName = "kratka" + Random.Shared.Next(100000), password = "abc12", firstName = "A", lastName = "B", phoneNumber = "060"
+            userName = "kratka" + Random.Shared.Next(100000), password = "abc12", firstName = "A", lastName = "B", phoneNumber = "060", address = "Dunavska 5"
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);

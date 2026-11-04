@@ -113,6 +113,19 @@ public class AuthController : BaseApiController
         }
     }
 
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
+    {
+        try
+        {
+            return Ok(await _authService.UpdateProfile(User.GetUserId(), dto));
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPut("change-password")]
     public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
     {

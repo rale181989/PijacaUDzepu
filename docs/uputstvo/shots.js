@@ -81,11 +81,23 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   await page.evaluate(code => { localStorage.removeItem('cart'); localStorage.setItem('guestOrders', JSON.stringify([code])); }, demo.trackingCode);
   await shot(page, 'c-track', '/prati/' + demo.trackingCode);
   await shot(page, 'c-login', '/login');
+  await shot(page, 'c-register', '/register', async p => {
+    // Redom: ime, prezime, korisničko ime, lozinka, telefon, adresa, sprat, stan
+    const values = ['Petar', 'Petrović', 'petar', 'lozinka123', '060 123 4567', 'Dunavska 5', '2', '7'];
+    const inputs = await p.$$('.register-container ion-input input');
+    for (let i = 0; i < values.length; i++) await inputs[i].type(values[i]);
+  });
   await shot(page, 'a-forgot', '/forgot-password');
   await shot(page, 'c-support', '/podrska');
 
   // Prijavljeni kupac
   await asUser(page, demo.kupac);
+  // Adresa za dostavu demo kupca (lokalna baza je možda starija od tih polja)
+  await page.evaluate(token => fetch('http://localhost:5000/api/auth/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify({ phoneNumber: '060 123 4567', address: 'Dunavska 5', floor: '2', apartment: '7' })
+  }), demo.kupac.token);
   await shot(page, 'c-my-orders', '/my-orders');
   await shot(page, 'c-order-detail', '/order-detail/' + demo.orders[0]);
   await shot(page, 'a-account', '/account');

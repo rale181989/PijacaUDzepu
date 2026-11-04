@@ -13,7 +13,7 @@ import { RegisterDto } from '../models/user.model';
 })
 export class RegisterPage {
   model: RegisterDto = {
-    userName: '', password: '', firstName: '', lastName: '', phoneNumber: ''
+    userName: '', password: '', firstName: '', lastName: '', phoneNumber: '', address: '', floor: '', apartment: ''
   };
   loading = false;
 
@@ -24,7 +24,15 @@ export class RegisterPage {
     private ts: TranslateService
   ) {}
 
+  // Telefon i adresa su obavezni (dostava); sprat i stan nisu
+  get canSubmit(): boolean {
+    const m = this.model;
+    return !this.loading && !!m.firstName.trim() && !!m.lastName.trim() && m.userName.trim().length >= 3
+      && m.password.length >= 8 && !!m.phoneNumber.trim() && !!m.address.trim();
+  }
+
   async register() {
+    if (!this.canSubmit) return;
     this.loading = true;
     this.authService.register(this.model).subscribe({
       next: () => {

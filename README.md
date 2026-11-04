@@ -9,10 +9,11 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 ## Funkcije
 
 **Kupac** (nalog nije obavezan)
-- Katalog sa filterima (pijaca, prodavac, grupa), pretragom bez kvačica i sortiranjem; kod sortiranja po ceni bira se jedinica mere
+- Katalog sa filterima (pijaca, prodavac, grupa), pretragom bez kvačica (polje čitljivo i na uskim telefonima) i sortiranjem; kod sortiranja po ceni bira se jedinica mere
 - Grupe proizvoda: voće, povrće, začinsko bilje, mahunarke, pečurke, mlečni proizvodi, jaja, meso, med i pčelinji proizvodi, zimnica, suvo voće i orašasti plodovi, kolači, kućna hemija, ostalo
 - Korpa sa robom više prodavaca; svaki prodavac dobija svoj deo porudžbine
 - Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
+- Registracija traži telefon i adresu (sprat i stan opciono); upisuju se sami u korpu, a menjaju se u „Moj nalog”
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
 - Moje porudžbine; odbijena porudžbina je precrtana, sa razlogom prodavca
 - Omiljeni proizvodi – srce na slici (i bez naloga), filter „Omiljeni” i „Obavesti me kad bude dostupno”
@@ -44,7 +45,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 
 **Nalog (sve uloge)**
 - „Zaboravili ste lozinku?” – link za novu lozinku na e-mail (važi 2 sata, jednom)
-- Moj nalog: promena lozinke i brisanje naloga (porudžbine ostaju prodavcima bez ličnih podataka)
+- Moj nalog: telefon i adresa za dostavu, promena lozinke i brisanje naloga (porudžbine ostaju prodavcima bez ličnih podataka)
 - Administrator može postaviti privremenu lozinku korisniku bez e-maila
 
 **Bezbednost**
@@ -69,7 +70,7 @@ npm ci --legacy-peer-deps
 npm start                     # http://localhost:4200 (ili: npx ng serve --port 8100)
 ```
 
-Test nalozi (samo lokalno, u Development režimu): `admin`/`admin1234`, `kupac`/`kupac1234`,
+Test nalozi (lokalno u Development režimu, a na Render-u samo uz `DEMO_ACCOUNTS=true` – bez nje javljaju „Nalog je onemogućen”): `admin`/`admin1234`, `kupac`/`kupac1234`,
 `kurir1`/`kurir1234`, `marko`/`vendor1234` (i ostali prodavci sa istom lozinkom).
 
 Android: `npm run build:android`, pa `npm run open:android` (Android Studio).
@@ -80,7 +81,7 @@ cd PijacaUDzepu.API
 dotnet test PijacaUDzepu.API.Tests     # pokreće ceo API nad posebnom bazom PijacaUDzepu_Test (lokalni Postgres)
 ```
 Pokrivaju: podelu korpe po prodavcima i iznose, „prvi kurir dobija porudžbinu”, stanje (bez prodaje preko stanja),
-zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku i brisanje naloga.
+zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji i brisanje naloga.
 
 ## Praćenje grešaka
 Ako je na serveru podešen `SENTRY_DSN`, greške iz produkcije stižu u Sentry (sa detaljima, bez ličnih podataka).

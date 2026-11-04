@@ -16,6 +16,38 @@
     </div>
 
     <section class="section">
+      <h3>{{ 'account.delivery' | t }}</h3>
+      <p *ngIf="authService.hasRole('Customer')" class="intro">{{ 'account.deliveryInfo' | t }}</p>
+      <form (ngSubmit)="saveProfile()">
+        <ion-item>
+          <ion-input [label]="'register.phone' | t" labelPlacement="floating" type="tel"
+                     [(ngModel)]="profile.phoneNumber" name="phoneNumber" required></ion-input>
+        </ion-item>
+        <ng-container *ngIf="authService.hasRole('Customer')">
+          <ion-item>
+            <ion-input [label]="'register.address' | t" labelPlacement="floating"
+                       [placeholder]="'cart.addressPlaceholder' | t"
+                       [(ngModel)]="profile.address" name="address"></ion-input>
+          </ion-item>
+          <div class="row">
+            <ion-item>
+              <ion-input [label]="'register.floor' | t" labelPlacement="floating"
+                         [(ngModel)]="profile.floor" name="floor" maxlength="20"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-input [label]="'register.apartment' | t" labelPlacement="floating"
+                         [(ngModel)]="profile.apartment" name="apartment" maxlength="20"></ion-input>
+            </ion-item>
+          </div>
+        </ng-container>
+        <ion-button expand="block" type="submit" [disabled]="!canSaveProfile" class="ion-margin-top">
+          <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+          {{ 'account.save' | t }}
+        </ion-button>
+      </form>
+    </section>
+
+    <section class="section">
       <h3>{{ 'account.changePassword' | t }}</h3>
       <form (ngSubmit)="changePassword()">
         <ion-item>

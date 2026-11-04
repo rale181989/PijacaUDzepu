@@ -1,17 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
 import { TranslateService } from '../services/translate.service';
+import { UpdateProfileDto } from '../models/user.model';
 
-// Moj nalog (sve uloge): promena lozinke i brisanje naloga (obaveza za Google Play)
+// Moj nalog (sve uloge): telefon i adresa za dostavu (kupac), promena lozinke i brisanje naloga (obaveza za Google Play)
 @Component({
   selector: 'app-account',
   templateUrl: './account.page.html',
   styleUrls: ['./account.page.scss'],
   standalone: false,
 })
-export class AccountPage {
+export class AccountPage implements OnInit {
+  profile: UpdateProfileDto = { phoneNumber: '', address: '', floor: '', apartment: '' };
+  saving = false;
+
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
@@ -24,6 +28,37 @@ export class AccountPage {
     private toastController: ToastController,
     private ts: TranslateService
   ) {}
+
+  ngOnInit() {
+    this.fillProfile();
+    // Sačuvani korisnik je možda od pre nego što je adresa postojala
+    this.authService.loadCurrentUser().subscribe({ next: () => this.fillProfile(), error: () => {} });
+  }
+
+  private fillProfile() {
+    const u = this.authService.currentUser;
+    this.profile = { phoneNumber: u?.phoneNumber ?? '', address: u?.address ?? '', floor: u?.floor ?? '', apartment: u?.apartment ?? '' };
+  }
+
+  get canSaveProfile(): boolean {
+    return !this.saving && !!this.profile.phoneNumber.trim();
+  }
+
+  saveProfile() {
+    if (!this.canSaveProfile) return;
+    this.saving = true;
+    this.authService.updateProfile(this.profile).subscribe({
+      next: async () => {
+        this.saving = false;
+        this.fillProfile();
+        await this.toast(this.ts.t('account.saved'), 'success');
+      },
+      error: async err => {
+        this.saving = false;
+        await this.toast(err.error?.message || this.ts.t('error.generic'), 'danger');
+      }
+    });
+  }
 
   get passwordsMatch(): boolean {
     return this.newPassword === this.confirmPassword;

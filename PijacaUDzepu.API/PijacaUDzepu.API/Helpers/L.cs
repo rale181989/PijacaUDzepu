@@ -60,6 +60,8 @@ public static class L
         ["Ovo je jedini administratorski nalog i ne može se obrisati."] = ("This is the only administrator account and cannot be deleted.", "Это единственный аккаунт администратора, его нельзя удалить."),
         ["Imate porudžbine u toku. Nalog možete obrisati kada budu završene."] = ("You have orders in progress. You can delete the account once they are finished.", "У вас есть активные заказы. Аккаунт можно удалить после их завершения."),
         ["Imate dostave u toku. Nalog možete obrisati kada ih završite."] = ("You have deliveries in progress. You can delete the account once you finish them.", "У вас есть активные доставки. Аккаунт можно удалить после их завершения."),
+        ["Unesite broj telefona."] = ("Enter your phone number.", "Введите номер телефона."),
+        ["Unesite adresu."] = ("Enter your address.", "Введите адрес."),
         ["Lozinka mora imati najmanje 8 znakova."] = ("The password must be at least 8 characters long.", "Пароль должен содержать не менее 8 символов."),
         ["Lozinka mora imati najmanje {0} znakova."] = ("The password must be at least {0} characters long.", "Пароль должен содержать не менее {0} символов."),
         ["Lozinka mora imati bar jedno malo slovo."] = ("The password must contain at least one lowercase letter.", "Пароль должен содержать хотя бы одну строчную букву."),

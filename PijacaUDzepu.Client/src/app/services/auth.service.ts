@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AcceptInvitationDto, AuthResponse, CreateVendorAdminDto, InviteVendorDto, LoginDto, RegisterDto, User } from '../models/user.model';
+import { AcceptInvitationDto, AuthResponse, CreateVendorAdminDto, InviteVendorDto, LoginDto, RegisterDto, UpdateProfileDto, User } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -56,6 +56,15 @@ export class AuthService {
     );
   }
 
+  updateProfile(dto: UpdateProfileDto) {
+    return this.http.put<User>(`${this.baseUrl}/profile`, dto).pipe(
+      tap(user => {
+        localStorage.setItem('user', JSON.stringify(user));
+        this.currentUserSource.next(user);
+      })
+    );
+  }
+
   changePassword(currentPassword: string, newPassword: string) {
     return this.http.put<{ message: string }>(`${this.baseUrl}/change-password`, { currentPassword, newPassword });
   }
@@ -74,7 +83,10 @@ export class AuthService {
 
   loadCurrentUser() {
     return this.http.get<User>(`${this.baseUrl}/me`).pipe(
-      tap(user => this.currentUserSource.next(user))
+      tap(user => {
+        localStorage.setItem('user', JSON.stringify(user));
+        this.currentUserSource.next(user);
+      })
     );
   }
 

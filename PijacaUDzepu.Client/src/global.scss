@@ -42,3 +42,27 @@
     display: none !important;
   }
 }
+
+// Pretraga: na uskim telefonima i sa većim slovima sistema Ionic-ov razmak od 55px za lupu
+// odsecao je placeholder, a podrazumevani je bled (60% providnosti). Kraći razmak, puna boja, tri tačke.
+ion-searchbar {
+  --placeholder-opacity: 1;
+  --placeholder-color: var(--ion-color-medium-shade);
+
+  .searchbar-search-icon {
+    inset-inline-start: 12px;
+    width: 18px;
+    height: 18px;
+  }
+
+  input.searchbar-input {
+    padding-inline-start: 42px !important;
+    padding-inline-end: 34px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .searchbar-clear-button {
+    inset-inline-end: 4px;
+  }
+}

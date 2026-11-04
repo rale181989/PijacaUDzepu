@@ -8,6 +8,11 @@ public class User : IdentityUser<int>
     public string LastName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 
+    // Adresa za dostavu kupca (upisuje se pri registraciji, popunjava korpu)
+    public string? Address { get; set; }
+    public string? Floor { get; set; }
+    public string? Apartment { get; set; }
+
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<VendorUser> VendorUsers { get; set; } = new List<VendorUser>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
