@@ -32,4 +32,33 @@ public class CatalogTests
 
         Assert.DoesNotContain(page.Items, p => p.Name is "Peršun" or "Bosiljak Sveži" or "Mirođija" or "Nana Sveža");
     }
+
+    // Android galerija šalje sliku bez ekstenzije u imenu; prihvata se ako je sadržaj slika
+    [Fact]
+    public async Task Product_image_without_extension_is_accepted_but_text_is_not()
+    {
+        var vendor = await _factory.As("ivana", "vendor1234");
+        var product = (await vendor.Get<List<MyProduct>>("/api/products/my-products"))[0];
+        // 1x1 PNG
+        var png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+
+        async Task<HttpResponseMessage> Upload(byte[] bytes, string fileName, string contentType)
+        {
+            var file = new ByteArrayContent(bytes);
+            file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            var form = new MultipartFormDataContent { { file, "file", fileName } };
+            return await vendor.Http.PostAsync($"/api/products/{product.Id}/image", form);
+        }
+
+        var ok = await Upload(png, "image:1000012345", "image/png");
+        Assert.Equal(System.Net.HttpStatusCode.OK, ok.StatusCode);
+        var updated = await vendor.Get<Product>($"/api/products/{product.Id}");
+        Assert.EndsWith(".jpg", updated.ImageUrl);
+
+        var bad = await Upload("nije slika"u8.ToArray(), "slika", "image/jpeg");
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, bad.StatusCode);
+        Assert.Equal("Neispravan format slike.", await Api.Message(bad));
+    }
+
+    private record MyProduct(int Id);
 }

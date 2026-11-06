@@ -386,7 +386,7 @@ async function build() {
   s.steps([
     { h: 'Dostupno da/ne', d: 'Prekidač skida proizvod iz ponude kada nestane robe i vraća ga kada je ponovo imate.' },
     { h: 'Novi proizvod', d: 'Dugme + dodaje proizvod.' },
-    { h: 'Izmena', d: 'Dodir na proizvod: naziv, cena, jedinica, grupa, klasa, napomena i slika. Slika sa telefona se sama smanjuje.' }
+    { h: 'Izmena', d: 'Dodir na proizvod: naziv, cena, jedinica, grupa, klasa, napomena i slika. Izabrana slika se odmah vidi, sama se smanjuje i čuva se dugmetom Sačuvaj.' }
   ], 0.6, 1.75, 5.2);
   s.phone('v-products', LEFT_X, PHONE_Y, PHONE_H, 'Spisak proizvoda prodavca', [[1, 0.77, 0.117], [2, 0.72, 0.955]]);
   s.phone('v-product-form', RIGHT_X, PHONE_Y, PHONE_H, 'Izmena proizvoda', [[3, 0.85, 0.128]]);

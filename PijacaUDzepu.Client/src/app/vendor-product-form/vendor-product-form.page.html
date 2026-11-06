@@ -72,13 +72,13 @@
     </ion-item>
 
     <div class="image-section">
-      <img *ngIf="imageUrl" [src]="getImageUrl(imageUrl)" class="product-preview" />
+      <img *ngIf="previewUrl || imageUrl" [src]="previewUrl || getImageUrl(imageUrl)" class="product-preview" />
       <ion-button fill="outline" (click)="fileInput.click()" expand="block">
         <ion-icon name="camera-outline" slot="start"></ion-icon>
-        {{ imageUrl ? 'Promeni sliku' : 'Dodaj sliku' }}
+        {{ previewUrl || imageUrl ? 'Promeni sliku' : 'Dodaj sliku' }}
       </ion-button>
       <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
-      <p *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</p>
+      <p *ngIf="selectedFile" class="file-name">Nova slika se čuva klikom na dugme ispod.</p>
     </div>
 
     <ion-button expand="block" type="submit" size="large" [disabled]="saving" class="ion-margin-top">

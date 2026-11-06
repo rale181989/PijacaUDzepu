@@ -28,7 +28,7 @@ dotnet test PijacaUDzepu.API.Tests          # integration tests against a real l
 - `ApiFactory` (a `WebApplicationFactory<Program>`) drops and recreates the `PijacaUDzepu_Test` database on every run, then starts the whole API in Development, so migrations and the demo data run too. Use the `TEST_DATABASE_URL` env var to point it at another server.
 - Each request gets its own `X-Forwarded-For`, so the login rate limit doesn't interfere.
 - All test classes share the `api` collection, so they run sequentially on one database. Pick different vendors or products per test so tests don't affect each other.
-- The covered flows are: the checkout split and fees, the courier accept race, stock overselling and its restore, a paused vendor, the mandatory reject reason, report totals, password rules, registration requiring phone and address, lockout, forgot password, account deletion, the health endpoint and message translation (every `L.T` key has a translation; errors follow `Accept-Language`).
+- The covered flows are: the checkout split and fees, the courier accept race, stock overselling and its restore, a paused vendor, the mandatory reject reason, report totals, password rules, registration requiring phone and address, product image upload without a file extension, lockout, forgot password, account deletion, the health endpoint and message translation (every `L.T` key has a translation; errors follow `Accept-Language`).
 - The Dockerfile publishes only the API project, so the test project never reaches the image.
 
 ### Client (run from `PijacaUDzepu.Client`)
@@ -161,6 +161,7 @@ Documentation rule: every change also goes into this file, `README.md` and the u
   - Otherwise `LocalImageStorage` writes to `wwwroot/Resources/Images` and the DB stores the relative `/Resources/...` path.
   - Order matters for consistency: save the new image, save the DB, then delete the old one (delete the new one if the DB save fails). `Delete` ignores URLs the storage didn't create, such as the seed data's Unsplash URLs.
   - The client's `getImageUrl` handles both relative and absolute URLs.
+  - **Uploads from phones:** the product form shrinks the picked photo in the browser (`shared/image-file.ts` `shrinkImage`: max 1600 px, JPEG) and previews it before saving, because phone photos are often over the 5 MB limit or (Android gallery) have no file extension. If the upload fails, the form stays open with the server's message instead of reporting success. The upload endpoints accept a name without an extension when the content type is `image/*`; `ImageResizer` rejects anything that isn't a real image ("Neispravan format slike.").
 
 ## Seed data
 

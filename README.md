@@ -22,7 +22,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Jezici: srpski, engleski, ruski – i poruke o greškama sa servera stižu na izabranom jeziku
 
 **Prodavac**
-- Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost
+- Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost (fotografija sa telefona se smanjuje već u aplikaciji i odmah se vidi na formi; ako slanje slike ne uspe, forma to jasno kaže)
 - Porudžbine po stranama; zvono dok ima porudžbina na čekanju
 - Potvrdi / odbij (razlog obavezan, kupac ga dobija i e-mailom) / spremno / kupac preuzeo
 - Radno vreme po danima, neradni dani i pauza („privremeno ne primam porudžbine”); van radnog vremena kupac vidi kad se tezga otvara i ne može da poruči
@@ -81,7 +81,7 @@ cd PijacaUDzepu.API
 dotnet test PijacaUDzepu.API.Tests     # pokreće ceo API nad posebnom bazom PijacaUDzepu_Test (lokalni Postgres)
 ```
 Pokrivaju: podelu korpe po prodavcima i iznose, „prvi kurir dobija porudžbinu”, stanje (bez prodaje preko stanja),
-zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji i brisanje naloga.
+zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji, sliku proizvoda bez ekstenzije u imenu i brisanje naloga.
 
 ## Praćenje grešaka
 Ako je na serveru podešen `SENTRY_DSN`, greške iz produkcije stižu u Sentry (sa detaljima, bez ličnih podataka).

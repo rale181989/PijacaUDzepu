@@ -144,7 +144,9 @@ public class VendorsController : BaseApiController
 
         var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
         var ext = Path.GetExtension(file.FileName).ToLower();
-        if (!allowed.Contains(ext)) return BadRequest(new { message = L.T("Dozvoljeni formati: jpg, jpeg, png, webp.") });
+        // Android galerija zna da pošalje ime bez ekstenzije; sadržaj ionako proverava ImageResizer
+        var looksLikeImage = allowed.Contains(ext) || (ext == "" && file.ContentType.StartsWith("image/"));
+        if (!looksLikeImage) return BadRequest(new { message = L.T("Dozvoljeni formati: jpg, jpeg, png, webp.") });
 
         try
         {

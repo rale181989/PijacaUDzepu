@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { ProductService } from '../services/product.service';
 import { PRODUCT_CATEGORIES, ProductInput } from '../models/product.model';
 import { TranslateService } from '../services/translate.service';
 import { environment } from '../../environments/environment';
+import { shrinkImage } from '../shared/image-file';
 
 @Component({
   selector: 'app-vendor-product-form',
@@ -12,11 +13,12 @@ import { environment } from '../../environments/environment';
   styleUrls: ['./vendor-product-form.page.scss'],
   standalone: false,
 })
-export class VendorProductFormPage implements OnInit {
+export class VendorProductFormPage implements OnInit, OnDestroy {
   productId: number | null = null;
   model: ProductInput = { name: '', price: 0, unit: 'Kg', category: 'Povrce', productClass: null, isAvailable: true };
   imageUrl: string | null = null;
   selectedFile: File | null = null;
+  previewUrl: string | null = null;
   loading = false;
   saving = false;
   apiUrl = environment.apiUrl.replace('/api', '');
@@ -48,9 +50,18 @@ export class VendorProductFormPage implements OnInit {
     }
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) this.selectedFile = file;
+  async onFileSelected(event: any) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // ista slika izabrana ponovo opet okida (change)
+    if (!file) return;
+    this.selectedFile = await shrinkImage(file);
+    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+    this.previewUrl = URL.createObjectURL(this.selectedFile);
+  }
+
+  ngOnDestroy() {
+    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
   }
 
   async save() {
@@ -68,10 +79,15 @@ export class VendorProductFormPage implements OnInit {
               await this.showSuccess();
               this.router.navigateByUrl('/vendor-products');
             },
-            error: async () => {
+            // Proizvod je sačuvan, ali slika nije: ostaje se na formi da prodavac vidi zašto i pokuša ponovo
+            error: async (err) => {
               this.saving = false;
-              await this.showSuccess();
-              this.router.navigateByUrl('/vendor-products');
+              if (!this.isEdit) this.productId = product.id;
+              const toast = await this.toastController.create({
+                message: 'Proizvod je sačuvan, ali slika nije: ' + (err.error?.message || 'greška pri slanju slike.'),
+                duration: 5000, color: 'danger'
+              });
+              await toast.present();
             }
           });
         } else {
