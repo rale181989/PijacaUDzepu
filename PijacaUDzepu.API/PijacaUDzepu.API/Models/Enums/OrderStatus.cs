@@ -9,5 +9,7 @@ public enum OrderStatus
     Completed,
     Cancelled,
     // Kurir je preuzeo robu i nosi je kupcu (dodato na kraj da ne menja postojeće vrednosti u bazi)
-    InDelivery
+    InDelivery,
+    // Kurir nije uspeo da dostavi (razlog je obavezan); roba se vraća prodavcu
+    NotDelivered
 }

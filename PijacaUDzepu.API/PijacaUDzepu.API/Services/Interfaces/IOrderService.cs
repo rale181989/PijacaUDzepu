@@ -9,15 +9,19 @@ public interface IOrderService
     Task<List<OrderDto>> CreateOrders(int customerId, OrderInputDto dto);
     Task<List<OrderDto>> CreateGuestOrders(GuestOrderInputDto dto);
     Task<PagedResult<OrderDto>> GetCustomerOrders(int customerId, int skip = 0, int take = 20);
-    Task<PagedResult<OrderDto>> GetVendorOrders(int vendorId, int skip = 0, int take = 20);
+    Task<PagedResult<OrderDto>> GetVendorOrders(int vendorId, bool finished, int skip = 0, int take = 20);
     Task<OrderDto> GetOrderById(int orderId);
     Task<OrderDto> UpdateOrderStatus(int orderId, int vendorId, OrderStatus newStatus, string? message = null);
     decimal CourierFee { get; }
     Task<OrderDto> CancelOrder(int orderId, int customerId);
+    Task<PagedResult<OrderDto>> GetOpenOrders(int skip = 0, int take = 20);
+    Task<OrderDto> AdminCompleteOrder(int orderId, int adminId);
+    Task<OrderDto> MarkNotDelivered(int orderId, int courierId, string reason);
     Task<List<OrderDto>> GetTrackedOrders(string code);
     Task<OrderDto> RateOrder(int orderId, int? customerId, string? trackingCode, OrderRatingInputDto dto);
     Task<OrderDto> CancelTrackedOrder(string code, int orderId);
     Task<int> GetVendorPendingCount(int vendorId);
+    Task<int> GetCustomerActiveCount(int customerId);
     Task<VendorTodayDto> GetVendorToday(int vendorId);
     Task<List<OrderDto>> GetAvailableCourierOrders(int courierId);
     Task<PagedResult<OrderDto>> GetCourierOrders(int courierId, bool finished, int skip = 0, int take = 20);

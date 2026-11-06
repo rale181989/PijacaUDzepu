@@ -108,6 +108,13 @@ public class OrdersController : BaseApiController
         }
     }
 
+    // Broj porudžbina kupca u toku (crveni broj na ikonici "Moje porudžbine")
+    [HttpGet("my-active-count")]
+    public async Task<IActionResult> GetMyActiveCount()
+    {
+        return Ok(new { count = await _orderService.GetCustomerActiveCount(User.GetUserId()) });
+    }
+
     [HttpGet("my-orders")]
     public async Task<IActionResult> GetMyOrders([FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
@@ -118,12 +125,12 @@ public class OrdersController : BaseApiController
 
     [Authorize(Policy = "RequireVendorAdmin")]
     [HttpGet("vendor-orders")]
-    public async Task<IActionResult> GetVendorOrders([FromQuery] int skip = 0, [FromQuery] int take = 20)
+    public async Task<IActionResult> GetVendorOrders([FromQuery] bool finished = false, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
         var vendorId = await GetCurrentVendorId();
         if (vendorId == null) return Forbid();
 
-        var result = await _orderService.GetVendorOrders(vendorId.Value, skip, take);
+        var result = await _orderService.GetVendorOrders(vendorId.Value, finished, skip, take);
         return Ok(result);
     }
 
@@ -183,6 +190,31 @@ public class OrdersController : BaseApiController
             return Ok(order);
         }
         catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Policy = "RequireSuperAdmin")]
+    [HttpGet("open")]
+    public async Task<IActionResult> GetOpenOrders([FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        return Ok(await _orderService.GetOpenOrders(skip, take));
+    }
+
+    [Authorize(Policy = "RequireSuperAdmin")]
+    [HttpPost("{id}/admin-complete")]
+    public async Task<IActionResult> AdminComplete(int id)
+    {
+        try
+        {
+            return Ok(await _orderService.AdminCompleteOrder(id, User.GetUserId()));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }

@@ -4,6 +4,7 @@
       <ion-back-button defaultHref="/my-orders"></ion-back-button>
     </ion-buttons>
     <ion-buttons slot="end">
+      <app-orders-button></app-orders-button>
       <app-cart-button></app-cart-button>
     </ion-buttons>
     <ion-title>{{ 'orders.order' | t }} #{{ order?.id }}</ion-title>
@@ -36,6 +37,20 @@
       </ion-card-content>
     </ion-card>
 
+    <ion-card *ngIf="order.status === 'NotDelivered'" class="vendor-message-card rejected">
+      <ion-card-content>
+        <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.notDeliveredTitle' | t }}</strong>
+        <p>{{ order.notDeliveredReason }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="order.status !== 'Rejected' && order.status !== 'Cancelled' && order.status !== 'NotDelivered'">
+      <ion-card-content>
+        <strong class="progress-title">{{ 'order.progress' | t }}</strong>
+        <app-order-progress [order]="order"></app-order-progress>
+      </ion-card-content>
+    </ion-card>
+
     <ion-card *ngIf="order.vendorMessage && order.status !== 'Rejected'" class="vendor-message-card">
       <ion-card-content>
         <strong><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ 'order.vendorMessage' | t }}</strong>
@@ -43,7 +58,14 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-card *ngIf="order.fulfillment === 'Courier' && order.status !== 'Rejected' && order.status !== 'Cancelled'" class="courier-card">
+    <ion-card *ngIf="order.closedByAdminAt" class="vendor-message-card">
+      <ion-card-content>
+        <strong><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }}</strong>
+        <p>{{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="order.fulfillment === 'Courier' && (order.courierName || order.status === 'Confirmed' || order.status === 'ReadyForPickup')" class="courier-card">
       <ion-card-content>
         <div class="courier-row">
           <ion-icon name="bicycle-outline" color="primary"></ion-icon>

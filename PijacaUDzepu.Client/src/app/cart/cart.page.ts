@@ -10,6 +10,7 @@ import { environment } from '../../environments/environment';
 import { TranslateService } from '../services/translate.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
 import { deliveryAddressOf } from '../models/user.model';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-cart',
@@ -37,7 +38,8 @@ export class CartPage implements OnInit {
     private alertController: AlertController,
     private toastController: ToastController,
     private ts: TranslateService,
-    private guestOrders: GuestOrdersService
+    private guestOrders: GuestOrdersService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
@@ -164,6 +166,8 @@ export class CartPage implements OnInit {
       next: async orders => {
         this.submitting = false;
         this.cartService.clearCart();
+        // Crveni broj na ikonici "Moje porudžbine" odmah raste
+        this.notificationService.loadCustomerActiveCount();
         this.note = '';
         this.guestName = '';
         this.address = deliveryAddressOf(this.authService.currentUser);

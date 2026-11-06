@@ -99,6 +99,10 @@
             <ion-icon name="people-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.users' | t }}</ion-label>
           </ion-item>
+          <ion-item routerLink="/admin-orders" routerDirection="root" (click)="closeMenu()">
+            <ion-icon name="receipt-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.openOrders' | t }}</ion-label>
+          </ion-item>
           <ion-item routerLink="/admin-reports" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.reports' | t }}</ion-label>
@@ -160,6 +164,7 @@
         <a *ngIf="authService.hasRole('Customer')" routerLink="/my-orders" routerLinkActive="active" class="notif-link">
           <ion-icon name="receipt-outline"></ion-icon>
           <span>{{ 'nav.orders' | t }}</span>
+          <span *ngIf="notificationService.customerActiveCount > 0" class="notif-badge">{{ notificationService.customerActiveCount }}</span>
         </a>
 
         <ng-container *ngIf="authService.hasRole('VendorAdmin')">
@@ -209,6 +214,10 @@
           <a routerLink="/admin-users" routerLinkActive="active">
             <ion-icon name="people-outline"></ion-icon>
             <span>{{ 'nav.users' | t }}</span>
+          </a>
+          <a routerLink="/admin-orders" routerLinkActive="active">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>{{ 'nav.openOrders' | t }}</span>
           </a>
           <a routerLink="/admin-reports" routerLinkActive="active">
             <ion-icon name="bar-chart-outline"></ion-icon>

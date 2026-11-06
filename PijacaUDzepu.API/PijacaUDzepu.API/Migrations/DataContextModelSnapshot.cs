@@ -290,6 +290,12 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<Guid?>("CheckoutId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ClosedByAdminAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ClosedByAdminId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ContactPhone")
                         .HasColumnType("text");
 
@@ -322,6 +328,12 @@ namespace PijacaUDzepu.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("GuestName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("NotDeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NotDeliveredReason")
                         .HasColumnType("text");
 
                     b.Property<string>("Note")
@@ -361,6 +373,8 @@ namespace PijacaUDzepu.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CheckoutId");
+
+                    b.HasIndex("ClosedByAdminId");
 
                     b.HasIndex("CourierId");
 
@@ -1011,6 +1025,11 @@ namespace PijacaUDzepu.API.Migrations
 
             modelBuilder.Entity("PijacaUDzepu.API.Models.Order", b =>
                 {
+                    b.HasOne("PijacaUDzepu.API.Models.User", "ClosedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ClosedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PijacaUDzepu.API.Models.User", "Courier")
                         .WithMany()
                         .HasForeignKey("CourierId")
@@ -1026,6 +1045,8 @@ namespace PijacaUDzepu.API.Migrations
                         .HasForeignKey("VendorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ClosedByAdmin");
 
                     b.Navigation("Courier");
 

@@ -35,3 +35,6 @@ PijacaUDzepu.API/PijacaUDzepu.API/Resources/Images/*
 appsettings.json
 appsettings.Production.json
 appsettings.Development.json
+
+# Firebase konfiguracija Android aplikacije: lokalno, ne u javni repozitorijum
+PijacaUDzepu.Client/android/app/google-services.json

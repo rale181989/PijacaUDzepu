@@ -16,6 +16,9 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) content?: IonContent;
 
   orders: Order[] = [];
+  // Aktivne (na čekanju, u pripremi, spremne, u dostavi) i završene (završene, odbijene, otkazane)
+  tab: 'active' | 'finished' = 'active';
+  activeCount: number | null = null;
   private sub?: Subscription;
   private loadSub?: Subscription;
   loading = false;
@@ -59,10 +62,12 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
     // učitavanja (ulazak na stranicu + obaveštenje) spoje i porudžbine se prikažu duplo
     this.loadSub?.unsubscribe();
     this.loading = true;
-    this.loadSub = this.orderService.getVendorOrders(this.page * this.pageSize, this.pageSize).subscribe({
+    const finished = this.tab === 'finished';
+    this.loadSub = this.orderService.getVendorOrders(finished, this.page * this.pageSize, this.pageSize).subscribe({
       next: result => {
         this.orders = result.items;
         this.totalCount = result.totalCount;
+        if (!finished) this.activeCount = result.totalCount;
         this.loading = false;
         // Strana je ostala prazna (npr. posle promene veličine strane) - prikaži poslednju
         if (this.orders.length === 0 && this.page > 0 && this.totalCount > 0) {
@@ -72,6 +77,14 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
       },
       error: () => this.loading = false
     });
+  }
+
+  selectTab(tab: 'active' | 'finished') {
+    if (tab === this.tab) return;
+    this.tab = tab;
+    this.page = 0;
+    this.orders = [];
+    this.loadOrders();
   }
 
   goToPage(page: number) {
@@ -93,14 +106,18 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
       next: async updated => {
         Object.assign(order, updated);
         this.notificationService.loadPendingCount();
+        // Završena ili odbijena prelazi u tab "Završene"
+        if (['Completed', 'Rejected', 'Cancelled'].includes(updated.status)) this.loadOrders();
         const toast = await this.toastController.create({
           message: `Status promenjen: ${this.getStatusLabel(newStatus)}`, duration: 2000, color: 'success'
         });
         await toast.present();
       },
       error: async err => {
+        // Najčešće je status u međuvremenu promenio kurir: prikaži stvarno stanje
+        this.loadOrders();
         const toast = await this.toastController.create({
-          message: err.error?.message || 'Greška', duration: 2000, color: 'danger'
+          message: err.error?.message || 'Greška', duration: 3000, color: 'danger'
         });
         await toast.present();
       }
@@ -154,7 +171,7 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
   getStatusLabel(status: string): string {
     const map: Record<string, string> = {
       'Pending': 'Na čekanju', 'Confirmed': 'Potvrđena', 'Rejected': 'Odbijena',
-      'ReadyForPickup': 'Spremna', 'InDelivery': 'U dostavi', 'Completed': 'Završena', 'Cancelled': 'Otkazana'
+      'ReadyForPickup': 'Spremna', 'InDelivery': 'U dostavi', 'Completed': 'Završena', 'Cancelled': 'Otkazana', 'NotDelivered': 'Nije dostavljena'
     };
     return map[status] || status;
   }
@@ -162,7 +179,7 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
   getStatusColor(status: string): string {
     const map: Record<string, string> = {
       'Pending': 'warning', 'Confirmed': 'primary', 'Rejected': 'danger',
-      'ReadyForPickup': 'success', 'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium'
+      'ReadyForPickup': 'success', 'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium', 'NotDelivered': 'danger'
     };
     return map[status] || 'medium';
   }

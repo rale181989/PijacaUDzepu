@@ -43,6 +43,15 @@ public class Order
     public int? CourierId { get; set; }
     public User? Courier { get; set; }
     public DateTime? CourierAssignedAt { get; set; }
+
+    // Kurir nije dostavio: razlog i vreme
+    public string? NotDeliveredReason { get; set; }
+    public DateTime? NotDeliveredAt { get; set; }
+
+    // Trag kada SuperAdmin ručno zatvori porudžbinu koja je ostala otvorena
+    public int? ClosedByAdminId { get; set; }
+    public User? ClosedByAdmin { get; set; }
+    public DateTime? ClosedByAdminAt { get; set; }
     public DateTime? PickedUpAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
 

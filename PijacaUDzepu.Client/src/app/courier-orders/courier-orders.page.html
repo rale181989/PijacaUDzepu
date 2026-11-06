@@ -13,6 +13,9 @@
       <ion-segment-button value="mine">
         <ion-label>Moje ({{ activeMine.length }})</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="finished">
+        <ion-label>Završene</ion-label>
+      </ion-segment-button>
       <ion-segment-button value="settlement">
         <ion-label>Obračun</ion-label>
       </ion-segment-button>
@@ -96,14 +99,19 @@
     </ng-container>
   </ng-container>
 
-  <!-- Porudžbine koje je ovaj kurir prihvatio -->
-  <ng-container *ngIf="!loading && tab === 'mine'">
-    <div *ngIf="mine.length === 0 && finishedTotal === 0" class="empty-state">
+  <!-- Moje: dostave u toku; Završene: isporučene, odbijene i otkazane (po stranama) -->
+  <ng-container *ngIf="!loading && (tab === 'mine' || tab === 'finished')">
+    <div *ngIf="tab === 'mine' && activeMine.length === 0" class="empty-state">
+      <ion-icon name="bicycle-outline" size="large"></ion-icon>
+      <p>Nemate dostava u toku. Nove porudžbine su u tabu „Nove”.</p>
+    </div>
+    <div *ngIf="tab === 'finished' && finishedMine.length === 0" class="empty-state">
       <ion-icon name="receipt-outline" size="large"></ion-icon>
-      <p>Još niste prihvatili nijednu porudžbinu.</p>
+      <p>Još nemate završenih dostava.</p>
     </div>
 
     <!-- Ruta kada je jedna korpa raspoređena na više tezgi -->
+    <ng-container *ngIf="tab === 'mine'">
     <div *ngFor="let route of routes; trackBy: trackByKey" class="route-card">
       <strong><ion-icon name="navigate-outline"></ion-icon> Ruta: {{ route.orders.length }} tezge → kupac</strong>
       <ol>
@@ -114,8 +122,9 @@
         <ion-icon name="map-outline" slot="start"></ion-icon> Otvori rutu u mapama
       </ion-button>
     </div>
+    </ng-container>
 
-    <ion-card *ngFor="let order of activeMine.concat(finishedMine)" class="order-card" [class.finished]="finishedMine.includes(order)">
+    <ion-card *ngFor="let order of (tab === 'mine' ? activeMine : finishedMine)" class="order-card" [class.finished]="tab === 'finished'">
       <ion-card-header>
         <div class="card-top">
           <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM. HH:mm' }}</ion-card-subtitle>
@@ -160,6 +169,10 @@
         <p class="summary">Za naplatu: <strong>{{ order.amountToPay | number:'1.0-0' }} din</strong>
           <span class="muted">(roba {{ order.totalAmount | number:'1.0-0' }} + usluga {{ order.deliveryFee | number:'1.0-0' }})</span></p>
         <p *ngIf="order.note" class="note">Napomena: {{ order.note }}</p>
+        <p *ngIf="order.closedByAdminAt" class="admin-closed">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Zatvorio administrator<span *ngIf="order.closedByAdminName"> {{ order.closedByAdminName }}</span> · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</span>
+        </p>
 
         <ion-button *ngIf="order.status === 'Confirmed' || order.status === 'ReadyForPickup'" expand="block"
                     [disabled]="busyId === order.id" (click)="markPickedUp(order)">
@@ -172,10 +185,19 @@
           <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
           Isporučeno
         </ion-button>
+        <ion-button *ngIf="order.status === 'InDelivery'" expand="block" color="danger" fill="outline"
+                    [disabled]="busyId === order.id" (click)="markNotDelivered(order)">
+          <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+          Nije dostavljeno
+        </ion-button>
+        <p *ngIf="order.status === 'NotDelivered'" class="not-delivered">
+          <ion-icon name="close-circle-outline"></ion-icon>
+          <span>Nije dostavljeno: {{ order.notDeliveredReason }}</span>
+        </p>
       </ion-card-content>
     </ion-card>
 
-    <app-pager [page]="finishedPage" [pageSize]="finishedPageSize" [totalCount]="finishedTotal"
+    <app-pager *ngIf="tab === 'finished'" [page]="finishedPage" [pageSize]="finishedPageSize" [totalCount]="finishedTotal"
                [storageKey]="pageSizeKey" (pageChange)="goToFinishedPage($event)" (pageSizeChange)="setFinishedPageSize($event)">
     </app-pager>
   </ng-container>

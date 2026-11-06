@@ -47,9 +47,19 @@ export class OrderService {
     return this.http.get<PagedResult<Order>>(`${this.baseUrl}/my-orders`, { params });
   }
 
-  getVendorOrders(skip = 0, take = 20) {
-    const params = new HttpParams().set('skip', skip.toString()).set('take', take.toString());
+  getVendorOrders(finished = false, skip = 0, take = 20) {
+    const params = new HttpParams().set('finished', String(finished)).set('skip', skip.toString()).set('take', take.toString());
     return this.http.get<PagedResult<Order>>(`${this.baseUrl}/vendor-orders`, { params });
+  }
+
+  // SuperAdmin: porudžbine koje još nisu zatvorene, najstarije prve
+  getOpenOrders(skip = 0, take = 20) {
+    const params = new HttpParams().set('skip', skip.toString()).set('take', take.toString());
+    return this.http.get<PagedResult<Order>>(`${this.baseUrl}/open`, { params });
+  }
+
+  adminComplete(id: number) {
+    return this.http.post<Order>(`${this.baseUrl}/${id}/admin-complete`, {});
   }
 
   getVendorToday() {

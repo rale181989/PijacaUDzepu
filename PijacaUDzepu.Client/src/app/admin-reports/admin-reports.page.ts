@@ -265,7 +265,7 @@ export class AdminReportsPage {
   statusLabel(status: OrderStatus): string {
     const labels: Record<string, string> = {
       'Pending': 'Na čekanju', 'Confirmed': 'Potvrđena', 'Rejected': 'Odbijena', 'ReadyForPickup': 'Spremna',
-      'InDelivery': 'U dostavi', 'Completed': 'Završena', 'Cancelled': 'Otkazana'
+      'InDelivery': 'U dostavi', 'Completed': 'Završena', 'Cancelled': 'Otkazana', 'NotDelivered': 'Nije dostavljena'
     };
     return labels[status] || status;
   }
@@ -273,7 +273,7 @@ export class AdminReportsPage {
   statusColor(status: OrderStatus): string {
     const colors: Record<string, string> = {
       'Pending': 'warning', 'Confirmed': 'primary', 'Rejected': 'danger', 'ReadyForPickup': 'success',
-      'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium'
+      'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium', 'NotDelivered': 'danger'
     };
     return colors[status] || 'medium';
   }

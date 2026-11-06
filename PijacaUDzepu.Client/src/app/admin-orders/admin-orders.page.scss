@@ -1,0 +1,33 @@
+.center-spinner { display: block; margin: 40px auto; }
+
+.hint {
+  margin: 12px 16px 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+
+  ion-icon { font-size: 64px; margin-bottom: 16px; }
+}
+
+ion-card.old { border-left: 4px solid var(--ion-color-danger); }
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+ion-card-content p {
+  margin: 0 0 4px;
+  color: var(--ion-text-color);
+
+  a { color: var(--ion-color-primary); }
+}
+
+.muted { color: var(--ion-color-medium); }

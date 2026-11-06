@@ -49,9 +49,10 @@ public class OrderWatchdog : BackgroundService
         var waiting = await context.Orders
             .Where(o => o.WaitAlertSentAt == null && (
                 (o.Status == OrderStatus.Pending && o.CreatedAt < pendingBefore) ||
-                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && o.CreatedAt < courierBefore
+                // Kurira porudžbina čeka od trenutka kada ju je prodavac potvrdio
+                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && (o.RespondedAt ?? o.CreatedAt) < courierBefore
                     && (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup))))
-            .Select(o => new { o.Id, o.VendorId, VendorName = o.Vendor.Name, o.Status, o.CreatedAt })
+            .Select(o => new { o.Id, o.VendorId, VendorName = o.Vendor.Name, o.Status, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.RespondedAt ?? o.CreatedAt })
             .ToListAsync();
         if (waiting.Count == 0) return;
 
@@ -61,7 +62,7 @@ public class OrderWatchdog : BackgroundService
 
         foreach (var o in waiting)
         {
-            var minutes = (int)(now - o.CreatedAt).TotalMinutes;
+            var minutes = (int)(now - o.Since).TotalMinutes;
             var reason = o.Status == OrderStatus.Pending ? "čeka prodavca" : "čeka kurira";
             await hub.Clients.Group(SupportService.AdminsGroup).SendAsync("OrderWaiting",
                 new { orderId = o.Id, vendorName = o.VendorName, reason, minutes });

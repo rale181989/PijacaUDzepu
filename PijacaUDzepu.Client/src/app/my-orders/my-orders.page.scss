@@ -31,3 +31,5 @@ ion-card-header {
 
 .order-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .my-rating { color: #b8860b; font-size: 15px; margin: 6px 0 0; span { color: var(--ion-text-color); font-size: 13px; } }
+
+.not-delivered { color: var(--ion-color-danger) !important; }

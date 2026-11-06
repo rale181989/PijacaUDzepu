@@ -4,6 +4,7 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-buttons slot="end">
+      <app-orders-button></app-orders-button>
       <app-cart-button></app-cart-button>
     </ion-buttons>
     <ion-title>{{ 'orders.title' | t }}</ion-title>
@@ -46,6 +47,8 @@
           <p>{{ order.items.length }} {{ 'cart.items' | t }}</p>
           <p class="total">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}<span *ngIf="order.deliveryFee > 0"> ({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span></p>
           <p *ngIf="order.vendorMessage" class="date"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ order.vendorMessage }}</p>
+          <p *ngIf="order.status === 'NotDelivered'" class="date not-delivered"><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.notDeliveredTitle' | t }}: {{ order.notDeliveredReason }}</p>
+          <p *ngIf="order.closedByAdminAt" class="date"><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }} · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
         </ng-template>
         <p *ngIf="order.fulfillment === 'Pickup'" class="date"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}</p>
         <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>

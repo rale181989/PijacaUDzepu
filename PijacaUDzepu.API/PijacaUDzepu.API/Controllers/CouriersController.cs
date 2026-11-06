@@ -120,6 +120,10 @@ public class CouriersController : BaseApiController
     public Task<IActionResult> MarkDelivered(int id) =>
         DeliveryStep(() => _orderService.MarkDelivered(id, User.GetUserId()));
 
+    [HttpPost("orders/{id}/not-delivered")]
+    public Task<IActionResult> MarkNotDelivered(int id, NotDeliveredDto dto) =>
+        DeliveryStep(() => _orderService.MarkNotDelivered(id, User.GetUserId(), dto.Reason));
+
     private async Task<IActionResult> DeliveryStep(Func<Task<Models.DTO.Output.OrderDto>> step)
     {
         try

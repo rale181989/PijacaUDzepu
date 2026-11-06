@@ -34,6 +34,11 @@ public class OrderDto
     public string? CourierName { get; set; }
     public string? CourierPhone { get; set; }
     public DateTime? CourierAssignedAt { get; set; }
+    public string? NotDeliveredReason { get; set; }
+    public DateTime? NotDeliveredAt { get; set; }
+    public string? ClosedByAdminName { get; set; }
+    public DateTime? ClosedByAdminAt { get; set; }
+    public DateTime? RespondedAt { get; set; }
     public DateTime? PickedUpAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
 

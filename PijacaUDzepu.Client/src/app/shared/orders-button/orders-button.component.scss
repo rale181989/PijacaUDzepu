@@ -1,0 +1,40 @@
+:host {
+  display: inline-block;
+}
+
+ion-button {
+  position: relative;
+  overflow: visible;
+}
+
+.orders-count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--ion-color-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  pointer-events: none;
+
+  // Stigla je promena statusa ili nova porudžbina
+  &.bump { animation: bump 0.6s ease-out 2; }
+}
+
+@keyframes bump {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.45); box-shadow: 0 0 0 4px rgba(var(--ion-color-danger-rgb), 0.3); }
+}
+
+// Na računaru su porudžbine u gornjem meniju
+@media (min-width: 768px) {
+  :host {
+    display: none;
+  }
+}

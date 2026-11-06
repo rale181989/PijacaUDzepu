@@ -194,7 +194,7 @@ export class TrackOrderPage implements OnInit, OnDestroy {
   getStatusColor(status: string): string {
     const map: Record<string, string> = {
       'Pending': 'warning', 'Confirmed': 'primary', 'Rejected': 'danger',
-      'ReadyForPickup': 'success', 'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium'
+      'ReadyForPickup': 'success', 'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium', 'NotDelivered': 'danger'
     };
     return map[status] || 'medium';
   }

@@ -38,3 +38,29 @@ ion-card-header {
 }
 
 .rating { font-size: 13px; margin: 4px 0; .stars { color: #b8860b; font-size: 15px; } }
+
+// Trag: porudžbinu je ručno zatvorio SuperAdmin
+.admin-closed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(var(--ion-color-tertiary-rgb), 0.12);
+  color: var(--ion-color-tertiary-shade);
+}
+
+// Kurir nije dostavio: razlog
+.not-delivered {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  color: var(--ion-color-danger-shade);
+}

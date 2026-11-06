@@ -9,10 +9,12 @@ import { CartButtonComponent } from './cart-button/cart-button.component';
 import { PagerComponent } from './pager/pager.component';
 import { RatingFormComponent } from './rating-form/rating-form.component';
 import { StarsPipe } from '../pipes/stars.pipe';
+import { OrderProgressComponent } from './order-progress/order-progress.component';
+import { OrdersButtonComponent } from './orders-button/orders-button.component';
 
 @NgModule({
   imports: [CommonModule, RouterModule, IonicModule, FormsModule],
-  declarations: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent],
-  exports: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent]
+  declarations: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent, OrderProgressComponent, OrdersButtonComponent],
+  exports: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent, OrderProgressComponent, OrdersButtonComponent]
 })
 export class SharedModule {}

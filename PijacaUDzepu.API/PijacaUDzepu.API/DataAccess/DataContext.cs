@@ -170,6 +170,12 @@ public class DataContext : IdentityDbContext<User, Role, int,
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
 
+            entity.HasOne(o => o.ClosedByAdmin)
+                .WithMany()
+                .HasForeignKey(o => o.ClosedByAdminId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
             entity.HasIndex(o => o.CourierId);
             entity.HasIndex(o => o.TrackingCode);
 

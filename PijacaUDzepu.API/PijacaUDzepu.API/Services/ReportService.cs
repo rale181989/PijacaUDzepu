@@ -311,11 +311,12 @@ public class ReportService : IReportService
     {
         var before = DateTime.UtcNow.AddMinutes(-15);
         var orders = await _context.Orders
-            .Where(o => o.CreatedAt < before && (o.Status == OrderStatus.Pending ||
-                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null &&
-                 (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup))))
+            // Kurira porudžbina čeka od potvrde prodavca
+            .Where(o => (o.Status == OrderStatus.Pending && o.CreatedAt < before) ||
+                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && (o.RespondedAt ?? o.CreatedAt) < before &&
+                 (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup)))
             .OrderBy(o => o.CreatedAt)
-            .Select(o => new { o.Id, VendorName = o.Vendor.Name, o.Status, o.Fulfillment, o.CreatedAt })
+            .Select(o => new { o.Id, VendorName = o.Vendor.Name, o.Status, o.Fulfillment, o.CreatedAt, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.RespondedAt ?? o.CreatedAt })
             .Take(100)
             .ToListAsync();
         var now = DateTime.UtcNow;
@@ -326,7 +327,7 @@ public class ReportService : IReportService
             Status = o.Status,
             Fulfillment = o.Fulfillment,
             CreatedAt = o.CreatedAt,
-            Minutes = (int)(now - o.CreatedAt).TotalMinutes,
+            Minutes = (int)(now - o.Since).TotalMinutes,
             Reason = o.Status == OrderStatus.Pending ? "Čeka prodavca" : "Čeka kurira"
         }).ToList();
     }

@@ -1,0 +1,12 @@
+<ol class="progress">
+  <li *ngFor="let step of steps; let i = index" [class.done]="step.done" [class.current]="i === currentIndex">
+    <span class="dot">
+      <ion-icon *ngIf="step.done" name="checkmark"></ion-icon>
+    </span>
+    <div class="text">
+      <strong>{{ step.key | t }}</strong>
+      <span *ngIf="step.detail" class="detail"> · {{ step.detail }}</span>
+      <span *ngIf="step.done && step.time" class="time">{{ step.time | date:'dd.MM. HH:mm' }}</span>
+    </div>
+  </li>
+</ol>

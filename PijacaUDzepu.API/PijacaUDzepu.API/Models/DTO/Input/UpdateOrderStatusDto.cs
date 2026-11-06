@@ -12,3 +12,11 @@ public class UpdateOrderStatusDto
     [MaxLength(300)]
     public string? Message { get; set; }
 }
+
+// Kurir nije dostavio porudžbinu: razlog je obavezan
+public class NotDeliveredDto
+{
+    [Required(ErrorMessage = "Upišite razlog zašto porudžbina nije dostavljena.")]
+    [MaxLength(300)]
+    public string Reason { get; set; } = string.Empty;
+}

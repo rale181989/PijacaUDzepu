@@ -4,6 +4,19 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Porudžbine</ion-title>
+    <ion-buttons slot="end">
+      <app-orders-button></app-orders-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="tab" (ionChange)="selectTab($any($event).detail.value)">
+      <ion-segment-button value="active">
+        <ion-label>Aktivne<span *ngIf="activeCount !== null"> ({{ activeCount }})</span></ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="finished">
+        <ion-label>Završene</ion-label>
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
 </ion-header>
 
@@ -16,7 +29,7 @@
 
   <div *ngIf="!loading && orders.length === 0" class="empty-state">
     <ion-icon name="receipt-outline" size="large"></ion-icon>
-    <p>Nema porudžbina</p>
+    <p>{{ tab === 'active' ? 'Nema aktivnih porudžbina' : 'Nema završenih porudžbina' }}</p>
   </div>
 
   <ion-list *ngIf="!loading">
@@ -59,7 +72,7 @@
         <div *ngIf="order.fulfillment === 'Courier'" class="guest-info">
           <ion-icon name="bicycle-outline"></ion-icon>
           <span *ngIf="order.courierName">Kurir: {{ order.courierName }}<span *ngIf="order.courierPhone"> · {{ order.courierPhone }}</span></span>
-          <span *ngIf="!order.courierName">Čeka se kurir</span>
+          <span *ngIf="!order.courierName">{{ order.status === 'Pending' ? 'Kuriri je dobijaju kada potvrdite' : 'Čeka se kurir' }}</span>
         </div>
 
         <p *ngIf="order.rating" class="rating">
@@ -70,6 +83,14 @@
           <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Vaš odgovor: {{ order.vendorMessage }}
         </p>
 
+        <p *ngIf="order.status === 'NotDelivered'" class="not-delivered">
+          <ion-icon name="close-circle-outline"></ion-icon>
+          <span>Kurir nije dostavio: {{ order.notDeliveredReason }}. Roba se vraća na tezgu.</span>
+        </p>
+        <p *ngIf="order.closedByAdminAt" class="admin-closed">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Zatvorio administrator<span *ngIf="order.closedByAdminName"> {{ order.closedByAdminName }}</span> · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</span>
+        </p>
         <p *ngIf="order.note" class="note">Napomena: {{ order.note }}</p>
         <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
 

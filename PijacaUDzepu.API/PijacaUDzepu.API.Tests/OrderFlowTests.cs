@@ -57,6 +57,8 @@ public class OrderFlowTests
 
         var product = (await VendorProducts(kupac, 3))[0];
         var order = (await Api.Read<List<Order>>(await kupac.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)))))[0];
+        var vendor = await _factory.As("nikola", "vendor1234");
+        (await vendor.Send(HttpMethod.Put, $"/api/orders/{order.Id}/status", new { status = "Confirmed" })).EnsureSuccessStatusCode();
 
         var results = await Task.WhenAll(
             kurir1.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/accept"),
@@ -133,6 +135,147 @@ public class OrderFlowTests
         var withReason = await vendor.Send(HttpMethod.Put, $"/api/orders/{order.Id}/status", new { status = "Rejected", message = "Nestalo robe" });
         Assert.Equal(HttpStatusCode.OK, withReason.StatusCode);
         Assert.Equal("Rejected", (await Api.Read<Order>(withReason)).Status);
+    }
+
+    // Tok: kupac poruči → prodavac potvrdi → tek tada kuriri vide porudžbinu → kurir prihvati (njegova je)
+    // → "Preuzeo sam robu" (kupac vidi U dostavi) → "Isporučeno" (završena)
+    [Fact]
+    public async Task Courier_flow_follows_vendor_confirmation_pickup_and_delivery()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var vendor = await _factory.As("bojan", "vendor1234");
+        var kurir = await _factory.As("kurir1", "kurir1234");
+        (await kurir.Send(HttpMethod.Put, "/api/couriers/me/shift", new { isOnShift = true })).EnsureSuccessStatusCode();
+        var product = (await VendorProducts(kupac, 8))[0];
+        async Task<int> ActiveCount() => (await kupac.Get<JsonElement>("/api/orders/my-active-count")).GetProperty("count").GetInt32();
+        var before = await ActiveCount();
+        var order = (await Api.Read<List<Order>>(await kupac.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)))))[0];
+        // Crveni broj na ikonici "Moje porudžbine" raste odmah posle porudžbine
+        Assert.Equal(before + 1, await ActiveCount());
+
+        // Dok prodavac ne potvrdi, kurir je ne vidi i ne može da je prihvati
+        Assert.DoesNotContain(await kurir.Get<List<Order>>("/api/couriers/available-orders"), o => o.Id == order.Id);
+        Assert.Equal(HttpStatusCode.Conflict, (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/accept")).StatusCode);
+
+        (await vendor.Send(HttpMethod.Put, $"/api/orders/{order.Id}/status", new { status = "Confirmed" })).EnsureSuccessStatusCode();
+        Assert.Contains(await kurir.Get<List<Order>>("/api/couriers/available-orders"), o => o.Id == order.Id);
+
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/accept")).EnsureSuccessStatusCode();
+        Assert.DoesNotContain(await kurir.Get<List<Order>>("/api/couriers/available-orders"), o => o.Id == order.Id);
+
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/picked-up")).EnsureSuccessStatusCode();
+        var forCustomer = await kupac.Get<JsonElement>($"/api/orders/{order.Id}");
+        Assert.Equal("InDelivery", forCustomer.GetProperty("status").GetString());
+        Assert.Equal(JsonValueKind.String, forCustomer.GetProperty("respondedAt").ValueKind);
+        Assert.Equal(JsonValueKind.String, forCustomer.GetProperty("courierAssignedAt").ValueKind);
+        Assert.Equal(JsonValueKind.String, forCustomer.GetProperty("pickedUpAt").ValueKind);
+
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/delivered")).EnsureSuccessStatusCode();
+        forCustomer = await kupac.Get<JsonElement>($"/api/orders/{order.Id}");
+        Assert.Equal("Completed", forCustomer.GetProperty("status").GetString());
+        Assert.Equal(JsonValueKind.String, forCustomer.GetProperty("deliveredAt").ValueKind);
+        Assert.Equal(before, await ActiveCount());
+    }
+
+    // "Nije dostavljeno": samo posle preuzimanja robe i uz obavezan razlog, koji vide kupac i prodavac
+    [Fact]
+    public async Task Courier_can_report_not_delivered_only_with_a_reason()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var vendor = await _factory.As("ivana", "vendor1234");
+        var kurir = await _factory.As("kurir1", "kurir1234");
+        (await kurir.Send(HttpMethod.Put, "/api/couriers/me/shift", new { isOnShift = true })).EnsureSuccessStatusCode();
+        var product = (await VendorProducts(kupac, 9))[0];
+        var order = (await Api.Read<List<Order>>(await kupac.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)))))[0];
+        (await vendor.Send(HttpMethod.Put, $"/api/orders/{order.Id}/status", new { status = "Confirmed" })).EnsureSuccessStatusCode();
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/accept")).EnsureSuccessStatusCode();
+
+        // Pre preuzimanja robe ne može
+        var tooEarly = await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/not-delivered", new { reason = "Kupac se ne javlja" });
+        Assert.Equal(HttpStatusCode.BadRequest, tooEarly.StatusCode);
+
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/picked-up")).EnsureSuccessStatusCode();
+        var noReason = await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/not-delivered", new { reason = "  " });
+        Assert.Equal(HttpStatusCode.BadRequest, noReason.StatusCode);
+        Assert.Equal("Upišite razlog zašto porudžbina nije dostavljena.", await Api.Message(noReason));
+
+        var res = await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{order.Id}/not-delivered", new { reason = " Kupac se ne javlja na telefon " });
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var forCustomer = await kupac.Get<JsonElement>($"/api/orders/{order.Id}");
+        Assert.Equal("NotDelivered", forCustomer.GetProperty("status").GetString());
+        Assert.Equal("Kupac se ne javlja na telefon", forCustomer.GetProperty("notDeliveredReason").GetString());
+        var forVendor = (await vendor.Get<Paged<JsonElement>>("/api/orders/vendor-orders?finished=true&take=100")).Items
+            .Single(o => o.GetProperty("id").GetInt32() == order.Id);
+        Assert.Equal("Kupac se ne javlja na telefon", forVendor.GetProperty("notDeliveredReason").GetString());
+        Assert.Contains((await kurir.Get<Paged<Order>>("/api/couriers/my-orders?finished=true&take=100")).Items, o => o.Id == order.Id);
+    }
+
+    // Prodavac i kurir imaju odvojene tabove: aktivne (i "U dostavi") i završene/odbijene
+    [Fact]
+    public async Task Vendor_and_courier_lists_split_active_and_finished_orders()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var vendor = await _factory.As("dragan", "vendor1234");
+        var kurir = await _factory.As("kurir2", "kurir1234");
+        (await kurir.Send(HttpMethod.Put, "/api/couriers/me/shift", new { isOnShift = true })).EnsureSuccessStatusCode();
+        var product = (await VendorProducts(kupac, 6))[0];
+
+        var rejected = (await Api.Read<List<Order>>(await kupac.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)))))[0];
+        var delivering = (await Api.Read<List<Order>>(await kupac.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)))))[0];
+        (await vendor.Send(HttpMethod.Put, $"/api/orders/{rejected.Id}/status", new { status = "Rejected", message = "Nestalo robe" })).EnsureSuccessStatusCode();
+        (await vendor.Send(HttpMethod.Put, $"/api/orders/{delivering.Id}/status", new { status = "Confirmed" })).EnsureSuccessStatusCode();
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{delivering.Id}/accept")).EnsureSuccessStatusCode();
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{delivering.Id}/picked-up")).EnsureSuccessStatusCode();
+
+        var vendorActive = (await vendor.Get<Paged<Order>>("/api/orders/vendor-orders?take=100")).Items;
+        var vendorFinished = (await vendor.Get<Paged<Order>>("/api/orders/vendor-orders?finished=true&take=100")).Items;
+        Assert.Contains(vendorActive, o => o.Id == delivering.Id && o.Status == "InDelivery");
+        Assert.DoesNotContain(vendorActive, o => o.Id == rejected.Id);
+        Assert.Contains(vendorFinished, o => o.Id == rejected.Id);
+        Assert.DoesNotContain(vendorFinished, o => o.Id == delivering.Id);
+
+        // Dostava u toku ostaje kuriru među aktivnima i posle osvežavanja
+        var courierActive = (await kurir.Get<Paged<Order>>("/api/couriers/my-orders")).Items;
+        var courierFinished = (await kurir.Get<Paged<Order>>("/api/couriers/my-orders?finished=true&take=100")).Items;
+        Assert.Contains(courierActive, o => o.Id == delivering.Id);
+        Assert.DoesNotContain(courierFinished, o => o.Id == delivering.Id);
+
+        (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{delivering.Id}/delivered")).EnsureSuccessStatusCode();
+        courierFinished = (await kurir.Get<Paged<Order>>("/api/couriers/my-orders?finished=true&take=100")).Items;
+        Assert.Contains(courierFinished, o => o.Id == delivering.Id && o.Status == "Completed");
+    }
+
+    // Porudžbina koja je slučajno ostala otvorena: samo SuperAdmin je može završiti
+    [Fact]
+    public async Task Super_admin_can_complete_an_order_left_open()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var admin = await _factory.As("admin", "admin1234");
+        var product = (await VendorProducts(kupac, 7))[0];
+        var order = (await Api.Read<List<Order>>(await kupac.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)))))[0];
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await kupac.Send(HttpMethod.Post, $"/api/orders/{order.Id}/admin-complete")).StatusCode);
+
+        var open = await admin.Get<Paged<Order>>("/api/orders/open?take=100");
+        Assert.Contains(open.Items, o => o.Id == order.Id);
+
+        var res = await admin.Send(HttpMethod.Post, $"/api/orders/{order.Id}/admin-complete");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var closed = await Api.Read<JsonElement>(res);
+        Assert.Equal("Completed", closed.GetProperty("status").GetString());
+        // Trag: ko je i kada zatvorio porudžbinu vidi i prodavac
+        Assert.False(string.IsNullOrEmpty(closed.GetProperty("closedByAdminName").GetString()));
+        var vendor = await _factory.As("ana", "vendor1234");
+        var forVendor = (await vendor.Get<Paged<JsonElement>>("/api/orders/vendor-orders?finished=true&take=100")).Items
+            .Single(o => o.GetProperty("id").GetInt32() == order.Id);
+        Assert.Equal(closed.GetProperty("closedByAdminName").GetString(), forVendor.GetProperty("closedByAdminName").GetString());
+        Assert.Equal(JsonValueKind.String, forVendor.GetProperty("closedByAdminAt").ValueKind);
+        Assert.DoesNotContain((await admin.Get<Paged<Order>>("/api/orders/open?take=100")).Items, o => o.Id == order.Id);
+
+        var again = await admin.Send(HttpMethod.Post, $"/api/orders/{order.Id}/admin-complete");
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode);
+        Assert.Equal("Porudžbina je već zatvorena.", await Api.Message(again));
     }
 
     [Fact]

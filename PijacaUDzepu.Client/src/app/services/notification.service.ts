@@ -48,6 +48,12 @@ export class NotificationService {
   }
 
   // Bilo kakva promena na porudžbini (status, dodeljen kurir) - stranice se osvežavaju
+  // Kupac: broj porudžbina u toku i "poskok" bedža kada stigne promena
+  private customerActiveSubject = new BehaviorSubject<number>(0);
+  customerActive$ = this.customerActiveSubject.asObservable();
+  private customerBumpSubject = new Subject<void>();
+  customerBump$ = this.customerBumpSubject.asObservable();
+
   private orderUpdatedSubject = new Subject<number>();
   orderUpdated$ = this.orderUpdatedSubject.asObservable();
 
@@ -86,6 +92,7 @@ export class NotificationService {
         this.loadCounts();
       } else {
         this.stopConnection();
+        this.customerActiveSubject.next(0);
       }
     });
 
@@ -114,6 +121,28 @@ export class NotificationService {
     if (this.authService.hasRole('SuperAdmin')) {
       this.loadSupportOpenCount();
     }
+    if (this.authService.hasRole('Customer')) {
+      this.loadCustomerActiveCount();
+    }
+  }
+
+  get customerActiveCount(): number {
+    return this.customerActiveSubject.value;
+  }
+
+  // Poziva se i posle nove porudžbine iz korpe
+  loadCustomerActiveCount() {
+    if (!this.authService.hasRole('Customer')) return;
+    this.http.get<{ count: number }>(`${this.apiUrl}/my-active-count`).subscribe({
+      next: res => this.customerActiveSubject.next(res.count),
+      error: () => {}
+    });
+  }
+
+  private customerChanged() {
+    if (!this.authService.hasRole('Customer')) return;
+    this.loadCustomerActiveCount();
+    this.customerBumpSubject.next();
   }
 
   private loadCourierShift() {
@@ -232,10 +261,17 @@ export class NotificationService {
             await this.showToast(rejectionText(this.ts, data), 'danger', 10000);
           } else if (data.message) {
             await this.showToast(`${data.vendorName}: ${data.message}`, 'primary');
+          } else if (data.status === 'InDelivery') {
+            await this.showToast(`#${data.orderId}: ${this.ts.t('order.onTheWay')}`, 'success');
+          } else if (data.status === 'NotDelivered') {
+            await this.showToast(`#${data.orderId}: ${this.ts.t('order.notDeliveredTitle')}`, 'danger', 10000);
+          } else if (data.status === 'Completed') {
+            await this.showToast(`#${data.orderId}: ${this.ts.t('order.completedToast')}`, 'success');
           }
         }
         this.courierEventsSubject.next({ type: 'status', orderId: data.orderId, status: data.status });
         this.orderUpdatedSubject.next(data.orderId);
+        this.customerChanged();
         if (this.authService.hasRole('VendorAdmin')) this.loadPendingCount();
       });
     });
@@ -244,7 +280,11 @@ export class NotificationService {
       this.ngZone.run(async () => {
         this.sound.play('update');
         this.orderUpdatedSubject.next(data.orderId);
-        await this.showToast(`Kurir ${data.courierName} preuzima porudžbinu #${data.orderId}`, 'success');
+        this.customerChanged();
+        // Kupac: kurir je dodeljen (robu tek preuzima); prodavac: ko dolazi po robu
+        await this.showToast(this.authService.hasRole('Customer')
+          ? `#${data.orderId}: ${this.ts.t('order.courierAssignedToast')} – ${data.courierName}`
+          : `Kurir ${data.courierName} dolazi po robu za porudžbinu #${data.orderId}`, 'success');
       });
     });
 

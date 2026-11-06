@@ -14,7 +14,7 @@ import { PagerComponent } from '../shared/pager/pager.component';
   standalone: false,
 })
 export class CourierOrdersPage implements OnInit, OnDestroy {
-  tab: 'available' | 'mine' | 'settlement' = 'available';
+  tab: 'available' | 'mine' | 'finished' | 'settlement' = 'available';
   settlement: CourierSettlement | null = null;
   settlementDate = '';
   acceptingGroup: string | null = null;
@@ -51,7 +51,8 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
       } else if (event.type === 'unavailable') {
         this.available = this.available.filter(o => o.id !== event.orderId);
       } else if (event.type === 'status') {
-        const order = this.mine.find(o => o.id === event.orderId);
+        // Moja dostava ili slobodna porudžbina za koju je prodavac javio "Spremno"
+        const order = this.mine.find(o => o.id === event.orderId) ?? this.available.find(o => o.id === event.orderId);
         if (order) order.status = event.status as OrderStatus;
       }
     });
@@ -118,6 +119,31 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
       buttons: [
         { text: 'Ne', role: 'cancel' },
         { text: 'Isporučeno', handler: () => this.runStep(order, this.courierService.markDelivered(order.id), 'Porudžbina isporučena') }
+      ]
+    });
+    await alert.present();
+  }
+
+  // Kupac nije tu, pogrešna adresa...: razlog je obavezan, dobijaju ga kupac, prodavac i administrator
+  async markNotDelivered(order: Order) {
+    const alert = await this.alertController.create({
+      header: `Nije dostavljeno #${order.id}`,
+      message: 'Upišite razlog. Kupac i prodavac će ga dobiti, a robu vratite prodavcu.',
+      inputs: [{ name: 'reason', type: 'textarea', placeholder: 'npr. Kupac se ne javlja na telefon', attributes: { maxlength: 300 } }],
+      buttons: [
+        { text: 'Otkaži', role: 'cancel' },
+        {
+          text: 'Potvrdi', role: 'destructive',
+          handler: data => {
+            const reason = data?.reason?.trim();
+            if (!reason) {
+              alert.message = '⚠ Razlog je obavezan – kupac i prodavac moraju da znaju zašto roba nije predata.';
+              return false;
+            }
+            this.runStep(order, this.courierService.markNotDelivered(order.id, reason), 'Prijavljeno: porudžbina nije dostavljena');
+            return true;
+          }
+        }
       ]
     });
     await alert.present();
@@ -223,9 +249,10 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     return item.key;
   }
 
-  selectTab(tab: 'available' | 'mine' | 'settlement') {
+  selectTab(tab: 'available' | 'mine' | 'finished' | 'settlement') {
     this.tab = tab;
     if (tab === 'settlement') this.loadSettlement();
+    if (tab === 'finished') this.loadFinished();
   }
 
   loadSettlement() {
@@ -294,7 +321,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
   getStatusLabel(status: OrderStatus): string {
     const labels: Record<string, string> = {
       'Pending': 'Čeka potvrdu prodavca', 'Confirmed': 'Prodavac priprema', 'Rejected': 'Odbijena',
-      'ReadyForPickup': 'Spremno za preuzimanje', 'InDelivery': 'U dostavi', 'Completed': 'Isporučena', 'Cancelled': 'Otkazana'
+      'ReadyForPickup': 'Spremno za preuzimanje', 'InDelivery': 'U dostavi', 'Completed': 'Isporučena', 'Cancelled': 'Otkazana', 'NotDelivered': 'Nije dostavljena'
     };
     return labels[status] || status;
   }
@@ -302,7 +329,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
   getStatusColor(status: OrderStatus): string {
     const colors: Record<string, string> = {
       'Pending': 'warning', 'Confirmed': 'primary', 'Rejected': 'danger',
-      'ReadyForPickup': 'success', 'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium'
+      'ReadyForPickup': 'success', 'InDelivery': 'tertiary', 'Completed': 'medium', 'Cancelled': 'medium', 'NotDelivered': 'danger'
     };
     return colors[status] || 'medium';
   }

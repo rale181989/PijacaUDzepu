@@ -42,6 +42,10 @@ export class CourierService {
     return this.http.post<Order>(`${this.baseUrl}/orders/${id}/delivered`, {});
   }
 
+  markNotDelivered(id: number, reason: string) {
+    return this.http.post<Order>(`${this.baseUrl}/orders/${id}/not-delivered`, { reason });
+  }
+
   getAvailableOrders() {
     return this.http.get<Order[]>(`${this.baseUrl}/available-orders`);
   }

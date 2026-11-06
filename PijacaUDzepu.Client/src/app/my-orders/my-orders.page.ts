@@ -119,7 +119,8 @@ export class MyOrdersPage implements OnInit, OnDestroy {
       'ReadyForPickup': 'success',
       'InDelivery': 'tertiary',
       'Completed': 'medium',
-      'Cancelled': 'medium'
+      'Cancelled': 'medium',
+      'NotDelivered': 'danger'
     };
     return map[status] || 'medium';
   }

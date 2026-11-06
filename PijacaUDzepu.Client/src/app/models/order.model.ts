@@ -26,6 +26,8 @@ export interface Order {
   courierName?: string;
   courierPhone?: string;
   courierAssignedAt?: string;
+  // Prodavac je odgovorio (potvrdio ili odbio)
+  respondedAt?: string | null;
   pickedUpAt?: string;
   deliveredAt?: string;
   items: OrderItem[];
@@ -34,6 +36,12 @@ export interface Order {
   marketAddress?: string | null;
   // Ocena kupca posle preuzimanja
   rating?: OrderRating | null;
+  // Kurir nije dostavio: obavezan razlog
+  notDeliveredReason?: string | null;
+  notDeliveredAt?: string | null;
+  // Trag kada je SuperAdmin ručno zatvorio porudžbinu koja je ostala otvorena
+  closedByAdminName?: string | null;
+  closedByAdminAt?: string | null;
 }
 
 export interface OrderRating {
@@ -83,4 +91,4 @@ export type FulfillmentType = 'Pickup' | 'Courier';
 // CustomerCancelEnabled u OrderService na serveru
 export const CUSTOMER_CANCEL_ENABLED = false;
 
-export type OrderStatus = 'Pending' | 'Confirmed' | 'Rejected' | 'ReadyForPickup' | 'InDelivery' | 'Completed' | 'Cancelled';
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Rejected' | 'ReadyForPickup' | 'InDelivery' | 'Completed' | 'Cancelled' | 'NotDelivered';

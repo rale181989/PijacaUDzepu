@@ -4,6 +4,7 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-buttons slot="end">
+      <app-orders-button></app-orders-button>
       <app-cart-button></app-cart-button>
     </ion-buttons>
     <ion-title>{{ code ? ('track.title' | t) : ('orders.title' | t) }}</ion-title>
@@ -68,9 +69,20 @@
             <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>
             <p *ngIf="order.vendorMessage">{{ order.vendorMessage }}</p>
           </div>
+          <div *ngIf="order.status === 'NotDelivered'" class="vendor-message rejected">
+            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.notDeliveredTitle' | t }}</strong>
+            <p>{{ order.notDeliveredReason }}</p>
+          </div>
+          <div *ngIf="order.status !== 'Rejected' && order.status !== 'Cancelled' && order.status !== 'NotDelivered'" class="progress-box">
+            <app-order-progress [order]="order"></app-order-progress>
+          </div>
           <div *ngIf="order.vendorMessage && order.status !== 'Rejected'" class="vendor-message">
             <strong><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ 'order.vendorMessage' | t }}</strong>
             <p>{{ order.vendorMessage }}</p>
+          </div>
+          <div *ngIf="order.closedByAdminAt" class="vendor-message">
+            <strong><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }}</strong>
+            <p>{{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
           </div>
 
           <div *ngIf="order.fulfillment === 'Courier' && order.status !== 'Rejected' && order.status !== 'Cancelled'" class="courier">
@@ -81,7 +93,7 @@
                 <p *ngIf="order.courierPhone"><a [href]="'tel:' + order.courierPhone">{{ order.courierPhone }}</a></p>
                 <p *ngIf="order.status === 'InDelivery'">{{ 'order.onTheWay' | t }}</p>
               </ng-container>
-              <strong *ngIf="!order.courierName">{{ 'order.courierPending' | t }}</strong>
+              <strong *ngIf="!order.courierName && (order.status === 'Confirmed' || order.status === 'ReadyForPickup')">{{ 'order.courierPending' | t }}</strong>
               <p *ngIf="order.deliveryAddress" class="muted">{{ 'order.deliveryAddress' | t }}: {{ order.deliveryAddress }}</p>
             </div>
           </div>

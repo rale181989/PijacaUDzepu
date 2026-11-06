@@ -43,9 +43,17 @@ public class OrderService : IOrderService
     // Cena Eko kurira po porudžbini (po prodavcu); podešava se sa Delivery__CourierFee
     public decimal CourierFee => _config.GetValue<decimal?>("Delivery:CourierFee") ?? 300m;
 
-    // Kuriri vide samo porudžbine koje su još u toku
+    // Porudžbine u toku pre preuzimanja robe (na čekanju, potvrđene, spremne); bez "U dostavi"
     private static readonly OrderStatus[] ActiveStatuses =
         { OrderStatus.Pending, OrderStatus.Confirmed, OrderStatus.ReadyForPickup };
+
+    // Kurir vidi i prihvata porudžbinu tek kada je prodavac potvrdi (tok: kupac → prodavac → kurir)
+    private static readonly OrderStatus[] CourierOfferStatuses =
+        { OrderStatus.Confirmed, OrderStatus.ReadyForPickup };
+
+    // Tab "Aktivne" kod prodavca i kurira: sve što još nije završeno, odbijeno ili otkazano
+    private static readonly OrderStatus[] OpenStatuses =
+        { OrderStatus.Pending, OrderStatus.Confirmed, OrderStatus.ReadyForPickup, OrderStatus.InDelivery };
 
     private const string CouriersGroup = "couriers";
 
@@ -342,11 +350,17 @@ public class OrderService : IOrderService
         };
     }
 
-    public async Task<PagedResult<OrderDto>> GetVendorOrders(int vendorId, int skip = 0, int take = 20)
+    // Aktivne i završene (završene, odbijene, otkazane) porudžbine prodavca su odvojeni tabovi
+    public async Task<PagedResult<OrderDto>> GetVendorOrders(int vendorId, bool finished, int skip = 0, int take = 20)
     {
-        var query = OrdersWithDetails()
-            .Where(o => o.VendorId == vendorId)
-            .OrderByDescending(o => o.CreatedAt);
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+
+        var query = OrdersWithDetails().Where(o => o.VendorId == vendorId);
+        query = finished
+            ? query.Where(o => !OpenStatuses.Contains(o.Status))
+            : query.Where(o => OpenStatuses.Contains(o.Status));
+        query = query.OrderByDescending(o => o.CreatedAt).ThenByDescending(o => o.Id);
 
         var totalCount = await query.CountAsync();
 
@@ -405,6 +419,13 @@ public class OrderService : IOrderService
             await StopVendorAlarm(order);
         if (newStatus == OrderStatus.Rejected)
             await RestoreStock(order);
+        if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue && newStatus == OrderStatus.Confirmed)
+            await NotifyCouriersNewOrder(order);
+        // Kuriri koji još biraju vide da je roba spremna
+        if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue && newStatus == OrderStatus.ReadyForPickup)
+            await _hubContext.Clients.Group(CouriersGroup).SendAsync("OrderStatusChanged",
+                new { orderId = order.Id, status = newStatus.ToString(), vendorName = order.Vendor.Name, message = (string?)null });
+        // Porudžbine iz vremena kada su kuriri obaveštavani odmah: odbijena prestaje da im zvoni
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue && newStatus == OrderStatus.Rejected)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -435,6 +456,54 @@ public class OrderService : IOrderService
         await NotifyStatusChanged(order, notifyCustomer: false);
         await StopVendorAlarm(order);
         await RestoreStock(order);
+        if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue)
+            await NotifyCouriersOrderUnavailable(order.Id);
+
+        return MapToDto(order);
+    }
+
+    // SuperAdmin: sve porudžbine koje još nisu zatvorene, najstarije prve (zaboravljene se vide odmah)
+    public async Task<PagedResult<OrderDto>> GetOpenOrders(int skip = 0, int take = 20)
+    {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+
+        var query = OrdersWithDetails().Where(o => OpenStatuses.Contains(o.Status));
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderBy(o => o.CreatedAt)
+            .ThenBy(o => o.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(o => MapToDto(o))
+            .ToListAsync();
+
+        return new PagedResult<OrderDto> { Items = items, TotalCount = totalCount, HasMore = skip + take < totalCount };
+    }
+
+    // SuperAdmin zatvara porudžbinu koja je slučajno ostala otvorena (prodavac ili kurir zaboravio da je završi).
+    // Kupac ne dobija push "isporučeno" za staru porudžbinu; prestaje zvono prodavcu i kuririma.
+    public async Task<OrderDto> AdminCompleteOrder(int orderId, int adminId)
+    {
+        var order = await OrdersWithDetails().FirstOrDefaultAsync(o => o.Id == orderId)
+            ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
+
+        if (!OpenStatuses.Contains(order.Status))
+            throw new InvalidOperationException(L.T("Porudžbina je već zatvorena."));
+
+        var wasPending = order.Status == OrderStatus.Pending;
+        order.Status = OrderStatus.Completed;
+        order.UpdatedAt = DateTime.UtcNow;
+        if (wasPending) order.RespondedAt = DateTime.UtcNow;
+        order.ClosedByAdminId = adminId;
+        order.ClosedByAdminAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        // Ime admina za trag u odgovoru
+        await _context.Entry(order).Reference(o => o.ClosedByAdmin).LoadAsync();
+
+        await NotifyStatusChanged(order, notifyCustomer: false);
+        if (wasPending)
+            await StopVendorAlarm(order);
         if (order.Fulfillment == FulfillmentType.Courier && !order.CourierId.HasValue)
             await NotifyCouriersOrderUnavailable(order.Id);
 
@@ -522,6 +591,7 @@ public class OrderService : IOrderService
         var dto = MapToDto(o);
         dto.DeliveryAddress = MaskAddress(o.DeliveryAddress);
         dto.ContactPhone = MaskPhone(o.ContactPhone);
+        dto.ClosedByAdminName = null; // gost vidi samo da je zatvorio administrator, ne i ko
         return dto;
     }
 
@@ -536,6 +606,9 @@ public class OrderService : IOrderService
         return new string(phone.Select(c => char.IsDigit(c) && ++seen <= digits - 2 ? '•' : c).ToArray());
     }
 
+    public Task<int> GetCustomerActiveCount(int customerId) =>
+        _context.Orders.CountAsync(o => o.CustomerId == customerId && OpenStatuses.Contains(o.Status));
+
     public async Task<int> GetVendorPendingCount(int vendorId)
     {
         return await _context.Orders
@@ -545,7 +618,7 @@ public class OrderService : IOrderService
     public async Task<List<OrderDto>> GetAvailableCourierOrders(int courierId)
     {
         var orders = await OrdersWithDetails()
-            .Where(o => o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && ActiveStatuses.Contains(o.Status))
+            .Where(o => o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && CourierOfferStatuses.Contains(o.Status))
             .Where(o => !_context.CourierDeclines.Any(d => d.OrderId == o.Id && d.CourierId == courierId))
             .OrderByDescending(o => o.CreatedAt)
             .Take(100)
@@ -562,8 +635,8 @@ public class OrderService : IOrderService
 
         var query = OrdersWithDetails().Where(o => o.CourierId == courierId);
         query = finished
-            ? query.Where(o => !ActiveStatuses.Contains(o.Status))
-            : query.Where(o => ActiveStatuses.Contains(o.Status));
+            ? query.Where(o => !OpenStatuses.Contains(o.Status))
+            : query.Where(o => OpenStatuses.Contains(o.Status));
 
         var totalCount = await query.CountAsync();
         var items = await query
@@ -586,7 +659,7 @@ public class OrderService : IOrderService
 
         // Jedan uslovni UPDATE: od više kurira koji istovremeno prihvate, upis uspeva samo prvom
         var updated = await _context.Orders
-            .Where(o => o.Id == orderId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && ActiveStatuses.Contains(o.Status))
+            .Where(o => o.Id == orderId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && CourierOfferStatuses.Contains(o.Status))
             .ExecuteUpdateAsync(set => set
                 .SetProperty(o => o.CourierId, (int?)courierId)
                 .SetProperty(o => o.CourierAssignedAt, (DateTime?)now)
@@ -615,7 +688,7 @@ public class OrderService : IOrderService
             $"Kurir za porudžbinu #{order.Id}", $"{courierName} dolazi po robu.", "/vendor-orders");
         if (order.CustomerId.HasValue)
             await _pushService.SendToUsers(new[] { order.CustomerId.Value },
-                "Kurir je preuzeo vašu porudžbinu", $"{courierName} će vam dostaviti porudžbinu od {order.Vendor.Name}.", $"/order-detail/{order.Id}");
+                "Dodeljen je kurir", $"{courierName} preuzima robu kod {order.Vendor.Name} i donosi vam je.", $"/order-detail/{order.Id}");
 
         return MapToDto(order);
     }
@@ -641,7 +714,7 @@ public class OrderService : IOrderService
     public async Task<List<OrderDto>> AcceptCourierCheckout(Guid checkoutId, int courierId)
     {
         var ids = await _context.Orders
-            .Where(o => o.CheckoutId == checkoutId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && ActiveStatuses.Contains(o.Status))
+            .Where(o => o.CheckoutId == checkoutId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && CourierOfferStatuses.Contains(o.Status))
             .Where(o => !_context.CourierDeclines.Any(d => d.OrderId == o.Id && d.CourierId == courierId))
             .Select(o => o.Id)
             .ToListAsync();
@@ -679,7 +752,7 @@ public class OrderService : IOrderService
         {
             Date = date,
             Delivered = delivered.Count,
-            InProgress = await _context.Orders.CountAsync(o => o.CourierId == courierId && ActiveStatuses.Contains(o.Status)),
+            InProgress = await _context.Orders.CountAsync(o => o.CourierId == courierId && OpenStatuses.Contains(o.Status)),
             Collected = delivered.Sum(d => d.TotalAmount + d.DeliveryFee),
             OwedToVendors = delivered.Sum(d => d.TotalAmount),
             Earned = delivered.Sum(d => d.DeliveryFee),
@@ -730,6 +803,37 @@ public class OrderService : IOrderService
         return MapToDto(order);
     }
 
+    // Kurir nije uspeo da preda robu (kupac nije tu, pogrešna adresa...). Razlog je obavezan i vide ga
+    // kupac, prodavac i administrator; roba se vraća prodavcu, pa se vraća i stanje.
+    public async Task<OrderDto> MarkNotDelivered(int orderId, int courierId, string reason)
+    {
+        var order = await LoadCourierOrder(orderId, courierId);
+        if (order.Status != OrderStatus.InDelivery)
+            throw new InvalidOperationException(L.T("Nedostavljanje možete prijaviti tek nakon što preuzmete robu."));
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new InvalidOperationException(L.T("Upišite razlog zašto porudžbina nije dostavljena."));
+
+        order.Status = OrderStatus.NotDelivered;
+        order.NotDeliveredReason = reason.Trim();
+        order.NotDeliveredAt = DateTime.UtcNow;
+        order.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        await NotifyStatusChanged(order, notifyCourier: false);
+        await RestoreStock(order);
+
+        var courierName = $"{order.Courier!.FirstName} {order.Courier.LastName}".Trim();
+        await _pushService.SendToUsers(await VendorUserIds(order.VendorId),
+            $"Porudžbina #{order.Id} nije dostavljena", $"{courierName}: {order.NotDeliveredReason}. Roba se vraća na tezgu.", "/vendor-orders");
+        var adminIds = await _context.Users
+            .Where(u => u.IsActive && u.UserRoles.Any(ur => ur.Role.Name == "SuperAdmin"))
+            .Select(u => u.Id).ToListAsync();
+        await _pushService.SendToUsers(adminIds,
+            $"Porudžbina #{order.Id} nije dostavljena", $"{order.Vendor.Name} · {courierName}: {order.NotDeliveredReason}", "/admin-reports");
+
+        return MapToDto(order);
+    }
+
     private async Task<Order> LoadCourierOrder(int orderId, int courierId) =>
         await OrdersWithDetails().FirstOrDefaultAsync(o => o.Id == orderId && o.CourierId == courierId)
         ?? throw new KeyNotFoundException(L.T("Porudžbina nije pronađena."));
@@ -761,6 +865,7 @@ public class OrderService : IOrderService
                 OrderStatus.ReadyForPickup => pickup ? "Roba je spremna, možete doći po nju." : "Porudžbina je spremna i čeka kurira.",
                 OrderStatus.InDelivery => "Kurir je preuzeo robu i krenuo ka vama.",
                 OrderStatus.Completed => pickup ? "Rezervacija je preuzeta. Hvala!" : "Porudžbina je isporučena. Prijatno!",
+                OrderStatus.NotDelivered => $"Porudžbina nije dostavljena. Razlog: {order.NotDeliveredReason}",
                 _ => null
             };
             if (text != null && freshMessage != null)
@@ -791,7 +896,8 @@ public class OrderService : IOrderService
         .Include(o => o.Vendor).ThenInclude(v => v.Market)
         .Include(o => o.Vendor).ThenInclude(v => v.Stall)
         .Include(o => o.Customer)
-        .Include(o => o.Courier);
+        .Include(o => o.Courier)
+        .Include(o => o.ClosedByAdmin);
 
     private async Task NotifyNewOrders(List<Order> orders)
     {
@@ -816,23 +922,26 @@ public class OrderService : IOrderService
                 order.Fulfillment == FulfillmentType.Pickup ? $"Nova rezervacija #{order.Id}" : $"Nova porudžbina #{order.Id} (Eko kurir)",
                 $"{customerName} · {order.TotalAmount:0} din", "/vendor-orders");
 
-            if (order.Fulfillment != FulfillmentType.Courier) continue;
-
-            // Obaveštenje dobijaju samo kuriri koji su na smeni
-            var onShift = await _context.CourierProfiles
-                .Where(c => c.IsOnShift && c.User.IsActive)
-                .Select(c => c.UserId)
-                .ToListAsync();
-            if (onShift.Count == 0) continue;
-
-            await _hubContext.Clients.Groups(onShift.Select(id => $"user_{id}").ToList())
-                .SendAsync("CourierNewOrder", MapToCourierPreview(order));
-            // Zvoni kuriru dok porudžbinu ne prihvati ili odbije (ili dok je ne preuzme drugi kurir)
-            await _pushService.SendAlarm(onShift, CourierAlarmTag(order.Id),
-                "Nova porudžbina za dostavu",
-                $"{order.Vendor.Name} ({order.Vendor.Market?.Name}) → {order.DeliveryAddress}",
-                "/courier-orders");
+            // Kuriri dobijaju porudžbinu tek kada je prodavac potvrdi (NotifyCouriersNewOrder)
         }
+    }
+
+    // Prodavac je potvrdio dostavu: kuriri na smeni je dobijaju i zvoni im dok je neko ne prihvati
+    private async Task NotifyCouriersNewOrder(Order order)
+    {
+        var onShift = await _context.CourierProfiles
+            .Where(c => c.IsOnShift && c.User.IsActive)
+            .Select(c => c.UserId)
+            .ToListAsync();
+        if (onShift.Count == 0) return;
+
+        await _hubContext.Clients.Groups(onShift.Select(id => $"user_{id}").ToList())
+            .SendAsync("CourierNewOrder", MapToCourierPreview(order));
+        // Zvoni kuriru dok porudžbinu ne prihvati ili odbije (ili dok je ne preuzme drugi kurir)
+        await _pushService.SendAlarm(onShift, CourierAlarmTag(order.Id),
+            "Nova porudžbina za dostavu",
+            $"{order.Vendor.Name} ({order.Vendor.Market?.Name}) → {order.DeliveryAddress}",
+            "/courier-orders");
     }
 
     // Porudžbina više nije slobodna (prihvaćena, odbijena ili otkazana): nestaje kod svih kurira i prestaje da im zvoni
@@ -875,10 +984,24 @@ public class OrderService : IOrderService
             _ => false
         };
 
+        // Najčešće: status je u međuvremenu promenio neko drugi (npr. kurir je već preuzeo robu)
         if (!valid)
             throw new InvalidOperationException(
-                L.T("Nije moguć prelaz statusa iz '{0}' u '{1}'.", current, next));
+                L.T("Nije moguć prelaz statusa iz '{0}' u '{1}'.", StatusName(current), StatusName(next)));
     }
+
+    private static string StatusName(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => L.T("na čekanju"),
+        OrderStatus.Confirmed => L.T("potvrđena"),
+        OrderStatus.Rejected => L.T("odbijena"),
+        OrderStatus.ReadyForPickup => L.T("spremna"),
+        OrderStatus.InDelivery => L.T("u dostavi"),
+        OrderStatus.Completed => L.T("završena"),
+        OrderStatus.Cancelled => L.T("otkazana"),
+        OrderStatus.NotDelivered => L.T("nije dostavljena"),
+        _ => status.ToString()
+    };
 
     private static OrderDto MapToDto(Order o) => new()
     {
@@ -908,8 +1031,14 @@ public class OrderService : IOrderService
         VendorPhones = o.Vendor.Phones,
         CourierId = o.CourierId,
         CourierName = o.Courier != null ? $"{o.Courier.FirstName} {o.Courier.LastName}".Trim() : null,
+        NotDeliveredReason = o.NotDeliveredReason,
+        NotDeliveredAt = o.NotDeliveredAt,
+        ClosedByAdminName = o.ClosedByAdmin == null ? null
+            : $"{o.ClosedByAdmin.FirstName} {o.ClosedByAdmin.LastName}".Trim() is { Length: > 0 } adminName ? adminName : o.ClosedByAdmin.UserName,
+        ClosedByAdminAt = o.ClosedByAdminAt,
         CourierPhone = o.Courier?.PhoneNumber,
         CourierAssignedAt = o.CourierAssignedAt,
+        RespondedAt = o.RespondedAt,
         PickedUpAt = o.PickedUpAt,
         DeliveredAt = o.DeliveredAt,
         Items = o.Items.Select(i => new OrderItemDto
