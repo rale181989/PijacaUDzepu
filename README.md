@@ -15,7 +15,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
 - Registracija traži telefon i adresu (sprat i stan opciono); upisuju se sami u korpu, a menjaju se u „Moj nalog”
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
-- Moje porudžbine i van menija: ikonica gore desno pored korpe sa crvenim brojem porudžbina u toku (menja se uživo i „poskoči” kad stigne promena); odbijena porudžbina je precrtana, sa razlogom prodavca
+- Moje porudžbine i van menija: ikonica gore desno pored korpe sa crvenim brojem porudžbina u toku (menja se uživo i „poskoči” kad stigne promena); odbijena ili nedostavljena porudžbina je cela crvena u spisku, precrtana, sa razlogom prodavca ili kurira
 - Tok porudžbine korak po korak, sa vremenom: poručeno → prodavac potvrdio → dodeljen kurir → kurir preuzeo robu → dostavljeno (rezervacija: rezervisano → potvrđeno → spremno → preuzeto)
 - Omiljeni proizvodi – srce na slici (i bez naloga), filter „Omiljeni” i „Obavesti me kad bude dostupno”
 - Ocena prodavca i kurira posle preuzimanja; prosečna ocena prodavca na karticama proizvoda
@@ -23,7 +23,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Jezici: srpski, engleski, ruski – i poruke o greškama sa servera stižu na izabranom jeziku
 
 **Prodavac**
-- Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost (fotografija sa telefona se smanjuje već u aplikaciji i odmah se vidi na formi; ako slanje slike ne uspe, forma to jasno kaže)
+- Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost; dupli dodir na „Sačuvaj” ne pravi duplikat (fotografija sa telefona se smanjuje već u aplikaciji i odmah se vidi na formi; ako slanje slike ne uspe, forma to jasno kaže)
 - Porudžbine i van menija: ikonica gore desno na svim stranicama prodavca, sa crvenim brojem porudžbina na čekanju (raste odmah kad stigne nova i „poskoči”)
 - Porudžbine u tabovima „Aktivne” i „Završene” (završene, odbijene, otkazane), po stranama; zvono dok ima porudžbina na čekanju
 - Potvrdi / odbij (razlog obavezan, kupac ga dobija i e-mailom) / spremno / kupac preuzeo
@@ -31,6 +31,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Količina na stanju (opciono): porudžbine je umanjuju, na nuli proizvod izlazi iz ponude
 - Brza izmena cene i stanja na listi proizvoda
 - Pregled dana: šta treba spremiti (zbir po proizvodu), šta je pri kraju, današnji promet
+- Prodavac ne vidi kupčev deo aplikacije (ponudu, korpu) i ne može da poručuje
 
 **Eko kurir**
 - Smena; zvono za nove dostave dok ih ne prihvati ili odbije
@@ -38,6 +39,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Preuzeo sam robu (kupac vidi da je roba kod kurira) → isporučeno, ili „Nije dostavljeno” uz obavezan razlog (vide ga kupac, prodavac i administrator; stanje se vraća); tabovi „Moje” (dostave u toku) i „Završene” (po stranama)
 - Porudžbina od više tezgi iste korpe: grupisano, „Prihvati sve”, ruta sa svim tezgama u Google mapama
 - Dnevni obračun: naplaćeno od kupaca, koliko se predaje kom prodavcu, zarada
+- Kurir ne vidi kupčev deo aplikacije i ne može da poručuje
 
 **Administrator**
 - Pijace, tezge, prodavci (pozivnice e-mailom), korisnici (pretraga, po stranama), kuriri
@@ -84,7 +86,7 @@ cd PijacaUDzepu.API
 dotnet test PijacaUDzepu.API.Tests     # pokreće ceo API nad posebnom bazom PijacaUDzepu_Test (lokalni Postgres)
 ```
 Pokrivaju: podelu korpe po prodavcima i iznose, „prvi kurir dobija porudžbinu”, stanje (bez prodaje preko stanja),
-zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji, sliku proizvoda bez ekstenzije u imenu, razdvajanje aktivnih i završenih porudžbina, zatvaranje zaostale porudžbine od strane administratora, tok dostave (kurir tek posle potvrde prodavca), „nije dostavljeno” sa razlogom i brisanje naloga.
+zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji, sliku proizvoda bez ekstenzije u imenu, razdvajanje aktivnih i završenih porudžbina, zabranu kupovine prodavcima i kuririma, zatvaranje zaostale porudžbine od strane administratora, tok dostave (kurir tek posle potvrde prodavca), „nije dostavljeno” sa razlogom i brisanje naloga.
 
 ## Praćenje grešaka
 Ako je na serveru podešen `SENTRY_DSN`, greške iz produkcije stižu u Sentry (sa detaljima, bez ličnih podataka).

@@ -82,7 +82,7 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-list [class.struck]="order.status === 'Rejected'">
+    <ion-list [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
       <ion-list-header>
         <ion-label>{{ 'order.items' | t }}</ion-label>
       </ion-list-header>
@@ -115,7 +115,7 @@
       </ion-button>
     </div>
 
-    <div class="total-row" [class.struck]="order.status === 'Rejected'">
+    <div class="total-row" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
       <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
       <ng-container *ngIf="order.deliveryFee > 0">
         <p>{{ 'order.deliveryFee' | t }}: {{ order.deliveryFee | number:'1.0-0' }} {{ 'din' | t }}</p>

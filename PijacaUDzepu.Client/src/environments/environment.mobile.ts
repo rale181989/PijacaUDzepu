@@ -8,7 +8,7 @@ export const environment = {
   // Javna adresa sajta za linkove koji se dele (npr. link za praćenje porudžbine)
   publicUrl: DEFAULT_API_SERVER,
   serverSelectable: true,
-  // Uključiti tek kada se android/app/google-services.json doda u projekat:
-  // bez njega PushNotifications.register() ruši Android aplikaciju u nativnom kodu
-  pushEnabled: false
+  // Zahteva android/app/google-services.json (lokalno, nije u repozitorijumu): bez njega
+  // PushNotifications.register() ruši Android aplikaciju u nativnom kodu
+  pushEnabled: true
 };

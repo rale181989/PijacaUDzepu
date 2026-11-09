@@ -211,6 +211,31 @@ public class OrderFlowTests
         Assert.Contains((await kurir.Get<Paged<Order>>("/api/couriers/my-orders?finished=true&take=100")).Items, o => o.Id == order.Id);
     }
 
+    // Prodavac i kurir ne mogu da kupuju, ni sa nalogom ni kao gost dok su prijavljeni
+    [Fact]
+    public async Task Vendors_and_couriers_cannot_order()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var product = (await VendorProducts(kupac, 1))[0];
+        var guestBody = new
+        {
+            items = new[] { new { productId = product.Id, quantity = 1 } },
+            fulfillment = "Pickup", guestName = "Test", guestPhone = "0641234567"
+        };
+
+        foreach (var (user, pass) in new[] { ("marko", "vendor1234"), ("kurir1", "kurir1234") })
+        {
+            var api = await _factory.As(user, pass);
+            var own = await api.Send(HttpMethod.Post, "/api/orders", CourierOrder((product.Id, 1)));
+            Assert.Equal(HttpStatusCode.Forbidden, own.StatusCode);
+            Assert.Equal("Prodavci i kuriri ne mogu da poručuju robu. Odjavite se ili koristite kupčev nalog.", await Api.Message(own));
+            Assert.Equal(HttpStatusCode.Forbidden, (await api.Send(HttpMethod.Post, "/api/orders/guest", guestBody)).StatusCode);
+        }
+
+        // Kupac i gost bez naloga i dalje poručuju
+        Assert.Equal(HttpStatusCode.OK, (await (await _factory.As()).Send(HttpMethod.Post, "/api/orders/guest", guestBody)).StatusCode);
+    }
+
     // Prodavac i kurir imaju odvojene tabove: aktivne (i "U dostavi") i završene/odbijene
     [Fact]
     public async Task Vendor_and_courier_lists_split_active_and_finished_orders()

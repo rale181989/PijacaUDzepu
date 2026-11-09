@@ -24,7 +24,7 @@
   </div>
 
   <ion-list *ngIf="!loading">
-    <ion-card *ngFor="let order of orders" [routerLink]="['/order-detail', order.id]" [class.rejected]="order.status === 'Rejected'">
+    <ion-card *ngFor="let order of orders" [routerLink]="['/order-detail', order.id]" [class.failed]="order.status === 'Rejected' || order.status === 'NotDelivered'">
       <ion-card-header>
         <ion-card-subtitle>
           {{ 'orders.order' | t }} #{{ order.id }} — {{ order.vendorName }}
@@ -34,20 +34,20 @@
         </ion-badge>
       </ion-card-header>
       <ion-card-content>
-        <!-- Odbijena porudžbina: stavke i iznos precrtani, ispod razlog koji je napisao prodavac -->
-        <ng-container *ngIf="order.status === 'Rejected'; else regular">
+        <!-- Odbijena ili nedostavljena porudžbina: crvena kartica, stavke i iznos precrtani, ispod razlog -->
+        <ng-container *ngIf="order.status === 'Rejected' || order.status === 'NotDelivered'; else regular">
           <p *ngFor="let item of order.items" class="struck">{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p>
           <p class="total struck">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</p>
           <div class="reject-reason">
-            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>
-            <p *ngIf="order.vendorMessage">{{ order.vendorMessage }}</p>
+            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.status === 'Rejected' ? 'order.rejectedTitle' : 'order.notDeliveredTitle') | t }}</strong>
+            <p *ngIf="order.status === 'Rejected' && order.vendorMessage">{{ order.vendorMessage }}</p>
+            <p *ngIf="order.status === 'NotDelivered' && order.notDeliveredReason">{{ order.notDeliveredReason }}</p>
           </div>
         </ng-container>
         <ng-template #regular>
           <p>{{ order.items.length }} {{ 'cart.items' | t }}</p>
           <p class="total">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}<span *ngIf="order.deliveryFee > 0"> ({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span></p>
           <p *ngIf="order.vendorMessage" class="date"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ order.vendorMessage }}</p>
-          <p *ngIf="order.status === 'NotDelivered'" class="date not-delivered"><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.notDeliveredTitle' | t }}: {{ order.notDeliveredReason }}</p>
           <p *ngIf="order.closedByAdminAt" class="date"><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }} · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
         </ng-template>
         <p *ngIf="order.fulfillment === 'Pickup'" class="date"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}</p>

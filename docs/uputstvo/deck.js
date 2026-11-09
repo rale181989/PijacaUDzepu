@@ -295,7 +295,7 @@ async function build() {
   s.title('Nalog kupca');
   s.steps([
     { h: 'Registracija', d: 'Nalog nije obavezan. Pri registraciji upisujete telefon i adresu (sprat i stan po želji); oni se sami upisuju u korpu.' },
-    { h: 'Moje porudžbine', d: 'Ikonica gore desno, pored korpe: crveni broj su porudžbine u toku i „poskoči” kad stigne promena. Spisak sa statusom, iznosom, načinom preuzimanja, porukom prodavca i imenom kurira.' },
+    { h: 'Moje porudžbine', d: 'Ikonica gore desno, pored korpe: crveni broj su porudžbine u toku i „poskoči” kad stigne promena. Spisak sa statusom, iznosom, načinom preuzimanja, porukom prodavca i imenom kurira. Odbijena ili nedostavljena porudžbina je crvena, sa razlogom.' },
     { h: 'Detalji', n: '→', d: 'Dodir na porudžbinu otvara detalje (sledeća strana).' }
   ], 0.6, 1.75, 5.2);
   s.phone('c-register', LEFT_X, PHONE_Y, PHONE_H, 'Registracija sa telefonom i adresom', [[1, 0.93, 0.56]]);
@@ -355,9 +355,9 @@ async function build() {
     { h: 'Pozivnica', d: 'Nalog otvara administrator. Na e-mail vam stiže pozivnica, a preko nje birate lozinku.' },
     { h: 'Jezik', d: 'Srpski, engleski ili ruski: izbor važi za ceo meni.' },
     { h: 'Porudžbine', d: 'Ikonica gore desno na svakoj stranici, sa crvenim brojem porudžbina koje čekaju vaš odgovor (odmah raste kad stigne nova). Tab „Aktivne” su porudžbine u toku, a „Završene” završene i odbijene.' },
-    { h: 'Profil, proizvodi, odjava', n: '✓', d: 'Ostale stavke vode do profila tezge, spiska proizvoda i dodavanja novog proizvoda.' }
+    { h: 'Profil, proizvodi, odjava', n: '✓', d: 'Ostale stavke vode do profila tezge, spiska proizvoda i dodavanja novog proizvoda. Kao prodavac ne vidite ponudu i korpu: za kupovinu se odjavite ili koristite kupčev nalog.' }
   ]);
-  s.phone('v-menu', RIGHT_X, PHONE_Y, PHONE_H, 'Meni prodavca', [[2, 0.62, 0.096], [3, 0.56, 0.485]]);
+  s.phone('v-menu', RIGHT_X, PHONE_Y, PHONE_H, 'Meni prodavca', [[2, 0.62, 0.096], [3, 0.56, 0.435]]);
 
   // 14. Nova porudžbina
   s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');

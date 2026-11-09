@@ -2,12 +2,14 @@ import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
+import { ShopGuard } from './guards/shop.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   {
     path: 'home',
-    loadChildren: () => import('./home/home.module').then(m => m.HomePageModule)
+    loadChildren: () => import('./home/home.module').then(m => m.HomePageModule),
+    canActivate: [ShopGuard]
   },
   {
     path: 'login',
@@ -32,7 +34,8 @@ const routes: Routes = [
   },
   {
     path: 'cart',
-    loadChildren: () => import('./cart/cart.module').then(m => m.CartPageModule)
+    loadChildren: () => import('./cart/cart.module').then(m => m.CartPageModule),
+    canActivate: [ShopGuard]
   },
   {
     path: 'legal/:doc',
@@ -56,21 +59,23 @@ const routes: Routes = [
   },
   {
     path: 'prati',
-    loadChildren: () => import('./track-order/track-order.module').then(m => m.TrackOrderPageModule)
+    loadChildren: () => import('./track-order/track-order.module').then(m => m.TrackOrderPageModule),
+    canActivate: [ShopGuard]
   },
   {
     path: 'prati/:code',
-    loadChildren: () => import('./track-order/track-order.module').then(m => m.TrackOrderPageModule)
+    loadChildren: () => import('./track-order/track-order.module').then(m => m.TrackOrderPageModule),
+    canActivate: [ShopGuard]
   },
   {
     path: 'my-orders',
     loadChildren: () => import('./my-orders/my-orders.module').then(m => m.MyOrdersPageModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard, ShopGuard]
   },
   {
     path: 'order-detail/:id',
     loadChildren: () => import('./order-detail/order-detail.module').then(m => m.OrderDetailPageModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard, ShopGuard]
   },
   {
     path: 'courier-orders',

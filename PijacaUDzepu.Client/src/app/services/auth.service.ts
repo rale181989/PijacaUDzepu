@@ -30,6 +30,16 @@ export class AuthService {
     return this.currentUser?.roles?.includes(role) ?? false;
   }
 
+  // Prodavac i kurir ne kupuju i ne vide kupčev deo aplikacije
+  get isStaff(): boolean {
+    return this.hasRole('VendorAdmin') || this.hasRole('Courier');
+  }
+
+  // Početna strana za prodavca i kurira (ista kao posle prijave)
+  get staffHome(): string {
+    return this.hasRole('VendorAdmin') ? '/vendor-products' : '/courier-orders';
+  }
+
   login(dto: LoginDto) {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, dto).pipe(
       tap(res => this.setAuth(res))

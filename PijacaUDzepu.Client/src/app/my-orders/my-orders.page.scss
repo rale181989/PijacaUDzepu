@@ -32,4 +32,8 @@ ion-card-header {
 .order-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .my-rating { color: #b8860b; font-size: 15px; margin: 6px 0 0; span { color: var(--ion-text-color); font-size: 13px; } }
 
-.not-delivered { color: var(--ion-color-danger) !important; }
+// Odbijena ili nedostavljena: cela kartica crvena, da se odmah vidi u spisku
+ion-card.failed {
+  border-left: 5px solid var(--ion-color-danger);
+  --background: rgba(var(--ion-color-danger-rgb), 0.06);
+}

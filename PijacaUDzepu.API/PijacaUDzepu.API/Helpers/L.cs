@@ -103,6 +103,7 @@ public static class L
         ["{0}: nema više na stanju."] = ("{0}: out of stock.", "{0}: больше нет в наличии."),
         ["Porudžbina nije pronađena."] = ("Order not found.", "Заказ не найден."),
         ["Porudžbina je već zatvorena."] = ("The order is already closed.", "Заказ уже закрыт."),
+        ["Prodavci i kuriri ne mogu da poručuju robu. Odjavite se ili koristite kupčev nalog."] = ("Vendors and couriers cannot order goods. Log out or use a customer account.", "Продавцы и курьеры не могут заказывать товар. Выйдите из аккаунта или используйте аккаунт покупателя."),
         ["Upišite razlog zašto porudžbina nije dostavljena."] = ("Enter the reason why the order was not delivered.", "Укажите причину, по которой заказ не доставлен."),
         ["Nedostavljanje možete prijaviti tek nakon što preuzmete robu."] = ("You can report a failed delivery only after picking up the goods.", "Сообщить о недоставке можно только после получения товара."),
         ["Upišite razlog odbijanja – kupac će ga dobiti."] = ("Enter the reason for rejecting – the customer will receive it.", "Укажите причину отказа – покупатель её получит."),

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PijacaUDzepu.API.Controllers.Base;
 using PijacaUDzepu.API.Extensions;
+using PijacaUDzepu.API.Helpers;
 using PijacaUDzepu.API.Models.DTO.Input;
 using PijacaUDzepu.API.Services.Interfaces;
 
@@ -18,9 +19,14 @@ public class OrdersController : BaseApiController
         _vendorService = vendorService;
     }
 
+    // Prodavac i kurir ne kupuju (ni kao gost dok su prijavljeni): poruči se sa kupčevog naloga ili bez naloga
+    private bool CannotBuy => User.IsInRole("VendorAdmin") || User.IsInRole("Courier");
+    private const string CannotBuyMessage = "Prodavci i kuriri ne mogu da poručuju robu. Odjavite se ili koristite kupčev nalog.";
+
     [HttpPost]
     public async Task<IActionResult> CreateOrder(OrderInputDto dto)
     {
+        if (CannotBuy) return StatusCode(StatusCodes.Status403Forbidden, new { message = L.T(CannotBuyMessage) });
         try
         {
             var userId = User.GetUserId();
@@ -37,6 +43,7 @@ public class OrdersController : BaseApiController
     [HttpPost("guest")]
     public async Task<IActionResult> CreateGuestOrder(GuestOrderInputDto dto)
     {
+        if (CannotBuy) return StatusCode(StatusCodes.Status403Forbidden, new { message = L.T(CannotBuyMessage) });
         try
         {
             var orders = await _orderService.CreateGuestOrders(dto);

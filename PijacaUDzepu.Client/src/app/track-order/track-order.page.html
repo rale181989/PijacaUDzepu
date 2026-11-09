@@ -98,14 +98,14 @@
             </div>
           </div>
 
-          <ion-list lines="none" class="items" [class.struck]="order.status === 'Rejected'">
+          <ion-list lines="none" class="items" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
             <ion-item *ngFor="let item of order.items">
               <ion-label><p>{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p></ion-label>
               <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} {{ 'din' | t }}</ion-note>
             </ion-item>
           </ion-list>
 
-          <p class="total" [class.struck]="order.status === 'Rejected'">
+          <p class="total" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
             {{ 'order.amountToPay' | t }}: <strong>{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</strong>
             <span *ngIf="order.deliveryFee > 0" class="muted">({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span>
           </p>

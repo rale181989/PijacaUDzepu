@@ -1,6 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ToastController } from '@ionic/angular/lazy';
+import { Component, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { NavController, ToastController } from '@ionic/angular/lazy';
 import { ProductService } from '../services/product.service';
 import { PRODUCT_CATEGORIES, ProductInput } from '../models/product.model';
 import { TranslateService } from '../services/translate.service';
@@ -13,9 +13,9 @@ import { shrinkImage } from '../shared/image-file';
   styleUrls: ['./vendor-product-form.page.scss'],
   standalone: false,
 })
-export class VendorProductFormPage implements OnInit, OnDestroy {
+export class VendorProductFormPage implements OnDestroy {
   productId: number | null = null;
-  model: ProductInput = { name: '', price: 0, unit: 'Kg', category: 'Povrce', productClass: null, isAvailable: true };
+  model: ProductInput = VendorProductFormPage.emptyModel();
   imageUrl: string | null = null;
   selectedFile: File | null = null;
   previewUrl: string | null = null;
@@ -28,13 +28,28 @@ export class VendorProductFormPage implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
+    private navController: NavController,
     private productService: ProductService,
     private toastController: ToastController,
     private ts: TranslateService
   ) {}
 
-  ngOnInit() {
+  private static emptyModel(): ProductInput {
+    return { name: '', price: 0, unit: 'Kg', category: 'Povrce', productClass: null, isAvailable: true };
+  }
+
+  // Ionic čuva stranicu u istoriji: pri svakom ulasku forma kreće od čistog stanja, inače bi "Dodaj proizvod"
+  // mogao da otvori staru formu sa podacima prethodnog proizvoda, pa bi "Sačuvaj" napravio kopiju
+  ionViewWillEnter() {
+    this.productId = null;
+    this.model = VendorProductFormPage.emptyModel();
+    this.imageUrl = null;
+    this.selectedFile = null;
+    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+    this.previewUrl = null;
+    this.saving = false;
+    this.loading = false;
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.productId = Number(id);
@@ -65,6 +80,8 @@ export class VendorProductFormPage implements OnInit, OnDestroy {
   }
 
   async save() {
+    // Dupli dodir: dugme se onemogući tek posle osvežavanja ekrana, pa bi drugi dodir napravio duplikat proizvoda
+    if (this.saving) return;
     this.saving = true;
     const obs = this.isEdit
       ? this.productService.update(this.productId!, this.model)
@@ -74,11 +91,7 @@ export class VendorProductFormPage implements OnInit, OnDestroy {
       next: async (product) => {
         if (this.selectedFile) {
           this.productService.uploadImage(product.id, this.selectedFile).subscribe({
-            next: async () => {
-              this.saving = false;
-              await this.showSuccess();
-              this.router.navigateByUrl('/vendor-products');
-            },
+            next: () => this.done(),
             // Proizvod je sačuvan, ali slika nije: ostaje se na formi da prodavac vidi zašto i pokuša ponovo
             error: async (err) => {
               this.saving = false;
@@ -91,9 +104,7 @@ export class VendorProductFormPage implements OnInit, OnDestroy {
             }
           });
         } else {
-          this.saving = false;
-          await this.showSuccess();
-          this.router.navigateByUrl('/vendor-products');
+          this.done();
         }
       },
       error: async (err) => {
@@ -104,6 +115,12 @@ export class VendorProductFormPage implements OnInit, OnDestroy {
         await toast.present();
       }
     });
+  }
+
+  // Sačuvano: dugme ostaje zaključano (drugi dodir ne sme da napravi duplikat), a forma se zatvara
+  private done() {
+    this.showSuccess();
+    this.navController.navigateBack('/vendor-products');
   }
 
   private async showSuccess() {

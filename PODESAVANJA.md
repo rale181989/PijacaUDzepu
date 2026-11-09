@@ -123,12 +123,15 @@ a **blokira mobilnu aplikaciju** (CORS). Dok se ne objavi, APK prikazuje prazan 
 
 ## 3. Push obaveštenja na telefonu (Firebase)
 
-- [ ] Napravljen Firebase projekat sa Android aplikacijom `rs.pijacaudzepu.app`
-- [ ] `google-services.json` dodat u `PijacaUDzepu.Client/android/app/`
-- [ ] `pushEnabled: true` u `PijacaUDzepu.Client/src/environments/environment.mobile.ts`
+- [x] Napravljen Firebase projekat sa Android aplikacijom `rs.pijacaudzepu.app` (projekat `pijacaudzepu`)
+- [x] `google-services.json` dodat u `PijacaUDzepu.Client/android/app/` (samo lokalno: repozitorijum je javan, fajl je u `.gitignore`; na drugom računaru ga ponovo preuzmi iz Firebase-a)
+- [x] `pushEnabled: true` u `PijacaUDzepu.Client/src/environments/environment.mobile.ts`
 - [ ] Env varijabla `FIREBASE_CREDENTIALS_JSON` na Render-u
 
 Bez ovoga obaveštenja stižu samo dok je aplikacija otvorena.
+
+> **Pažnja:** APK sa `pushEnabled: true` u pozadini prepušta zvono Androidu (push sa servera). Dok na Render-u
+> nema `FIREBASE_CREDENTIALS_JSON`, telefon u pozadini ne zvoni uopšte – zato ova varijabla mora biti upisana.
 
 ### Uputstvo
 1. <https://console.firebase.google.com> → **Add project**.

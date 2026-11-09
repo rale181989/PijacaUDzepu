@@ -22,7 +22,7 @@
         <button [class.active]="ts.lang === 'ru'" (click)="setLang('ru')">RU</button>
       </div>
       <ion-list>
-        <ion-item routerLink="/home" routerDirection="root" (click)="closeMenu()">
+        <ion-item *ngIf="!authService.isStaff" routerLink="/home" routerDirection="root" (click)="closeMenu()">
           <ion-icon name="storefront-outline" slot="start"></ion-icon>
           <ion-label>{{ 'nav.home' | t }}</ion-label>
         </ion-item>
@@ -140,17 +140,17 @@
   <!-- Desktop top nav bar (hidden on mobile) -->
   <div class="desktop-nav">
     <div class="desktop-nav-inner">
-      <a routerLink="/home" class="nav-brand">
+      <a [routerLink]="authService.isStaff ? authService.staffHome : '/home'" class="nav-brand">
         <img src="assets/logo.svg" [alt]="'app.title' | t" class="nav-logo" />
       </a>
 
       <nav class="nav-links">
-        <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <a *ngIf="!authService.isStaff" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <ion-icon name="storefront-outline"></ion-icon>
           <span>{{ 'nav.home' | t }}</span>
         </a>
 
-        <a routerLink="/cart" routerLinkActive="active" class="cart-link">
+        <a *ngIf="!authService.isStaff" routerLink="/cart" routerLinkActive="active" class="cart-link">
           <ion-icon name="cart-outline"></ion-icon>
           <span>{{ 'nav.cart' | t }}</span>
           <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
