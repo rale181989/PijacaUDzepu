@@ -1,0 +1,30 @@
+<ion-grid *ngIf="variant === 'grid'" aria-hidden="true">
+  <ion-row>
+    <ion-col size="6" size-md="4" size-lg="3" *ngFor="let _ of items">
+      <ion-card class="sk-card">
+        <ion-skeleton-text animated class="sk-image"></ion-skeleton-text>
+        <ion-card-content>
+          <ion-skeleton-text animated class="sk-badge"></ion-skeleton-text>
+          <ion-skeleton-text animated class="sk-title"></ion-skeleton-text>
+          <ion-skeleton-text animated class="sk-line"></ion-skeleton-text>
+          <ion-skeleton-text animated class="sk-price"></ion-skeleton-text>
+          <ion-skeleton-text animated class="sk-button"></ion-skeleton-text>
+        </ion-card-content>
+      </ion-card>
+    </ion-col>
+  </ion-row>
+</ion-grid>
+
+<ng-container *ngIf="variant === 'list'">
+  <ion-card *ngFor="let _ of items" class="sk-card" aria-hidden="true">
+    <ion-card-content>
+      <div class="sk-row">
+        <ion-skeleton-text animated class="sk-title"></ion-skeleton-text>
+        <ion-skeleton-text animated class="sk-badge"></ion-skeleton-text>
+      </div>
+      <ion-skeleton-text animated class="sk-line"></ion-skeleton-text>
+      <ion-skeleton-text animated class="sk-line short"></ion-skeleton-text>
+      <ion-skeleton-text animated class="sk-price"></ion-skeleton-text>
+    </ion-card-content>
+  </ion-card>
+</ng-container>

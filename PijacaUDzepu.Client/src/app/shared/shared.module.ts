@@ -11,10 +11,11 @@ import { RatingFormComponent } from './rating-form/rating-form.component';
 import { StarsPipe } from '../pipes/stars.pipe';
 import { OrderProgressComponent } from './order-progress/order-progress.component';
 import { OrdersButtonComponent } from './orders-button/orders-button.component';
+import { SkeletonComponent } from './skeleton/skeleton.component';
 
 @NgModule({
   imports: [CommonModule, RouterModule, IonicModule, FormsModule],
-  declarations: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent, OrderProgressComponent, OrdersButtonComponent],
-  exports: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent, OrderProgressComponent, OrdersButtonComponent]
+  declarations: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent, OrderProgressComponent, OrdersButtonComponent, SkeletonComponent],
+  exports: [TranslatePipe, StarsPipe, AppFooterComponent, CartButtonComponent, PagerComponent, RatingFormComponent, OrderProgressComponent, OrdersButtonComponent, SkeletonComponent]
 })
 export class SharedModule {}

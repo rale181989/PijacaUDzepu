@@ -254,7 +254,7 @@
     </ng-template>
   </ion-modal>
 
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  <app-skeleton *ngIf="loading && products.length === 0" variant="grid" [count]="6"></app-skeleton>
 
   <div *ngIf="!loading && connectionError" class="empty-state connection-error">
     <ion-icon name="cloud-offline-outline" size="large" color="danger"></ion-icon>

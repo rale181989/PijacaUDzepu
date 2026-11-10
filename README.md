@@ -21,6 +21,8 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Ocena prodavca i kurira posle preuzimanja; prosečna ocena prodavca na karticama proizvoda
 - „Poruči ponovo” – stavke prethodne porudžbine u korpu
 - Jezici: srpski, engleski, ruski – i poruke o greškama sa servera stižu na izabranom jeziku
+- Sajt može da se instalira kao aplikacija (i na iPhone-u: Safari → Podeli → „Dodaj na početni ekran”); link poslat na WhatsApp/Viber prikazuje logo i opis
+- Ikonica aplikacije, ekran pri pokretanju i favicon su iz loga; verzija aplikacije piše u „Moj nalog”; dok se spisak učitava, prikazuju se sive kartice umesto spinera
 
 **Prodavac**
 - Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost; dupli dodir na „Sačuvaj” ne pravi duplikat (fotografija sa telefona se smanjuje već u aplikaciji i odmah se vidi na formi; ako slanje slike ne uspe, forma to jasno kaže)

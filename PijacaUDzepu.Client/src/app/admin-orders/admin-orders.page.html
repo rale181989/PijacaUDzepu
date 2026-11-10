@@ -14,7 +14,7 @@
 
   <p class="hint">Sve porudžbine koje još nisu završene, odbijene ni otkazane, najstarije prve. Ako je neka slučajno ostala otvorena, završite je ovde; ostaje zapisano da ju je zatvorio administrator.</p>
 
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  <app-skeleton *ngIf="loading" [count]="4"></app-skeleton>
 
   <div *ngIf="!loading && orders.length === 0" class="empty-state">
     <ion-icon name="checkmark-done-outline" size="large"></ion-icon>

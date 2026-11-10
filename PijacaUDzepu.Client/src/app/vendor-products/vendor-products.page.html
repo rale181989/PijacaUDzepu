@@ -18,7 +18,7 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  <app-skeleton *ngIf="loading" [count]="4"></app-skeleton>
 
   <div *ngIf="!loading && products.length === 0" class="empty-state">
     <ion-icon name="leaf-outline" size="large"></ion-icon>

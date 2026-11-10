@@ -173,6 +173,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'account.delivery': 'Telefon i adresa za dostavu',
     'account.deliveryInfo': 'Upisuju se automatski u korpu. Pri naručivanju ih možete promeniti samo za tu porudžbinu.',
     'account.save': 'Sačuvaj',
+    'account.version': 'Verzija',
     'account.saved': 'Podaci su sačuvani',
     'nav.account': 'Moj nalog',
     'home.inStock': 'Na stanju',
@@ -499,6 +500,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'account.delivery': 'Phone and delivery address',
     'account.deliveryInfo': 'They are filled into the cart automatically. When ordering you can change them for that order only.',
     'account.save': 'Save',
+    'account.version': 'Version',
     'account.saved': 'Details saved',
     'nav.account': 'My account',
     'home.inStock': 'In stock',
@@ -825,6 +827,7 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'account.delivery': 'Телефон и адрес доставки',
     'account.deliveryInfo': 'Они автоматически подставляются в корзину. При заказе их можно изменить только для этого заказа.',
     'account.save': 'Сохранить',
+    'account.version': 'Версия',
     'account.saved': 'Данные сохранены',
     'nav.account': 'Мой аккаунт',
     'home.inStock': 'В наличии',
@@ -988,6 +991,11 @@ export class TranslateService {
   private langSource = new BehaviorSubject<Lang>(this.loadLang());
   lang$ = this.langSource.asObservable();
 
+  constructor() {
+    // Jezik stranice prati izabrani jezik (pregledač, čitači ekrana, prevodilac)
+    document.documentElement.lang = this.lang;
+  }
+
   get lang(): Lang { return this.langSource.value; }
 
   t(key: string): string {
@@ -997,6 +1005,7 @@ export class TranslateService {
   setLang(lang: Lang) {
     this.langSource.next(lang);
     localStorage.setItem('lang', lang);
+    document.documentElement.lang = lang;
   }
 
   private loadLang(): Lang {

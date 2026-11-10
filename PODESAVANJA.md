@@ -56,7 +56,7 @@ Redom, pre nego što aplikaciju dobiju pravi kupci i prodavci. Stavke označene 
 - [ ] Backup baze (Neon) – odeljak 9.
 
 **Preporučeno**
-- [ ] Push obaveštenja (Firebase) – odeljak 3 (🤖 uključuje `pushEnabled` i pravi novi APK kad je `google-services.json` tu).
+- [ ] Push obaveštenja (Firebase) – odeljak 3: `google-services.json` i `pushEnabled` su urađeni, ostaje `FIREBASE_CREDENTIALS_JSON` na Render-u.
 - [ ] Praćenje grešaka (Sentry) – odeljak 8.
 - [ ] Cena Eko kurira – odeljak 4.
 
@@ -264,3 +264,14 @@ sa detaljima i brojem korisnika koje su pogodile.
 2. Probaj vraćanje bez rizika: **Branches → Create branch** od stanja „pre sat vremena” i pogledaj podatke u njoj.
    Glavna baza se ne dira; posle obriši probnu granu.
 3. Zapiši gde je uputstvo, da u hitnom slučaju ne tražiš.
+
+---
+
+## 10. Sopstveni domen (kada pređeš sa onrender.com)
+
+- [ ] Domen povezan na Render (Render → Settings → Custom Domains)
+
+Posle povezivanja 🤖 menja adresu na tri mesta, pa novi deploy i novi APK:
+- `PijacaUDzepu.Client/src/index.html` – `og:image` (slika koja se vidi kad se link pošalje na WhatsApp/Viber);
+- `PijacaUDzepu.Client/src/app/services/api-server.ts` – podrazumevani server mobilne aplikacije;
+- `FrontendUrl` / `FrontendUrls` na API-ju (linkovi u e-mailovima i CORS).

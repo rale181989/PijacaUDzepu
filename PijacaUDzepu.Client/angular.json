@@ -24,6 +24,11 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               {
+                "glob": "manifest.json",
+                "input": "src",
+                "output": "."
+              },
+              {
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"

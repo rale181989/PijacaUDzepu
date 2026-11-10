@@ -35,7 +35,7 @@
     </ion-toggle>
   </div>
 
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  <app-skeleton *ngIf="loading" [count]="4"></app-skeleton>
 
   <!-- Nove porudžbine: svi kuriri ih vide, prvi koji prihvati je preuzima -->
   <ng-container *ngIf="!loading && tab === 'available'">

@@ -4,6 +4,7 @@ import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
 import { TranslateService } from '../services/translate.service';
 import { UpdateProfileDto } from '../models/user.model';
+import { APP_VERSION } from '../version';
 
 // Moj nalog (sve uloge): telefon i adresa za dostavu (kupac), promena lozinke i brisanje naloga (obaveza za Google Play)
 @Component({
@@ -13,6 +14,7 @@ import { UpdateProfileDto } from '../models/user.model';
   standalone: false,
 })
 export class AccountPage implements OnInit {
+  readonly appVersion = APP_VERSION;
   profile: UpdateProfileDto = { phoneNumber: '', address: '', floor: '', apartment: '' };
   saving = false;
 

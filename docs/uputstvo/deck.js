@@ -210,7 +210,7 @@ async function build() {
     s.text(pages, x + 0.35, 5.15, 3.1, 0.3, { size: 12, color: 'muted' });
   }
   await s.icon('MdLanguage', 0.6, 6.0, 0.5, 'forest');
-  s.text([{ text: 'Gde radi: ', bold: true }, { text: 'u browseru na pijacaudzepu.onrender.com i kao Android aplikacija. Jezik (SR · EN · RU) birate u meniju ☰, a na njemu stižu i poruke o greškama.' }], 1.25, 6.0, 11.3, 0.5, { size: 15, valign: 'middle' });
+  s.text([{ text: 'Gde radi: ', bold: true }, { text: 'u browseru na pijacaudzepu.onrender.com i kao Android aplikacija; na iPhone-u Safari → Podeli → „Dodaj na početni ekran”. Jezik (SR · EN · RU) birate u meniju ☰.' }], 1.25, 6.0, 11.3, 0.5, { size: 15, valign: 'middle' });
 
   // 3. Odeljak: kupci
   const section = async (num, title, sub, ic, col, sectionName, iconColor) => {
