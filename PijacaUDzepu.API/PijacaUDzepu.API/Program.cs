@@ -13,7 +13,8 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter());
+            // Pri prijemu samo nazivi ("Courier"), ne brojevi (npr. 7); pri slanju bez pucanja (vidi NamedEnumConverter)
+            new NamedEnumConverter());
     })
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -22,8 +23,9 @@ builder.Services.AddControllers()
         options.InvalidModelStateResponseFactory = context =>
         {
             var problem = new Microsoft.AspNetCore.Mvc.ValidationProblemDetails(context.ModelState);
+            // Klijent prikazuje "message": poznata poruka na jeziku korisnika, inače opšta (nikad engleski tekst okvira)
             var known = context.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).FirstOrDefault(L.Has);
-            if (known != null) problem.Extensions["message"] = L.T(known);
+            problem.Extensions["message"] = L.T(known ?? "Proverite unete podatke.");
             return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(problem);
         };
     });
@@ -89,14 +91,14 @@ builder.Services.AddRateLimiter(options =>
     options.OnRejected = (context, token) => new ValueTask(context.HttpContext.Response.WriteAsJsonAsync(
         new { message = L.T("Previše pokušaja. Sačekajte malo pa pokušajte ponovo.") }, token));
     options.AddPolicy(SupportController.RateLimitPolicy, context =>
-        RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => new FixedWindowRateLimiterOptions
+        RateLimitPartition.GetFixedWindowLimiter(RequestIp.Of(context), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 5,
             Window = TimeSpan.FromMinutes(10)
         }));
     // Prijava, registracija i zaboravljena lozinka: najviše 10 pokušaja u minuti po IP adresi
     options.AddPolicy(AuthController.RateLimitPolicy, context =>
-        RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => new FixedWindowRateLimiterOptions
+        RateLimitPartition.GetFixedWindowLimiter(RequestIp.Of(context), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 10,
             Window = TimeSpan.FromMinutes(1)
@@ -165,13 +167,6 @@ app.MapFallbackToFile("index.html");
 await Seed.SeedData(app.Services, app.Environment.IsDevelopment());
 
 app.Run();
-
-// Render je iza proksija, pa je prava adresa klijenta u X-Forwarded-For
-static string ClientIp(HttpContext context)
-{
-    var ip = context.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim();
-    return string.IsNullOrEmpty(ip) ? context.Connection.RemoteIpAddress?.ToString() ?? "unknown" : ip;
-}
 
 // Za integracione testove (WebApplicationFactory<Program>)
 public partial class Program { }

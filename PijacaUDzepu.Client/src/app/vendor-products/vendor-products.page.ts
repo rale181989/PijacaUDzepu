@@ -39,42 +39,37 @@ export class VendorProductsPage implements OnInit {
   }
 
   // Cena i stanje bez otvaranja forme (pijačne cene se menjaju svakodnevno)
-  async quickEdit(product: Product, event: Event) {
+  quick: { product: Product; price: number | null; stock: number | null } | null = null;
+
+  quickEdit(product: Product, event: Event) {
     // Red je link ka formi (ion-item sa routerLink): bez preventDefault klik bi otvorio formu
     event.stopPropagation();
     event.preventDefault();
-    const alert = await this.alertController.create({
-      header: product.name,
-      inputs: [
-        { name: 'price', type: 'number', value: product.price, min: 0.01, placeholder: 'Cena (din)', label: 'Cena' } as any,
-        { name: 'stock', type: 'number', value: product.stockQuantity ?? '', min: 0, placeholder: 'Na stanju (prazno = ne prati se)' } as any
-      ],
-      message: `Cena u din/${this.getUnitLabel(product.unit)}; stanje u ${this.getUnitLabel(product.unit)} (prazno = ne prati se).`,
-      buttons: [
-        { text: 'Otkaži', role: 'cancel' },
-        {
-          text: 'Sačuvaj',
-          handler: data => {
-            const price = Number(data.price);
-            if (!(price > 0)) return false;
-            const stockText = String(data.stock ?? '').trim();
-            const stock = stockText === '' ? null : Number(stockText);
-            if (stock !== null && !(stock >= 0)) return false;
-            this.productService.quickUpdate(product.id, stock === null
-              ? { price, clearStock: true }
-              : { price, stockQuantity: stock }).subscribe({
-              next: async updated => {
-                Object.assign(product, updated);
-                const toast = await this.toastController.create({ message: 'Sačuvano', duration: 1500, color: 'success' });
-                await toast.present();
-              }
-            });
-            return true;
-          }
-        }
-      ]
+    this.quick = { product, price: product.price, stock: product.stockQuantity ?? null };
+  }
+
+  saveQuick() {
+    if (!this.quick) return;
+    const { product } = this.quick;
+    const price = Number(this.quick.price);
+    if (!(price > 0)) return;
+    const stockText = String(this.quick.stock ?? '').trim();
+    const stock = stockText === '' ? null : Number(stockText);
+    if (stock !== null && !(stock >= 0)) return;
+    this.quick = null;
+    this.productService.quickUpdate(product.id, stock === null
+      ? { price, clearStock: true }
+      : { price, stockQuantity: stock }).subscribe({
+      next: async updated => {
+        Object.assign(product, updated);
+        const toast = await this.toastController.create({ message: 'Sačuvano', duration: 1500, color: 'success', position: 'top' });
+        await toast.present();
+      },
+      error: async err => {
+        const toast = await this.toastController.create({ message: err.error?.message || 'Greška pri čuvanju', duration: 3000, color: 'danger' });
+        await toast.present();
+      }
     });
-    await alert.present();
   }
 
   async confirmDelete(product: Product) {

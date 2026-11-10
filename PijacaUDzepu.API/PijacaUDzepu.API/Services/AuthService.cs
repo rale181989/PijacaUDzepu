@@ -20,6 +20,7 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly DataContext _context;
     private readonly ILogger<AuthService> _logger;
+    private readonly LoginThrottle _loginThrottle;
 
     private static readonly TimeSpan ResetLinkValidity = TimeSpan.FromHours(2);
     private static readonly OrderStatus[] ActiveStatuses =
@@ -31,9 +32,11 @@ public class AuthService : IAuthService
         ITokenService tokenService,
         IEmailService emailService,
         DataContext context,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        LoginThrottle loginThrottle)
     {
         _logger = logger;
+        _loginThrottle = loginThrottle;
         _userManager = userManager;
         _signInManager = signInManager;
         _tokenService = tokenService;
@@ -41,7 +44,7 @@ public class AuthService : IAuthService
         _context = context;
     }
 
-    public async Task<AuthResponseDto> Login(LoginDto dto)
+    public async Task<AuthResponseDto> Login(LoginDto dto, string clientIp)
     {
         var user = await _userManager.Users
             .Include(u => u.VendorUsers).ThenInclude(vu => vu.Vendor)
@@ -54,11 +57,22 @@ public class AuthService : IAuthService
         if (user.LockoutEnd == DateTimeOffset.MaxValue)
             throw new UnauthorizedAccessException(L.T("Nalog je onemogućen. Obratite se administratoru."));
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: true);
+        // Posle 10 pogrešnih lozinki prijava se zaključava samo za adresu sa koje su stigle (LoginThrottle):
+        // napadač ne može da zaključa tuđi nalog, a vlasnik se i dalje prijavljuje sa svog uređaja
+        const string lockedMessage = "Previše pogrešnih pokušaja. Nalog je privremeno zaključan, pokušajte ponovo za 15 minuta.";
+        if (_loginThrottle.IsBlocked(user.Id, user.SecurityStamp, clientIp))
+            throw new UnauthorizedAccessException(L.T(lockedMessage));
+
+        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: false);
         if (result.IsLockedOut)
-            throw new UnauthorizedAccessException(L.T("Previše pogrešnih pokušaja. Nalog je privremeno zaključan, pokušajte ponovo za 15 minuta."));
+            throw new UnauthorizedAccessException(L.T(lockedMessage));
         if (!result.Succeeded)
+        {
+            if (_loginThrottle.RecordFailure(user.Id, user.SecurityStamp, clientIp))
+                throw new UnauthorizedAccessException(L.T(lockedMessage));
             throw new UnauthorizedAccessException(L.T("Pogrešno korisničko ime ili lozinka."));
+        }
+        _loginThrottle.Reset(user.Id, user.SecurityStamp, clientIp);
 
         return new AuthResponseDto
         {
@@ -77,12 +91,17 @@ public class AuthService : IAuthService
         if (await _userManager.Users.AnyAsync(u => u.NormalizedUserName == dto.UserName.ToUpper()))
             throw new InvalidOperationException(L.T("Korisničko ime je zauzeto."));
 
+        // Isti e-mail na dva naloga: link za novu lozinku ne bi znao kome da ide
+        var email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
+        if (email != null && await _userManager.Users.AnyAsync(u => u.NormalizedEmail == email.ToUpperInvariant()))
+            throw new InvalidOperationException(L.T("Ovaj e-mail već koristi drugi nalog."));
+
         var user = new User
         {
             UserName = dto.UserName,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            Email = dto.Email,
+            Email = email,
             PhoneNumber = dto.PhoneNumber.Trim(),
             Address = dto.Address.Trim(),
             Floor = Clean(dto.Floor),
@@ -225,6 +244,15 @@ public class AuthService : IAuthService
         user.Address = Clean(dto.Address);
         user.Floor = Clean(dto.Floor);
         user.Apartment = Clean(dto.Apartment);
+        if (dto.Email != null)
+        {
+            var email = Clean(dto.Email);
+            if (email != null && !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+                throw new InvalidOperationException(L.T("Unesite ispravan e-mail."));
+            if (email != null && await _userManager.Users.AnyAsync(u => u.Id != userId && u.NormalizedEmail == email.ToUpperInvariant()))
+                throw new InvalidOperationException(L.T("Ovaj e-mail već koristi drugi nalog."));
+            user.Email = email;
+        }
         await _userManager.UpdateAsync(user);
 
         return await MapToUserDto(user);

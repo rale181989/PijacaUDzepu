@@ -365,3 +365,7 @@ app-footer {
   ion-icon { font-size: 18px; color: var(--ion-color-danger); }
   &.active { border-color: var(--ion-color-danger); background: rgba(var(--ion-color-danger-rgb), 0.08); }
 }
+
+.how-it-works{margin:10px 12px 0;padding:8px 12px;border-radius:10px;background:var(--ion-color-light);font-size:13px;
+  ol{margin:4px 0 0;padding-left:18px}ion-button{margin:0}}
+.in-cart{margin:2px 0 4px;text-align:center;font-size:12px;font-weight:600;color:var(--ion-color-primary)}

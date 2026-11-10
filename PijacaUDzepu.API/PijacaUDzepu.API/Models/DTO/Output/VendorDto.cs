@@ -21,6 +21,8 @@ public class VendorDto
     public bool OrdersPaused { get; set; }
     public List<DeliveryScheduleEntry> OpeningHours { get; set; } = new();
     public List<DateOnly> ClosedDates { get; set; } = new();
+    // Današnje ranije zatvaranje ("HH:mm") ili null
+    public string? EarlyCloseToday { get; set; }
     // Trenutno stanje (lokalno vreme): da li prima porudžbine, razlog (Paused/ClosedDay/Hours/Inactive), kad se otvara/zatvara
     public bool IsOpen { get; set; }
     public string? ClosedReason { get; set; }

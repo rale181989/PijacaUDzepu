@@ -34,7 +34,7 @@
         <p><strong>Prodavac:</strong> {{ order.vendorName }}<span *ngIf="order.marketName" class="muted"> · {{ order.marketName }}<span *ngIf="order.stallLabel">, tezga {{ order.stallLabel }}</span></span></p>
         <p><strong>Kupac:</strong> {{ order.customerName }}<span *ngIf="order.contactPhone"> · <a [href]="'tel:' + order.contactPhone">{{ order.contactPhone }}</a></span></p>
         <p *ngIf="order.fulfillment === 'Courier'"><strong>Kurir:</strong> {{ order.courierName || 'nije dodeljen' }}</p>
-        <p><strong>Iznos:</strong> {{ order.amountToPay | number:'1.0-0' }} din <span class="muted">({{ order.items.length }} {{ order.items.length === 1 ? 'stavka' : 'stavki' }})</span></p>
+        <p><strong>Iznos:</strong> {{ order.amountToPay | number:'1.0-0' }} din <span class="muted">({{ order.items.length }} {{ itemsWord(order.items.length) }})</span></p>
         <ion-button size="small" color="success" [disabled]="busyId === order.id" (click)="complete(order)">
           <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Završi
         </ion-button>

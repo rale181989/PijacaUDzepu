@@ -6,9 +6,6 @@
     <ion-title>Moji proizvodi</ion-title>
     <ion-buttons slot="end">
       <app-orders-button></app-orders-button>
-      <ion-button routerLink="/vendor-product-form">
-        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
-      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -28,20 +25,20 @@
 
   <ion-list *ngIf="!loading">
     <ion-item-sliding *ngFor="let product of products">
-      <ion-item [routerLink]="['/vendor-product-form', product.id]">
+      <ion-item [routerLink]="['/vendor-product-form', product.id]" [class.off]="!product.isAvailable">
         <ion-thumbnail slot="start">
           <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" />
         </ion-thumbnail>
         <ion-label>
-          <h2>{{ product.name }}</h2>
+          <h2>{{ product.name }} <span *ngIf="!product.isAvailable" class="off-badge">Nije u ponudi</span></h2>
           <p>{{ product.price | number:'1.0-0' }} din/{{ getUnitLabel(product.unit) }}
             <span *ngIf="product.stockQuantity != null" class="stock" [class.low]="product.stockQuantity <= 3">
               · na stanju {{ product.stockQuantity | number:'1.0-2' }} {{ getUnitLabel(product.unit) }}
             </span>
           </p>
         </ion-label>
-        <ion-button slot="end" fill="clear" size="small" (click)="quickEdit(product, $event)" title="Brza izmena cene i stanja">
-          <ion-icon name="pricetag-outline" slot="icon-only"></ion-icon>
+        <ion-button slot="end" fill="outline" size="small" (click)="quickEdit(product, $event)" aria-label="Promeni cenu i stanje">
+          Cena
         </ion-button>
         <ion-toggle slot="end" [checked]="product.isAvailable"
                     (ionChange)="toggleAvailability(product)"
@@ -56,8 +53,29 @@
     </ion-item-sliding>
   </ion-list>
 
+  <!-- Brza izmena: dva polja sa nazivima (u dijalogu se naziv gubio čim se upiše broj) -->
+  <ion-modal [isOpen]="!!quick" (didDismiss)="quick = null" [initialBreakpoint]="0.6" [breakpoints]="[0, 0.6, 0.9]">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ quick?.product?.name }}</ion-title>
+          <ion-buttons slot="end"><ion-button (click)="quick = null">Nazad</ion-button></ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" *ngIf="quick">
+        <ion-input type="number" inputmode="decimal" label="Cena (din/{{ getUnitLabel(quick.product.unit) }})" labelPlacement="stacked"
+                   fill="outline" [(ngModel)]="quick.price" min="0.01"></ion-input>
+        <ion-input type="number" inputmode="decimal" label="Na stanju ({{ getUnitLabel(quick.product.unit) }})" labelPlacement="stacked"
+                   fill="outline" [(ngModel)]="quick.stock" min="0" class="ion-margin-top"
+                   helperText="Prazno = stanje ne pratim"></ion-input>
+        <ion-button expand="block" class="ion-margin-top" [disabled]="!((quick.price ?? 0) > 0)" (click)="saveQuick()">Sačuvaj</ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button routerLink="/vendor-product-form">
+    <!-- Novi proizvod: jedno dugme dole desno (u zaglavlju je sekao naslov) -->
+    <ion-fab-button routerLink="/vendor-product-form" aria-label="Dodaj proizvod">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>

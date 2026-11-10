@@ -81,7 +81,7 @@
             </div>
           </div>
         </div>
-        <p class="summary">{{ order.items.length }} stavki · roba {{ order.totalAmount | number:'1.0-0' }} din · <strong>usluga {{ order.deliveryFee | number:'1.0-0' }} din</strong></p>
+        <p class="summary">{{ order.items.length }} {{ itemsWord(order.items.length) }} · roba {{ order.totalAmount | number:'1.0-0' }} din · <strong>usluga {{ order.deliveryFee | number:'1.0-0' }} din</strong></p>
         <div class="decision">
           <ion-button fill="outline" color="danger" [disabled]="acceptingId !== null || decliningId !== null" (click)="decline(order)">
             <ion-spinner *ngIf="decliningId === order.id" name="crescent" slot="start"></ion-spinner>
@@ -166,8 +166,7 @@
             <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} din</ion-note>
           </ion-item>
         </ion-list>
-        <p class="summary">Za naplatu: <strong>{{ order.amountToPay | number:'1.0-0' }} din</strong>
-          <span class="muted">(roba {{ order.totalAmount | number:'1.0-0' }} + usluga {{ order.deliveryFee | number:'1.0-0' }})</span></p>
+        <p class="summary">Za naplatu: <strong>{{ order.amountToPay | number:'1.0-0' }} din</strong>&nbsp;<span class="muted">(roba {{ order.totalAmount | number:'1.0-0' }} + usluga {{ order.deliveryFee | number:'1.0-0' }})</span></p>
         <p *ngIf="order.note" class="note">Napomena: {{ order.note }}</p>
         <p *ngIf="order.closedByAdminAt" class="admin-closed">
           <ion-icon name="shield-checkmark-outline"></ion-icon>

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, map, tap } from 'rxjs';
+import { GuestOrdersService } from './guest-orders.service';
 import { environment } from '../../environments/environment';
 import { AcceptInvitationDto, AuthResponse, CreateVendorAdminDto, InviteVendorDto, LoginDto, RegisterDto, UpdateProfileDto, User } from '../models/user.model';
 
@@ -10,7 +11,7 @@ export class AuthService {
   private currentUserSource = new BehaviorSubject<User | null>(null);
   currentUser$ = this.currentUserSource.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private guestOrders: GuestOrdersService) {
     this.loadStoredUser();
   }
 
@@ -35,9 +36,9 @@ export class AuthService {
     return this.hasRole('VendorAdmin') || this.hasRole('Courier');
   }
 
-  // Početna strana za prodavca i kurira (ista kao posle prijave)
+  // Početna strana za prodavca (porudžbine) i kurira (dostave), ista kao posle prijave
   get staffHome(): string {
-    return this.hasRole('VendorAdmin') ? '/vendor-products' : '/courier-orders';
+    return this.hasRole('VendorAdmin') ? '/vendor-orders' : '/courier-orders';
   }
 
   login(dto: LoginDto) {
@@ -110,6 +111,18 @@ export class AuthService {
     localStorage.setItem('token', res.token);
     localStorage.setItem('user', JSON.stringify(res.user));
     this.currentUserSource.next(res.user);
+    this.claimGuestOrders(res.user);
+  }
+
+  // Kupac je ranije poručivao kao gost sa ovog uređaja: te porudžbine prelaze na njegov nalog
+  // (vide se u "Moje porudžbine"), a uređaj više ne pamti kodove za praćenje
+  private claimGuestOrders(user: User) {
+    const codes = this.guestOrders.codes;
+    if (!user.roles?.includes('Customer') || codes.length === 0) return;
+    this.http.post<{ claimed: number }>(`${environment.apiUrl}/orders/claim`, { trackingCodes: codes }).subscribe({
+      next: () => this.guestOrders.clear(),
+      error: () => {}
+    });
   }
 
   private loadStoredUser() {

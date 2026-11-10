@@ -6,6 +6,7 @@ namespace PijacaUDzepu.API.Models.DTO.Input;
 public class ProductInputDto
 {
     [Required]
+    [MaxLength(100, ErrorMessage = "Naziv proizvoda može imati najviše 100 znakova.")]
     public string Name { get; set; } = string.Empty;
 
     [Required]
@@ -32,7 +33,7 @@ public class ProductInputDto
 // Brza izmena sa liste proizvoda: samo popunjena polja se menjaju
 public class QuickProductUpdateDto
 {
-    [Range(0.01, 10_000_000)]
+    [Range(0.01, 999999)]
     public decimal? Price { get; set; }
 
     [Range(0, 1_000_000)]

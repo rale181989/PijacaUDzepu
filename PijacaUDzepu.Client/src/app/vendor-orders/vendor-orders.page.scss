@@ -64,3 +64,27 @@ ion-card-header {
   background: rgba(var(--ion-color-danger-rgb), 0.1);
   color: var(--ion-color-danger-shade);
 }
+
+// Kupac: svaki podatak u svom redu; telefon se poziva dodirom
+.customer { margin: 6px 0; }
+.guest-info.phone {
+  color: var(--ion-color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  ion-icon { color: var(--ion-color-primary); }
+}
+
+.pending-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 16px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(var(--ion-color-warning-rgb), 0.15);
+  font-weight: 600;
+}
+
+// Razlog odbijanja je crven, da se ne pomeša sa običnom porukom kupcu
+.vendor-message.reject-reason { color: var(--ion-color-danger); }

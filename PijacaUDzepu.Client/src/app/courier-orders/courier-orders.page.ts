@@ -6,6 +6,7 @@ import { NotificationService } from '../services/notification.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, OrderStatus } from '../models/order.model';
 import { PagerComponent } from '../shared/pager/pager.component';
+import { itemsWord } from '../shared/plural';
 
 @Component({
   selector: 'app-courier-orders',
@@ -15,6 +16,7 @@ import { PagerComponent } from '../shared/pager/pager.component';
 })
 export class CourierOrdersPage implements OnInit, OnDestroy {
   tab: 'available' | 'mine' | 'finished' | 'settlement' = 'available';
+  readonly itemsWord = itemsWord;
   settlement: CourierSettlement | null = null;
   settlementDate = '';
   acceptingGroup: string | null = null;

@@ -23,6 +23,10 @@
           <ion-input [label]="'register.phone' | t" labelPlacement="floating" type="tel"
                      [(ngModel)]="profile.phoneNumber" name="phoneNumber" required></ion-input>
         </ion-item>
+        <ion-item>
+          <ion-input [label]="'account.email' | t" labelPlacement="floating" type="email"
+                     [(ngModel)]="profile.email" name="email" maxlength="200"></ion-input>
+        </ion-item>
         <ng-container *ngIf="authService.hasRole('Customer')">
           <ion-item>
             <ion-input [label]="'register.address' | t" labelPlacement="floating"

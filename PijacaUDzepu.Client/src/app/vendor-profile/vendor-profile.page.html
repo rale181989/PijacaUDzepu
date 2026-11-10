@@ -71,16 +71,37 @@
     <h3>Radno vreme i dostupnost</h3>
     <p class="status" [class.closed]="!isOpen"><ion-icon [name]="isOpen ? 'checkmark-circle' : 'time-outline'"></ion-icon> {{ statusText }}</p>
 
+    <!-- Pauza se čuva odmah, čim se pomeri prekidač -->
     <ion-item lines="none" class="pause-item" [class.paused]="ordersPaused">
-      <ion-toggle [(ngModel)]="ordersPaused" justify="space-between">
+      <ion-toggle [checked]="ordersPaused" [disabled]="savingAvailability" (ionChange)="setPaused($any($event).detail.checked)" justify="space-between">
         <strong>Privremeno ne primam porudžbine</strong>
-        <span class="hint">Kupci vide da tezga trenutno ne prima porudžbine.</span>
+        <span class="hint">Važi odmah. Kupci vide da tezga trenutno ne prima porudžbine.</span>
       </ion-toggle>
     </ion-item>
 
-    <p class="hint">Radni dani i vreme kada primate porudžbine. Ako nijedan dan nije označen, porudžbine stižu u svako doba.</p>
+    <!-- Izuzetak samo za danas: nedeljni raspored ostaje kakav jeste -->
+    <div class="today-box">
+      <h4>Samo danas</h4>
+      <p *ngIf="earlyCloseToday" class="early">
+        Danas zatvarate u <strong>{{ earlyCloseToday }}</strong>
+        <ion-button size="small" fill="clear" (click)="setEarlyClose(null)">Poništi</ion-button>
+      </p>
+      <div class="today-actions">
+        <ion-button size="small" fill="outline" color="danger" [disabled]="savingAvailability || closedDates.includes(today)" (click)="closeToday()">
+          Danas ne radim
+        </ion-button>
+        <span class="early-input">
+          Danas zatvaram u
+          <input type="time" [(ngModel)]="earlyCloseInput" aria-label="Danas zatvaram u" />
+          <ion-button size="small" fill="outline" [disabled]="savingAvailability || !earlyCloseInput" (click)="setEarlyClose(earlyCloseInput)">Sačuvaj</ion-button>
+        </span>
+      </div>
+    </div>
+
+    <h4>Nedeljni raspored</h4>
+    <p class="hint">Označite <strong>sve</strong> dane kada radite – neoznačeni dani su neradni. Ako nijedan dan nije označen, porudžbine stižu u svako doba. Za izuzetak danas koristite „Samo danas” iznad.</p>
     <div *ngFor="let d of days" class="day-row" [class.off]="!d.open">
-      <ion-checkbox [(ngModel)]="d.open" labelPlacement="end" justify="start">{{ d.label }}</ion-checkbox>
+      <ion-checkbox [(ngModel)]="d.open" labelPlacement="end" justify="start" [attr.aria-label]="d.label">{{ d.short }}</ion-checkbox>
       <span class="times">
         <input type="time" [(ngModel)]="d.from" [disabled]="!d.open" [attr.aria-label]="d.label + ' od'" />
         –
@@ -98,13 +119,13 @@
       <span *ngIf="closedDates.length === 0" class="hint">Nema neradnih dana.</span>
     </div>
     <div class="add-date">
-      <input type="date" [(ngModel)]="newClosedDate" [min]="today" aria-label="Neradni dan" />
+      <label class="date-label">Datum <input type="date" [(ngModel)]="newClosedDate" [min]="today" aria-label="Neradni dan" /></label>
       <ion-button size="small" fill="outline" [disabled]="!newClosedDate" (click)="addClosedDate()">Dodaj</ion-button>
     </div>
 
     <ion-button expand="block" (click)="saveAvailability()" [disabled]="savingAvailability" class="ion-margin-top">
       <ion-spinner *ngIf="savingAvailability" name="crescent" slot="start"></ion-spinner>
-      Sačuvaj radno vreme
+      Sačuvaj nedeljni raspored i neradne dane
     </ion-button>
   </div>
 

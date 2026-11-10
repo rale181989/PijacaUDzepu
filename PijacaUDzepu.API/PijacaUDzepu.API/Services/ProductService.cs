@@ -21,8 +21,19 @@ public class ProductService : IProductService
         _favorites = favorites;
     }
 
+    // Grupe proizvoda u kojima trenutno ima dostupne robe (za filter na početnoj)
+    public async Task<List<Models.Enums.ProductCategory>> GetAvailableCategories(int? marketId, int? vendorId)
+    {
+        var query = _context.Products.Where(p => p.IsAvailable && p.Vendor.IsActive);
+        if (marketId.HasValue) query = query.Where(p => p.Vendor.MarketId == marketId.Value);
+        if (vendorId.HasValue) query = query.Where(p => p.VendorId == vendorId.Value);
+        return await query.Select(p => p.Category).Distinct().ToListAsync();
+    }
+
     public async Task<PagedResult<ProductDto>> GetAllProducts(string? search = null, int? vendorId = null, int? marketId = null, Models.Enums.ProductCategory? category = null, Models.Enums.ProductUnit? unit = null, Models.Enums.ProductSort sort = Models.Enums.ProductSort.NameAsc, int skip = 0, int take = 20, List<int>? ids = null, List<int>? vendorIds = null)
     {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
         var query = _context.Products
             .Include(p => p.Vendor).ThenInclude(v => v.Market)
             .Include(p => p.Vendor).ThenInclude(v => v.Stall)
@@ -42,11 +53,16 @@ public class ProductService : IProductService
             query = query.Where(p => p.IsAvailable);
         }
 
-        // Pretraga je samo po nazivu proizvoda; pijaca, prodavac, tezga i grupa imaju svoje filtere
+        // Pretraga je samo po nazivu proizvoda; pijaca, prodavac, tezga i grupa imaju svoje filtere.
+        // Duža reč se traži i po korenu (bez poslednja dva slova, najmanje 4): "jabuka" nalazi "Jabuke",
+        // "paradaiz" nalazi "Paradajz" (srpski padeži i množina, sitna greška u kucanju na kraju reči).
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{search.Trim()}%";
-            query = query.Where(p => EF.Functions.ILike(EF.Functions.Unaccent(p.Name), EF.Functions.Unaccent(pattern)));
+            var term = search.Trim();
+            var pattern = $"%{term}%";
+            var stem = term.Length >= 5 ? $"%{term[..Math.Max(4, term.Length - 2)]}%" : pattern;
+            query = query.Where(p => EF.Functions.ILike(EF.Functions.Unaccent(p.Name), EF.Functions.Unaccent(pattern))
+                || EF.Functions.ILike(EF.Functions.Unaccent(p.Name), EF.Functions.Unaccent(stem)));
         }
 
         if (marketId.HasValue)
@@ -114,10 +130,19 @@ public class ProductService : IProductService
         return MapToDto(product);
     }
 
+    // Isti naziv dvaput kod istog prodavca zbunjuje kupce (i bio je trag duplog dodavanja)
+    private async Task EnsureUniqueName(int vendorId, string name, int? exceptProductId = null)
+    {
+        var normalized = name.Trim().ToLower();
+        if (await _context.Products.AnyAsync(p => p.VendorId == vendorId && p.Id != (exceptProductId ?? 0) && p.Name.Trim().ToLower() == normalized))
+            throw new InvalidOperationException(L.T("Već imate proizvod sa nazivom „{0}”.", name.Trim()));
+    }
+
     public async Task<ProductDto> CreateProduct(int vendorId, ProductInputDto dto)
     {
         var vendor = await _context.Vendors.FindAsync(vendorId)
             ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
+        await EnsureUniqueName(vendorId, dto.Name);
 
         var product = new Product
         {
@@ -146,6 +171,7 @@ public class ProductService : IProductService
             .Include(p => p.Vendor)
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
             ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
+        await EnsureUniqueName(vendorId, dto.Name, productId);
 
         var wasAvailable = product.IsAvailable;
         product.Name = dto.Name;

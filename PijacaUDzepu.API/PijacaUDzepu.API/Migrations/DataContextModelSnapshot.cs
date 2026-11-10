@@ -813,6 +813,12 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<DateOnly?>("EarlyCloseDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EarlyCloseTime")
+                        .HasColumnType("text");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 

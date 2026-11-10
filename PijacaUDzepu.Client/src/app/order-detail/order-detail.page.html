@@ -30,6 +30,26 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- Gde se roba preuzima i kako se dobija prodavac (poziv jednim dodirom) -->
+    <ion-card class="pickup-card">
+      <ion-card-content>
+        <strong><ion-icon [name]="order.fulfillment === 'Pickup' ? 'storefront-outline' : 'person-outline'"></ion-icon>
+          {{ (order.fulfillment === 'Pickup' ? 'order.where' : 'order.vendorContact') | t }}</strong>
+        <p class="vendor-line">{{ order.vendorName }} · {{ order.marketName }}<span *ngIf="order.stallLabel">, {{ 'home.stall' | t }} {{ order.stallLabel }}</span></p>
+        <p *ngIf="order.marketAddress" class="muted">{{ order.marketAddress }}</p>
+        <div class="contact-actions">
+          <ion-button *ngIf="order.vendorPhones?.length" size="small" [href]="'tel:' + order.vendorPhones[0]">
+            <ion-icon name="call-outline" slot="start"></ion-icon> {{ 'order.callVendor' | t }}
+          </ion-button>
+          <ion-button *ngIf="order.fulfillment === 'Pickup' && order.marketAddress" size="small" fill="outline" target="_blank"
+                      [href]="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(order.marketAddress)">
+            <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'order.directions' | t }}
+          </ion-button>
+        </div>
+        <p *ngIf="order.status === 'Pending' || order.status === 'Confirmed' || order.status === 'ReadyForPickup'" class="muted small">{{ 'order.cancelByPhone' | t }}</p>
+      </ion-card-content>
+    </ion-card>
+
     <ion-card *ngIf="order.status === 'Rejected'" class="vendor-message-card rejected">
       <ion-card-content>
         <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>

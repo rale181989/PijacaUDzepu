@@ -45,10 +45,11 @@ const call = async (method, url, body, token) => {
   await sleep(300);
   await page.screenshot({ path: path.join(OUT, 'v-stock.png') });
   const idx = await page.evaluate(() => [...document.querySelectorAll('app-vendor-products ion-item h2')].findIndex(h => h.textContent.includes('Paprike')));
-  await (await page.$$('app-vendor-products ion-item ion-button[title]'))[idx].click();
+  // Dugme "Cena" otvara prozor sa poljima za cenu i stanje
+  await page.evaluate(i => [...document.querySelectorAll('app-vendor-products ion-item')][i].querySelector('ion-button').click(), idx);
   await sleep(1200);
   await page.screenshot({ path: path.join(OUT, 'v-quick.png') });
-  await page.evaluate(() => document.querySelector('ion-alert')?.dismiss());
+  await page.evaluate(() => document.querySelector('ion-modal')?.dismiss());
 
   await page.goto(APP + '/vendor-today', { waitUntil: 'networkidle2' });
   await sleep(1500);

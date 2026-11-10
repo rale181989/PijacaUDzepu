@@ -2,9 +2,10 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { NotificationService } from '../services/notification.service';
 import { Order, OrderStatus } from '../models/order.model';
-import { AlertController, IonContent, ToastController } from '@ionic/angular/lazy';
+import { ActionSheetController, AlertController, IonContent, ToastController } from '@ionic/angular/lazy';
 import { Subscription } from 'rxjs';
 import { PagerComponent } from '../shared/pager/pager.component';
+import { ordersWord } from '../shared/plural';
 
 @Component({
   selector: 'app-vendor-orders',
@@ -35,8 +36,9 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
 
   constructor(
     private orderService: OrderService,
-    private notificationService: NotificationService,
+    public notificationService: NotificationService,
     private alertController: AlertController,
+    private actionSheetController: ActionSheetController,
     private toastController: ToastController
   ) {}
 
@@ -108,8 +110,9 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
         this.notificationService.loadPendingCount();
         // Završena ili odbijena prelazi u tab "Završene"
         if (['Completed', 'Rejected', 'Cancelled'].includes(updated.status)) this.loadOrders();
+        // Gore, da ne pokrije dugmad na kartici
         const toast = await this.toastController.create({
-          message: `Status promenjen: ${this.getStatusLabel(newStatus)}`, duration: 2000, color: 'success'
+          message: `Status promenjen: ${this.getStatusLabel(newStatus)}`, duration: 2000, color: 'success', position: 'top'
         });
         await toast.present();
       },
@@ -124,7 +127,37 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
     });
   }
 
-  // Prodavac uz potvrdu, odbijanje ili "Spremno" može da napiše poruku kupcu
+  // "Kupac preuzeo" završava porudžbinu i ne može da se vrati: prvo potvrda
+  async confirmPickedUp(order: Order) {
+    const alert = await this.alertController.create({
+      header: `Kupac preuzeo #${order.id}?`,
+      message: `${order.customerName} je preuzeo robu i platio ${order.amountToPay.toFixed(0)} din. Porudžbina prelazi u „Završene”.`,
+      buttons: [
+        { text: 'Nazad', role: 'cancel' },
+        { text: 'Da, preuzeo', handler: () => this.updateStatus(order, 'Completed') }
+      ]
+    });
+    await alert.present();
+  }
+
+  // Odbijanje: gotov razlog jednim dodirom ili svoj tekst
+  async reject(order: Order) {
+    const reasons = ['Nestalo je robe', 'Danas ne radim', 'Ne mogu da spremim na vreme'];
+    const sheet = await this.actionSheetController.create({
+      header: `Razlog odbijanja #${order.id}`,
+      subHeader: 'Kupac će dobiti ovu poruku.',
+      buttons: [
+        ...reasons.map(reason => ({ text: reason, handler: () => { this.updateStatus(order, 'Rejected', reason); } })),
+        { text: 'Drugi razlog…', handler: () => { this.respond(order, 'Rejected'); } },
+        { text: 'Nazad', role: 'cancel' }
+      ]
+    });
+    await sheet.present();
+  }
+
+  readonly ordersWord = ordersWord;
+
+  // Prodavac uz potvrdu ili odbijanje može da napiše poruku kupcu ("Spremno" ide jednim dodirom)
   async respond(order: Order, status: OrderStatus) {
     const pickup = order.fulfillment === 'Pickup';
     const titles: Record<string, string> = {
@@ -149,7 +182,7 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
         attributes: { maxlength: 300 }
       }],
       buttons: [
-        { text: 'Otkaži', role: 'cancel' },
+        { text: 'Nazad', role: 'cancel' },
         {
           text: reject ? 'Odbij' : 'Pošalji',
           role: reject ? 'destructive' : undefined,

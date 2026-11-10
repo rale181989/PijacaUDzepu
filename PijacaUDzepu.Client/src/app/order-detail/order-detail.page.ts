@@ -51,6 +51,8 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
+  readonly encodeURIComponent = encodeURIComponent;
+
   getStatusLabel(status: string): string {
     return this.ts.t('status.' + status) || status;
   }

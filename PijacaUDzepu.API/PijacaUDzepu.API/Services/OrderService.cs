@@ -47,6 +47,8 @@ public class OrderService : IOrderService
     private static readonly OrderStatus[] ActiveStatuses =
         { OrderStatus.Pending, OrderStatus.Confirmed, OrderStatus.ReadyForPickup };
 
+    private const decimal MaxOrderAmount = 1_000_000m;
+
     // Kurir vidi i prihvata porudžbinu tek kada je prodavac potvrdi (tok: kupac → prodavac → kurir)
     private static readonly OrderStatus[] CourierOfferStatuses =
         { OrderStatus.Confirmed, OrderStatus.ReadyForPickup };
@@ -78,6 +80,10 @@ public class OrderService : IOrderService
         _context.Orders.AddRange(orders);
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
+
+        // Ime kupca za obaveštenje prodavcu i odgovor (inače bi pisalo "Gost")
+        var customer = await _context.Users.FindAsync(customerId);
+        foreach (var order in orders) order.Customer = customer;
 
         await NotifyNewOrders(orders);
 
@@ -203,6 +209,22 @@ public class OrderService : IOrderService
     }
 
     // Pregled dana za prodavca
+    private record PrepareLine(string ProductName, ProductUnit Unit, decimal Quantity);
+
+    // Zbir stavki po proizvodu i jedinici, uz broj porudžbina u kojima se pojavljuje
+    private static List<PrepareItemDto> SumItems(IEnumerable<IEnumerable<PrepareLine>> orders) =>
+        orders.SelectMany((items, orderIndex) => items.Select(item => (item, orderIndex)))
+            .GroupBy(x => (x.item.ProductName, x.item.Unit))
+            .Select(g => new PrepareItemDto
+            {
+                ProductName = g.Key.ProductName,
+                Unit = g.Key.Unit,
+                Quantity = g.Sum(x => x.item.Quantity),
+                Orders = g.Select(x => x.orderIndex).Distinct().Count()
+            })
+            .OrderBy(x => x.ProductName)
+            .ToList();
+
     public async Task<VendorTodayDto> GetVendorToday(int vendorId)
     {
         var today = LocalTime.Today;
@@ -211,7 +233,7 @@ public class OrderService : IOrderService
 
         var active = await _context.Orders
             .Where(o => o.VendorId == vendorId && ActiveStatuses.Contains(o.Status))
-            .Select(o => new { o.Status, Items = o.Items.Select(i => new { i.ProductName, i.Unit, i.Quantity }) })
+            .Select(o => new { o.Status, Items = o.Items.Select(i => new PrepareLine(i.ProductName, i.Unit, i.Quantity)) })
             .ToListAsync();
         var todays = await _context.Orders
             .Where(o => o.VendorId == vendorId && o.CreatedAt >= fromUtc && o.CreatedAt < toUtc)
@@ -224,20 +246,10 @@ public class OrderService : IOrderService
             Confirmed = active.Count(o => o.Status == OrderStatus.Confirmed),
             Ready = active.Count(o => o.Status == OrderStatus.ReadyForPickup),
             InDelivery = active.Count(o => o.Status == OrderStatus.InDelivery),
-            // Spremaju se porudžbine koje nisu predate (na čekanju, potvrđene, spremne)
-            ToPrepare = active
-                .Where(o => o.Status != OrderStatus.InDelivery)
-                .SelectMany(o => o.Items.Select(i => (i.ProductName, i.Unit, i.Quantity, Order: o)))
-                .GroupBy(x => (x.ProductName, x.Unit))
-                .Select(g => new PrepareItemDto
-                {
-                    ProductName = g.Key.ProductName,
-                    Unit = g.Key.Unit,
-                    Quantity = g.Sum(x => x.Quantity),
-                    Orders = g.Select(x => x.Order).Distinct().Count()
-                })
-                .OrderBy(x => x.ProductName)
-                .ToList(),
+            // Sprema se samo ono što je prodavac prihvatio; spakovano ("Spremno") se više ne broji,
+            // a porudžbine na čekanju su posebno (još mogu biti odbijene)
+            ToPrepare = SumItems(active.Where(o => o.Status == OrderStatus.Confirmed).Select(o => o.Items)),
+            AwaitingAnswer = SumItems(active.Where(o => o.Status == OrderStatus.Pending).Select(o => o.Items)),
             TodayOrders = todays.Count,
             TodayCompleted = todays.Count(o => o.Status == OrderStatus.Completed),
             TodayGoodsTotal = todays.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.TotalAmount),
@@ -308,6 +320,16 @@ public class OrderService : IOrderService
             foreach (var item in group)
             {
                 var product = products.First(p => p.Id == item.ProductId);
+
+                // Komad, veza, pakovanje...: samo celi brojevi (decimale samo za kg i litar)
+                if (product.Unit is not (ProductUnit.Kg or ProductUnit.Litar) && item.Quantity != decimal.Truncate(item.Quantity))
+                    throw new InvalidOperationException(L.T("{0}: količina mora biti ceo broj.", product.Name));
+
+                // Kupac je u korpi video drugu cenu: ne naplaćuje se ništa što nije video
+                if (item.ExpectedUnitPrice.HasValue && item.ExpectedUnitPrice.Value != product.Price)
+                    throw new InvalidOperationException(L.T("Cena za {0} je promenjena: sada je {1} din. Proverite korpu i poručite ponovo.",
+                        product.Name, product.Price.ToString("0.##")));
+
                 var totalPrice = product.Price * item.Quantity;
 
                 order.Items.Add(new OrderItem
@@ -322,6 +344,9 @@ public class OrderService : IOrderService
             }
 
             order.TotalAmount = order.Items.Sum(i => i.TotalPrice);
+            // Iznos u bazi ima najviše 8 cifara pre zareza; ovolika porudžbina sa pijace nije stvarna
+            if (order.TotalAmount > MaxOrderAmount)
+                throw new InvalidOperationException(L.T("Iznos porudžbine je prevelik. Za velike količine javite se prodavcu."));
             orders.Add(order);
         }
 
@@ -330,6 +355,8 @@ public class OrderService : IOrderService
 
     public async Task<PagedResult<OrderDto>> GetCustomerOrders(int customerId, int skip = 0, int take = 20)
     {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
         var query = OrdersWithDetails()
             .Where(o => o.CustomerId == customerId)
             .OrderByDescending(o => o.CreatedAt);
@@ -604,6 +631,17 @@ public class OrderService : IOrderService
         var digits = phone.Count(char.IsDigit);
         var seen = 0;
         return new string(phone.Select(c => char.IsDigit(c) && ++seen <= digits - 2 ? '•' : c).ToArray());
+    }
+
+    // Kupac se registrovao ili prijavio na uređaju sa kog je ranije poručivao kao gost: te porudžbine
+    // (po kodovima za praćenje koje taj uređaj čuva) prelaze na njegov nalog i vide se u "Moje porudžbine".
+    public async Task<int> ClaimGuestOrders(int customerId, List<string> trackingCodes)
+    {
+        var codes = trackingCodes.Where(c => !string.IsNullOrWhiteSpace(c)).Select(c => c.Trim()).Distinct().Take(20).ToList();
+        if (codes.Count == 0) return 0;
+        return await _context.Orders
+            .Where(o => o.CustomerId == null && o.TrackingCode != null && codes.Contains(o.TrackingCode))
+            .ExecuteUpdateAsync(set => set.SetProperty(o => o.CustomerId, (int?)customerId));
     }
 
     public Task<int> GetCustomerActiveCount(int customerId) =>
@@ -980,7 +1018,6 @@ public class OrderService : IOrderService
             (OrderStatus.Pending, OrderStatus.Rejected) => true,
             (OrderStatus.Confirmed, OrderStatus.ReadyForPickup) => true,
             (OrderStatus.ReadyForPickup, OrderStatus.Completed) => true,
-            (OrderStatus.Pending, OrderStatus.Cancelled) => true,
             _ => false
         };
 

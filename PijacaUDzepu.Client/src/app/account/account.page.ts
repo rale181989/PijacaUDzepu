@@ -15,7 +15,7 @@ import { APP_VERSION } from '../version';
 })
 export class AccountPage implements OnInit {
   readonly appVersion = APP_VERSION;
-  profile: UpdateProfileDto = { phoneNumber: '', address: '', floor: '', apartment: '' };
+  profile: UpdateProfileDto = { phoneNumber: '', address: '', floor: '', apartment: '', email: '' };
   saving = false;
 
   currentPassword = '';
@@ -39,7 +39,7 @@ export class AccountPage implements OnInit {
 
   private fillProfile() {
     const u = this.authService.currentUser;
-    this.profile = { phoneNumber: u?.phoneNumber ?? '', address: u?.address ?? '', floor: u?.floor ?? '', apartment: u?.apartment ?? '' };
+    this.profile = { phoneNumber: u?.phoneNumber ?? '', address: u?.address ?? '', floor: u?.floor ?? '', apartment: u?.apartment ?? '', email: u?.email ?? '' };
   }
 
   get canSaveProfile(): boolean {

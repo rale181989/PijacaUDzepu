@@ -20,6 +20,8 @@ export interface UpdateProfileDto {
   address?: string;
   floor?: string;
   apartment?: string;
+  // "" = ukloni e-mail; izostavljeno = bez promene
+  email?: string;
 }
 
 export interface AuthResponse {

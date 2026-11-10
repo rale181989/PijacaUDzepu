@@ -66,3 +66,27 @@ ion-searchbar {
     inset-inline-end: 4px;
   }
 }
+
+// Dugačak tekst bez razmaka (napomena, adresa, telefon) se lomi umesto da razvuče karticu preko ekrana
+ion-card-content {
+  overflow-wrap: anywhere;
+}
+
+// Pristupačnost: fokus tastature se vidi (Ionic ga podrazumevano skriva)
+:focus-visible {
+  outline: 3px solid var(--ion-color-warning);
+  outline-offset: 2px;
+}
+ion-searchbar.searchbar-has-focus .searchbar-input-container {
+  box-shadow: 0 0 0 3px rgba(var(--ion-color-warning-rgb), 0.6);
+  border-radius: 8px;
+}
+
+// Podnožje na kratkim stranicama stoji na dnu ekrana, ne "visi" na sredini
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+}
+app-footer {
+  margin-top: auto;
+}

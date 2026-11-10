@@ -82,6 +82,8 @@ export interface GuestOrderInput {
 export interface OrderItemInput {
   productId: number;
   quantity: number;
+  // Cena iz korpe: ako je prodavac u međuvremenu promenio cenu, server odbija porudžbinu
+  expectedUnitPrice?: number;
 }
 
 // Pickup = rezervacija, kupac sam preuzima kod prodavca; Courier = dostava preko Eko kurira

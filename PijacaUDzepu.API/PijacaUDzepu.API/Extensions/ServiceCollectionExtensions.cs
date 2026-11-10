@@ -26,6 +26,8 @@ public static class ServiceCollectionExtensions
             options.UseNpgsql(dataSource));
 
         services.AddScoped<ITokenService, TokenService>();
+        services.AddMemoryCache();
+        services.AddSingleton<LoginThrottle>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IMarketService, MarketService>();
         services.AddScoped<IStallService, StallService>();

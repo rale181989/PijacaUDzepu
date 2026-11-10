@@ -31,4 +31,6 @@ public class VendorAvailabilityDto
     public bool OrdersPaused { get; set; }
     public List<DeliveryScheduleEntry> OpeningHours { get; set; } = new();
     public List<DateOnly> ClosedDates { get; set; } = new();
+    // "HH:mm": danas se zatvara ranije (samo danas); prazno = bez ranijeg zatvaranja
+    public string? EarlyCloseToday { get; set; }
 }

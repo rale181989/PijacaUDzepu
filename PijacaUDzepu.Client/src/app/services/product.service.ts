@@ -27,6 +27,14 @@ export class ProductService {
     return this.http.get<PagedResult<Product>>(this.baseUrl, { params });
   }
 
+  // Grupe proizvoda u kojima ima robe (filter na početnoj ne nudi prazne)
+  getCategories(marketId?: number | null, vendorId?: number | null) {
+    let params = new HttpParams();
+    if (marketId) params = params.set('marketId', marketId);
+    if (vendorId) params = params.set('vendorId', vendorId);
+    return this.http.get<string[]>(`${this.baseUrl}/categories`, { params });
+  }
+
   getById(id: number) {
     return this.http.get<Product>(`${this.baseUrl}/${id}`);
   }

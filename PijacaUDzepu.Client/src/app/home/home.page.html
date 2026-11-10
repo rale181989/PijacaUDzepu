@@ -16,6 +16,17 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
+  <!-- Kako radi (dok kupac ne zatvori) -->
+  <div *ngIf="showHowItWorks" class="how-it-works">
+    <strong>{{ 'home.howTitle' | t }}</strong>
+    <ol>
+      <li>{{ 'home.how1' | t }}</li>
+      <li>{{ howFeeText() }}</li>
+      <li>{{ 'home.how3' | t }}</li>
+    </ol>
+    <ion-button size="small" fill="clear" (click)="closeHowItWorks()">{{ 'home.howClose' | t }}</ion-button>
+  </div>
+
   <div class="filters-bar">
     <div class="filter-row">
       <button class="filter-btn" (click)="openFilterModal('market')">
@@ -30,15 +41,16 @@
         <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
       </button>
 
-      <button class="filter-btn" (click)="openFilterModal('stall')" *ngIf="selectedMarketId">
-        <ion-icon name="grid-outline"></ion-icon>
-        <span class="filter-btn-text">{{ selectedStallId ? ('home.stall' | t) + ' ' + getStallLabel(selectedStallId) : ('home.allStalls' | t) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
-
       <button class="filter-btn" (click)="openFilterModal('category')">
         <ion-icon name="pricetag-outline"></ion-icon>
         <span class="filter-btn-text">{{ selectedCategory ? getCategoryLabel(selectedCategory) : ('home.allCategories' | t) }}</span>
+        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+      </button>
+
+      <!-- Tezga se pojavljuje tek kad je izabrana pijaca, pa stoji poslednja da ne pomera ostale filtere -->
+      <button class="filter-btn" (click)="openFilterModal('stall')" *ngIf="selectedMarketId">
+        <ion-icon name="grid-outline"></ion-icon>
+        <span class="filter-btn-text">{{ selectedStallId ? ('home.stall' | t) + ' ' + getStallLabel(selectedStallId) : ('home.allStalls' | t) }}</span>
         <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
       </button>
 
@@ -258,7 +270,7 @@
 
   <div *ngIf="!loading && connectionError" class="empty-state connection-error">
     <ion-icon name="cloud-offline-outline" size="large" color="danger"></ion-icon>
-    <p><strong>{{ 'home.noConnection' | t }}</strong></p>
+    <p><strong>{{ connectionTitle }}</strong></p>
     <p class="error-detail">{{ connectionError }}</p>
     <ion-button fill="outline" (click)="loadProducts()">{{ 'home.retry' | t }}</ion-button>
   </div>
@@ -312,15 +324,16 @@
             </p>
             <p *ngIf="getPricePerKg(product) as perKg" class="product-unit-price">≈ {{ perKg | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel('Kg') }}</p>
             <div class="qty-controls">
-              <ion-button fill="outline" size="small" (click)="decreaseQty(product)" [disabled]="getSelectedQty(product.id) === 0">
+              <ion-button fill="outline" size="small" (click)="decreaseQty(product)" [disabled]="getSelectedQty(product.id) === 0" [attr.aria-label]="('a11y.less' | t) + ': ' + product.name">
                 <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
               </ion-button>
               <span class="qty-value">{{ getSelectedQty(product.id) }}</span>
-              <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false || !product.isAvailable">
+              <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false || !product.isAvailable" [attr.aria-label]="('a11y.more' | t) + ': ' + product.name">
                 <ion-icon name="add-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>
-            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="getSelectedQty(product.id) === 0 || product.vendorOpen === false || !product.isAvailable">
+            <p *ngIf="inCart(product.id) > 0" class="in-cart">{{ 'home.inCart' | t }}: {{ inCart(product.id) | number:'1.0-2' }} {{ getUnitLabel(product.unit) }}</p>
+            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="product.vendorOpen === false || !product.isAvailable">
               <ion-icon name="cart-outline" slot="start"></ion-icon>
               {{ 'home.add' | t }}
             </ion-button>

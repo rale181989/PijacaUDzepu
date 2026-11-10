@@ -30,8 +30,18 @@
     <ion-button routerLink="/home" fill="outline">{{ 'cart.browse' | t }}</ion-button>
   </div>
 
+  <!-- Odmah posle poručivanja: potvrda da je sve stiglo -->
+  <div *ngIf="!loading && justOrdered && groups.length" class="thanks">
+    <ion-icon name="checkmark-circle"></ion-icon> {{ 'track.thanks' | t }}
+  </div>
+
   <ng-container *ngIf="!loading">
     <section *ngFor="let group of groups" class="purchase">
+      <!-- Jedna kupovina može biti više porudžbina (po tezgi): ukupan iznos na jednom mestu -->
+      <p class="purchase-total">
+        {{ 'track.purchaseTotal' | t }}: <strong>{{ groupTotal(group) | number:'1.0-0' }} {{ 'din' | t }}</strong>
+        <span *ngIf="group.orders.length > 1" class="muted"> · {{ group.orders.length }} {{ 'track.parts' | t }}</span>
+      </p>
       <!-- Link za praćenje: gost ga čuva ili šalje sebi -->
       <div class="link-box">
         <p>{{ 'track.linkHint' | t }}</p>
@@ -94,7 +104,7 @@
                 <p *ngIf="order.status === 'InDelivery'">{{ 'order.onTheWay' | t }}</p>
               </ng-container>
               <strong *ngIf="!order.courierName && (order.status === 'Confirmed' || order.status === 'ReadyForPickup')">{{ 'order.courierPending' | t }}</strong>
-              <p *ngIf="order.deliveryAddress" class="muted">{{ 'order.deliveryAddress' | t }}: {{ order.deliveryAddress }}</p>
+              <p *ngIf="order.deliveryAddress" class="muted">{{ 'order.deliveryAddress' | t }}: {{ ownAddress(group.code) || order.deliveryAddress }}</p>
             </div>
           </div>
 

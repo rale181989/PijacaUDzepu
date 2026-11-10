@@ -9,7 +9,10 @@ public class VendorTodayDto
     public int Confirmed { get; set; }
     public int Ready { get; set; }
     public int InDelivery { get; set; }
+    // Prihvaćeno, a još nije spakovano
     public List<PrepareItemDto> ToPrepare { get; set; } = new();
+    // Porudžbine koje još čekaju odgovor prodavca (mogu biti odbijene)
+    public List<PrepareItemDto> AwaitingAnswer { get; set; } = new();
     public int TodayOrders { get; set; }
     public int TodayCompleted { get; set; }
     public decimal TodayGoodsTotal { get; set; }

@@ -103,6 +103,10 @@ export class MyOrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  itemsLabel(n: number): string {
+    return this.ts.plural(n, 'items');
+  }
+
   getStatusLabel(status: string): string {
     return this.ts.t('status.' + status) || status;
   }

@@ -29,6 +29,11 @@ public class ProductsController : BaseApiController
     }
 
     [AllowAnonymous]
+    [HttpGet("categories")]
+    public async Task<IActionResult> GetCategories([FromQuery] int? marketId, [FromQuery] int? vendorId) =>
+        Ok(await _productService.GetAvailableCategories(marketId, vendorId));
+
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -70,6 +75,10 @@ public class ProductsController : BaseApiController
         {
             return NotFound(new { message = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [Authorize(Policy = "RequireVendorAdmin")]
@@ -87,6 +96,10 @@ public class ProductsController : BaseApiController
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

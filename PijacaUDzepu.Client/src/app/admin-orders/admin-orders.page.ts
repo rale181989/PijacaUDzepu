@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { OrderService } from '../services/order.service';
 import { Order, OrderStatus } from '../models/order.model';
 import { PagerComponent } from '../shared/pager/pager.component';
+import { itemsWord } from '../shared/plural';
 
 // Porudžbine koje još nisu zatvorene, najstarije prve. SuperAdmin ovde završava one koje su
 // slučajno ostale otvorene; porudžbina pamti ko ju je i kada zatvorio.
@@ -15,6 +16,7 @@ import { PagerComponent } from '../shared/pager/pager.component';
 })
 export class AdminOrdersPage implements OnDestroy {
   orders: Order[] = [];
+  readonly itemsWord = itemsWord;
   loading = false;
   busyId: number | null = null;
   page = 0;

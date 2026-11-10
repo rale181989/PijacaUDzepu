@@ -295,3 +295,18 @@ ion-menu ion-item-divider {
     margin-top: 56px;
   }
 }
+
+.menu-header-brand .menu-logo {
+  background: #fff;
+  border-radius: 8px;
+  padding: 3px 6px;
+}
+
+// Mnogo stavki (admin): linkovi se pomeraju vodoravno, a nalog i "Odjava" ostaju vidljivi desno
+.nav-links {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  a { flex: none; }
+}
+.nav-auth { flex: none; }

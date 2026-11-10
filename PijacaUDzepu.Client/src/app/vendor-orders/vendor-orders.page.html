@@ -32,6 +32,12 @@
     <p>{{ tab === 'active' ? 'Nema aktivnih porudžbina' : 'Nema završenih porudžbina' }}</p>
   </div>
 
+  <!-- Broj na ikonici gore su porudžbine na čekanju; ovde piše šta znači -->
+  <p *ngIf="!loading && tab === 'active' && notificationService.pendingCount > 0" class="pending-hint">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    Čeka vaš odgovor: {{ notificationService.pendingCount }} {{ ordersWord(notificationService.pendingCount) }} (to je broj na ikonici gore)
+  </p>
+
   <ion-list *ngIf="!loading">
     <ion-card *ngFor="let order of orders">
       <ion-card-header>
@@ -62,16 +68,18 @@
           <strong>Ukupno: {{ order.totalAmount | number:'1.0-0' }} din</strong>
         </div>
 
-        <div class="guest-info">
-          <ion-icon name="person-outline"></ion-icon>
-          <span>{{ order.customerName }}</span>
-          <span *ngIf="order.contactPhone"> · {{ order.contactPhone }}</span>
-          <span *ngIf="order.deliveryAddress"> · {{ order.deliveryAddress }}</span>
+        <!-- Kupac: ime, telefon (poziv jednim dodirom) i adresa, svako u svom redu -->
+        <div class="customer">
+          <div class="guest-info"><ion-icon name="person-outline"></ion-icon><span>{{ order.customerName }}</span></div>
+          <a *ngIf="order.contactPhone" class="guest-info phone" [href]="'tel:' + order.contactPhone">
+            <ion-icon name="call-outline"></ion-icon><span>{{ order.contactPhone }}</span>
+          </a>
+          <div *ngIf="order.deliveryAddress" class="guest-info"><ion-icon name="location-outline"></ion-icon><span>{{ order.deliveryAddress }}</span></div>
         </div>
 
         <div *ngIf="order.fulfillment === 'Courier'" class="guest-info">
           <ion-icon name="bicycle-outline"></ion-icon>
-          <span *ngIf="order.courierName">Kurir: {{ order.courierName }}<span *ngIf="order.courierPhone"> · {{ order.courierPhone }}</span></span>
+          <span *ngIf="order.courierName">Kurir: {{ order.courierName }}<a *ngIf="order.courierPhone" [href]="'tel:' + order.courierPhone"> · {{ order.courierPhone }}</a></span>
           <span *ngIf="!order.courierName">{{ order.status === 'Pending' ? 'Kuriri je dobijaju kada potvrdite' : 'Čeka se kurir' }}</span>
         </div>
 
@@ -79,8 +87,9 @@
           Ocena kupca: <span class="stars">{{ order.rating.vendorScore | stars }}</span>
           <span *ngIf="order.rating.comment"> – „{{ order.rating.comment }}”</span>
         </p>
-        <p *ngIf="order.vendorMessage" class="vendor-message">
-          <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Vaš odgovor: {{ order.vendorMessage }}
+        <p *ngIf="order.vendorMessage" class="vendor-message" [class.reject-reason]="order.status === 'Rejected'">
+          <ion-icon [name]="order.status === 'Rejected' ? 'close-circle-outline' : 'chatbubble-ellipses-outline'"></ion-icon>
+          {{ order.status === 'Rejected' ? 'Razlog odbijanja' : 'Vaš odgovor' }}: {{ order.vendorMessage }}
         </p>
 
         <p *ngIf="order.status === 'NotDelivered'" class="not-delivered">
@@ -100,15 +109,15 @@
             <ion-icon name="checkmark-outline" slot="start"></ion-icon> Potvrdi
           </ion-button>
           <ion-button *ngIf="order.status === 'Pending'" size="small" color="danger" fill="outline"
-                      (click)="respond(order, 'Rejected')">
+                      (click)="reject(order)">
             <ion-icon name="close-outline" slot="start"></ion-icon> Odbij
           </ion-button>
           <ion-button *ngIf="order.status === 'Confirmed'" size="small" color="success"
-                      (click)="respond(order, 'ReadyForPickup')">
+                      (click)="updateStatus(order, 'ReadyForPickup')">
             <ion-icon name="bag-check-outline" slot="start"></ion-icon> Spremno
           </ion-button>
           <ion-button *ngIf="order.status === 'ReadyForPickup' && order.fulfillment === 'Pickup'" size="small" color="primary"
-                      (click)="updateStatus(order, 'Completed')">
+                      (click)="confirmPickedUp(order)">
             <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Kupac preuzeo
           </ion-button>
         </div>

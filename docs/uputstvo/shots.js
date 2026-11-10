@@ -64,8 +64,9 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   const page = await browser.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 
-  // Kupac bez naloga (gost)
+  // Kupac bez naloga (gost); okvir "Kako radi" je već zatvoren, da filteri stoje gde ih oznake pokazuju
   await asUser(page, null);
+  await page.evaluate(() => localStorage.setItem('howItWorksSeen', '1'));
   await shot(page, 'c-home', '/home');
   await shot(page, 'c-home-products', '/home', scrollContent(520));
   await shot(page, 'c-menu', '/home', openMenu);
@@ -77,13 +78,22 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   await shot(page, 'c-cart', '/cart');
   await shot(page, 'c-cart-checkout', '/cart', scrollContent(2000));
 
-  // Praćenje porudžbine gosta
-  await page.evaluate(code => { localStorage.removeItem('cart'); localStorage.setItem('guestOrders', JSON.stringify([code])); }, demo.trackingCode);
-  await shot(page, 'c-track', '/prati/' + demo.trackingCode);
+  // Praćenje porudžbine gosta: nova kupovina sa dve tezge (demo porudžbina iz demo.json je možda već zatvorena)
+  const guestOrders = await (await fetch('http://localhost:5000/api/orders/guest', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: [{ productId: 1, quantity: 2 }, { productId: products.items.find(p => p.vendorId === 2).id, quantity: 1 }],
+      fulfillment: 'Courier', guestName: 'Petar Petrović', guestPhone: '060 123 4567', guestAddress: 'Dunavska 5, sprat 2, stan 7' })
+  })).json();
+  const trackingCode = guestOrders[0].trackingCode;
+  await fetch(`http://localhost:5000/api/orders/${guestOrders[0].id}/status`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + demo.marko.token }, body: JSON.stringify({ status: 'Confirmed', message: 'Spremamo, stiže za sat vremena' })
+  });
+  await page.evaluate(code => { localStorage.removeItem('cart'); localStorage.setItem('guestOrders', JSON.stringify([code])); }, trackingCode);
+  await shot(page, 'c-track', '/prati/' + trackingCode);
   await shot(page, 'c-login', '/login');
   await shot(page, 'c-register', '/register', async p => {
-    // Redom: ime, prezime, korisničko ime, lozinka, telefon, adresa, sprat, stan
-    const values = ['Petar', 'Petrović', 'petar', 'lozinka123', '060 123 4567', 'Dunavska 5', '2', '7'];
+    // Redom: ime, prezime, korisničko ime, lozinka, e-mail, telefon, adresa, sprat, stan
+    const values = ['Petar', 'Petrović', 'petar', 'lozinka123', 'petar@example.com', '060 123 4567', 'Dunavska 5', '2', '7'];
     const inputs = await p.$$('.register-container ion-input input');
     for (let i = 0; i < values.length; i++) await inputs[i].type(values[i]);
   });
@@ -105,7 +115,18 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   // Prodavac
   await asUser(page, demo.marko);
   await shot(page, 'v-orders', '/vendor-orders');
-  await shot(page, 'v-orders-more', '/vendor-orders', scrollContent(420));
+  // Prva potvrđena porudžbina (sa dugmetom "Spremno") na vrhu ekrana
+  await shot(page, 'v-orders-more', '/vendor-orders', page => page.evaluate(async () => {
+    const btn = [...document.querySelectorAll('app-vendor-orders ion-button')].find(b => b.textContent.includes('Spremno'));
+    const card = btn?.closest('ion-card');
+    const c = document.querySelector('app-vendor-orders ion-content');
+    if (card && c) {
+      const scrollEl = await c.getScrollElement();
+      const top = card.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop - 8;
+      await c.scrollToPoint(0, Math.max(0, top), 0);
+    }
+    await new Promise(r => setTimeout(r, 400));
+  }));
   await shot(page, 'v-products', '/vendor-products');
   await shot(page, 'v-product-form', '/vendor-product-form/1');
   await shot(page, 'v-profile', '/vendor-profile');

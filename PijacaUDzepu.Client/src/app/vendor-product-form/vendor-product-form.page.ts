@@ -35,7 +35,8 @@ export class VendorProductFormPage implements OnDestroy {
   ) {}
 
   private static emptyModel(): ProductInput {
-    return { name: '', price: 0, unit: 'Kg', category: 'Povrce', productClass: null, isAvailable: true };
+    // Cena prazna (ne 0): inače se kucanjem dobija "0180"
+    return { name: '', price: null as unknown as number, unit: 'Kg', category: 'Povrce', productClass: null, isAvailable: true };
   }
 
   // Ionic čuva stranicu u istoriji: pri svakom ulasku forma kreće od čistog stanja, inače bi "Dodaj proizvod"

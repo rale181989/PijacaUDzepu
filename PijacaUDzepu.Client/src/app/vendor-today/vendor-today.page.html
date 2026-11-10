@@ -27,13 +27,23 @@
 
     <section class="panel">
       <h3>Šta treba spremiti</h3>
-      <p class="hint">Zbir stavki svih porudžbina na čekanju, potvrđenih i spremnih.</p>
+      <p class="hint">Zbir potvrđenih porudžbina koje još niste označili kao „Spremno”.</p>
       <p *ngIf="data.toPrepare.length === 0" class="hint">Trenutno nema porudžbina za spremanje.</p>
       <div *ngFor="let item of data.toPrepare" class="prepare-row">
         <span class="name">{{ item.productName }}</span>
         <strong>{{ item.quantity | number:'1.0-2' }} {{ unit(item.unit) }}</strong>
-        <span class="orders">{{ item.orders }} {{ item.orders === 1 ? 'porudžbina' : 'porudžbina' }}</span>
+        <span class="orders">{{ item.orders }} {{ ordersWord(item.orders) }}</span>
       </div>
+    </section>
+
+    <section *ngIf="data.awaitingAnswer.length > 0" class="panel awaiting">
+      <h3>Čeka vaš odgovor</h3>
+      <p class="hint">Porudžbine koje još niste potvrdili – ne spremajte ih dok ih ne prihvatite.</p>
+      <a *ngFor="let item of data.awaitingAnswer" class="prepare-row" routerLink="/vendor-orders">
+        <span class="name">{{ item.productName }}</span>
+        <strong>{{ item.quantity | number:'1.0-2' }} {{ unit(item.unit) }}</strong>
+        <span class="orders">{{ item.orders }} {{ ordersWord(item.orders) }}</span>
+      </a>
     </section>
 
     <section *ngIf="data.lowStock.length > 0" class="panel low">

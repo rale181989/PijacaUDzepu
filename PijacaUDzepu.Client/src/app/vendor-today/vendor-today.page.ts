@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { OrderService, VendorToday } from '../services/order.service';
 import { TranslateService } from '../services/translate.service';
+import { ordersWord } from '../shared/plural';
 
 // Pregled dana za prodavca: šta treba spremiti (zbir stavki porudžbina u toku), stanje i današnji promet
 @Component({
@@ -12,6 +13,7 @@ import { TranslateService } from '../services/translate.service';
 export class VendorTodayPage {
   data: VendorToday | null = null;
   loading = false;
+  readonly ordersWord = ordersWord;
 
   constructor(private orderService: OrderService, private ts: TranslateService) {}
 

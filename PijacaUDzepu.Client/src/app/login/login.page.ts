@@ -74,7 +74,7 @@ export class LoginPage {
       next: (res) => {
         this.loading = false;
         if (res.user.roles.includes('VendorAdmin')) {
-          this.router.navigateByUrl('/vendor-products');
+          this.router.navigateByUrl('/vendor-orders');
         } else if (res.user.roles.includes('Courier')) {
           this.router.navigateByUrl('/courier-orders');
         } else if (res.user.roles.includes('SuperAdmin')) {
@@ -86,7 +86,7 @@ export class LoginPage {
       error: async (err) => {
         this.loading = false;
         const message = isConnectionError(err)
-          ? `${this.ts.t('home.noConnection')}: ${describeConnectionError(err)}`
+          ? `${this.ts.t('home.noConnection')}: ${describeConnectionError(err, k => this.ts.t(k))}`
           : err.error?.message || this.ts.t('login.error');
         const toast = await this.toastController.create({
           message,

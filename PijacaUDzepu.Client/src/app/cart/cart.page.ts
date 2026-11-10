@@ -11,6 +11,9 @@ import { TranslateService } from '../services/translate.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
 import { deliveryAddressOf } from '../models/user.model';
 import { NotificationService } from '../services/notification.service';
+import { ProductService } from '../services/product.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-cart',
@@ -39,7 +42,8 @@ export class CartPage implements OnInit {
     private toastController: ToastController,
     private ts: TranslateService,
     private guestOrders: GuestOrdersService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private productService: ProductService
   ) {}
 
   ngOnInit() {
@@ -57,6 +61,26 @@ export class CartPage implements OnInit {
       });
     }
     this.orderService.getDeliveryOptions().subscribe({ next: o => this.courierFee = o.courierFee, error: () => {} });
+  }
+
+  ionViewWillEnter() {
+    this.refreshProducts();
+  }
+
+  // Korpa pamti proizvod iz trenutka dodavanja: pre poručivanja se osvežavaju cena, stanje i dostupnost,
+  // a kupac dobija poruku ako se cena promenila (server ionako odbija porudžbinu sa starom cenom)
+  refreshProducts() {
+    const items = this.cartService.getItems();
+    if (items.length === 0) return;
+    forkJoin(items.map(i => this.productService.getById(i.product.id).pipe(catchError(() => of(null))))).subscribe(products => {
+      const result = this.cartService.updateProducts(products.filter((p): p is NonNullable<typeof p> => !!p));
+      const parts: string[] = [];
+      if (result.priceChanged.length) parts.push(`${this.ts.t('cart.priceChanged')}: ${result.priceChanged.join(', ')}`);
+      if (result.unavailable.length) parts.push(`${this.ts.t('cart.nowUnavailable')}: ${result.unavailable.join(', ')}`);
+      if (parts.length) {
+        this.toastController.create({ message: parts.join('. '), duration: 5000, color: 'warning' }).then(t => t.present());
+      }
+    });
   }
 
   updateQuantity(productId: number, quantity: number) {
@@ -98,6 +122,21 @@ export class CartPage implements OnInit {
     return this.courierFee * this.vendorCount;
   }
 
+  // Različite pijace u korpi: kod preuzimanja kupac ide na više mesta
+  get marketNames(): string[] {
+    return [...new Set(this.items.map(i => i.product.marketName).filter(Boolean))];
+  }
+
+  // Šta još fali za poručivanje (dugmad su inače siva bez objašnjenja)
+  get missingFields(): string[] {
+    const missing: string[] = [];
+    if (!this.authService.isLoggedIn && !this.guestName.trim()) missing.push(this.ts.t('cart.missingName'));
+    if (!this.phone.trim()) missing.push(this.ts.t('cart.missingPhone'));
+    if (!this.emailValid) missing.push(this.ts.t('cart.missingEmail'));
+    if (!this.address.trim()) missing.push(this.ts.t('cart.missingAddress'));
+    return missing;
+  }
+
   // E-mail nije obavezan, ali ako je unet mora biti ispravan
   get emailValid(): boolean {
     const email = this.guestEmail.trim();
@@ -115,6 +154,7 @@ export class CartPage implements OnInit {
   }
 
   async submitOrder(fulfillment: FulfillmentType) {
+    if (this.submitting) return;
     if (fulfillment === 'Pickup' ? !this.canReserve : !this.canCourier) return;
 
     const goods = this.cartService.total;
@@ -137,11 +177,14 @@ export class CartPage implements OnInit {
   }
 
   private placeOrder(fulfillment: FulfillmentType) {
+    // Dupli dodir na "Naruči" u potvrdi: druga porudžbina ne sme da ode
+    if (this.submitting) return;
     this.submitting = true;
 
     const cartItems = this.items.map(i => ({
       productId: i.product.id,
-      quantity: i.quantity
+      quantity: i.quantity,
+      expectedUnitPrice: i.product.price
     }));
 
     const obs = this.authService.isLoggedIn
@@ -165,6 +208,7 @@ export class CartPage implements OnInit {
     obs.subscribe({
       next: async orders => {
         this.submitting = false;
+        const usedAddress = this.address.trim(); // pre nego što se polje vrati na adresu iz naloga
         this.cartService.clearCart();
         // Crveni broj na ikonici "Moje porudžbine" odmah raste
         this.notificationService.loadCustomerActiveCount();
@@ -182,16 +226,19 @@ export class CartPage implements OnInit {
           this.router.navigateByUrl('/my-orders');
         } else if (trackingCode) {
           this.guestOrders.add(trackingCode);
-          this.router.navigateByUrl('/prati/' + trackingCode);
+          if (fulfillment === 'Courier' && usedAddress) this.guestOrders.rememberAddress(trackingCode, usedAddress);
+          this.router.navigateByUrl('/prati/' + trackingCode + '?nova=1');
         } else {
           this.router.navigateByUrl('/home');
         }
       },
       error: async (err) => {
         this.submitting = false;
+        // Najčešće se promenila cena ili stanje: korpa odmah pokazuje nove podatke
+        this.refreshProducts();
         const toast = await this.toastController.create({
           message: err.error?.message || this.ts.t('cart.orderError'),
-          duration: 3000,
+          duration: 5000,
           color: 'danger'
         });
         await toast.present();

@@ -23,6 +23,9 @@ public class Vendor
     public bool OrdersPaused { get; set; }
     public List<DeliveryScheduleEntry>? OpeningHours { get; set; }
     public List<DateOnly>? ClosedDates { get; set; }
+    // "Danas zatvaram ranije": važi samo za EarlyCloseDate (lokalni datum), vreme "HH:mm"
+    public DateOnly? EarlyCloseDate { get; set; }
+    public string? EarlyCloseTime { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

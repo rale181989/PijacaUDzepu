@@ -32,6 +32,8 @@ export class TrackOrderPage implements OnInit, OnDestroy {
   groups: TrackedGroup[] = [];
   loading = false;
   notFound = false;
+  // Stigao je direktno iz korpe: prikazuje se "Hvala! Porudžbina je primljena."
+  justOrdered = false;
   private hub: signalR.HubConnection | null = null;
 
   constructor(
@@ -53,9 +55,21 @@ export class TrackOrderPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.code = this.route.snapshot.paramMap.get('code');
+    this.justOrdered = this.route.snapshot.queryParamMap.has('nova');
     // Otvoren link se pamti, pa se kupovina vidi i kasnije u "Moje porudžbine"
     if (this.code) this.guestOrders.add(this.code);
     this.load();
+  }
+
+  // Ukupno za plaćanje jedne kupovine (sve tezge zajedno), bez odbijenih i otkazanih
+  groupTotal(group: TrackedGroup): number {
+    return group.orders
+      .filter(o => !['Rejected', 'Cancelled', 'NotDelivered'].includes(o.status))
+      .reduce((sum, o) => sum + o.amountToPay, 0);
+  }
+
+  ownAddress(code: string): string | null {
+    return this.guestOrders.addressFor(code);
   }
 
   ngOnDestroy() {

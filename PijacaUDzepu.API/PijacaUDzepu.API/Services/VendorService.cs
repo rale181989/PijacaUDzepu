@@ -119,6 +119,10 @@ public class VendorService : IVendorService
         var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall).FirstOrDefaultAsync(v => v.Id == vendorId)
             ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
+        var badValue = dto.OpeningHours.FirstOrDefault(h => h.Day is < 1 or > 7
+            || !VendorAvailability.TryParseTime(h.From, out _) || !VendorAvailability.TryParseTime(h.To, out _));
+        if (badValue != null)
+            throw new InvalidOperationException(L.T("Radno vreme nije ispravno: dan ili vreme ne postoji (vreme kao 07:00)."));
         var invalid = dto.OpeningHours.FirstOrDefault(h => !VendorAvailability.IsValid(h));
         if (invalid != null)
             throw new InvalidOperationException(L.T("Radno vreme nije ispravno: početak mora biti pre kraja (npr. 07:00 – 14:00)."));
@@ -127,6 +131,18 @@ public class VendorService : IVendorService
         // Jedan unos po danu; prošli neradni dani se ne čuvaju
         vendor.OpeningHours = dto.OpeningHours.GroupBy(h => h.Day).Select(g => g.First()).OrderBy(h => h.Day).ToList();
         vendor.ClosedDates = dto.ClosedDates.Where(d => d >= LocalTime.Today).Distinct().OrderBy(d => d).Take(60).ToList();
+        if (string.IsNullOrWhiteSpace(dto.EarlyCloseToday))
+        {
+            vendor.EarlyCloseDate = null;
+            vendor.EarlyCloseTime = null;
+        }
+        else
+        {
+            if (!VendorAvailability.TryParseTime(dto.EarlyCloseToday.Trim(), out var at))
+                throw new InvalidOperationException(L.T("Vreme zatvaranja nije ispravno (npr. 14:00)."));
+            vendor.EarlyCloseDate = LocalTime.Today;
+            vendor.EarlyCloseTime = at.ToString("HH:mm");
+        }
         vendor.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return MapToDto(vendor);
@@ -187,6 +203,7 @@ public class VendorService : IVendorService
         DeliveryRadiusKm = v.DeliveryRadiusKm,
         DeliverySchedule = v.DeliverySchedule,
         OrdersPaused = v.OrdersPaused,
+        EarlyCloseToday = v.EarlyCloseDate == LocalTime.Today ? v.EarlyCloseTime : null,
         OpeningHours = v.OpeningHours ?? new(),
         ClosedDates = v.ClosedDates ?? new(),
         IsOpen = status.IsOpen,

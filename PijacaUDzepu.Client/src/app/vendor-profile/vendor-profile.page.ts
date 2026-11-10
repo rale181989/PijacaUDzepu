@@ -35,8 +35,14 @@ export class VendorProfilePage implements OnInit {
 
   // Radno vreme i dostupnost (posebno čuvanje: PUT my-vendor/availability)
   readonly dayLabels = ['Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja'];
-  days = this.dayLabels.map((label, i) => ({ day: i + 1, label, open: false, from: '07:00', to: '14:00' }));
+  // Kratki nazivi da stanu na uzak telefon ("Ponedeljak" je bio odsečen)
+  readonly dayShort = ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
+  days = this.dayLabels.map((label, i) => ({ day: i + 1, label, short: this.dayShort[i], open: false, from: '07:00', to: '14:00' }));
   ordersPaused = false;
+  earlyCloseToday: string | null = null;
+  earlyCloseInput = '';
+  // Poslednje sačuvano stanje: pauza i "samo danas" čuvaju se odmah, bez nesačuvanih izmena rasporeda
+  private saved: { ordersPaused: boolean; openingHours: { day: number; from: string; to: string }[]; closedDates: string[]; earlyCloseToday: string | null } | null = null;
   closedDates: string[] = [];
   newClosedDate = '';
   statusText = '';
@@ -92,12 +98,14 @@ export class VendorProfilePage implements OnInit {
     });
   }
 
-  private applyAvailability(v: { ordersPaused: boolean; openingHours: { day: number; from: string; to: string }[]; closedDates: string[]; isOpen: boolean; closedReason?: string | null; opensAt?: string | null; closesAt?: string | null }) {
+  private applyAvailability(v: { ordersPaused: boolean; openingHours: { day: number; from: string; to: string }[]; closedDates: string[]; earlyCloseToday?: string | null; isOpen: boolean; closedReason?: string | null; opensAt?: string | null; closesAt?: string | null }) {
     this.ordersPaused = v.ordersPaused;
     this.closedDates = [...(v.closedDates ?? [])];
+    this.earlyCloseToday = v.earlyCloseToday ?? null;
+    this.saved = { ordersPaused: v.ordersPaused, openingHours: [...(v.openingHours ?? [])], closedDates: [...(v.closedDates ?? [])], earlyCloseToday: this.earlyCloseToday };
     this.days = this.dayLabels.map((label, i) => {
       const h = v.openingHours?.find(x => x.day === i + 1);
-      return { day: i + 1, label, open: !!h, from: h?.from ?? '07:00', to: h?.to ?? '14:00' };
+      return { day: i + 1, label, short: this.dayShort[i], open: !!h, from: h?.from ?? '07:00', to: h?.to ?? '14:00' };
     });
     this.isOpen = v.isOpen;
     this.statusText = v.isOpen
@@ -122,12 +130,51 @@ export class VendorProfilePage implements OnInit {
     this.closedDates = this.closedDates.filter(d => d !== date);
   }
 
+  // Pauza važi odmah (ranije je čekala dugme na dnu, pa su kupci i dalje poručivali)
+  setPaused(paused: boolean) {
+    if (!this.saved) return;
+    this.saveQuick({ ...this.saved, ordersPaused: paused }, paused ? 'Pauza uključena – kupci ne mogu da poručuju' : 'Ponovo primate porudžbine');
+  }
+
+  closeToday() {
+    if (!this.saved) return;
+    this.saveQuick({ ...this.saved, closedDates: [...new Set([...this.saved.closedDates, this.today])].sort() }, 'Danas ne radite – kupci vide kada se otvarate');
+  }
+
+  setEarlyClose(time: string | null) {
+    if (!this.saved) return;
+    this.saveQuick({ ...this.saved, earlyCloseToday: time }, time ? `Danas zatvarate u ${time}` : 'Danas radite po rasporedu');
+    this.earlyCloseInput = '';
+  }
+
+  // Čuva samo pauzu ili izuzetak za danas, uz poslednji sačuvani raspored (nesačuvane izmene rasporeda ostaju na ekranu)
+  private saveQuick(state: NonNullable<VendorProfilePage['saved']>, message: string) {
+    const draftDays = this.days.map(d => ({ ...d }));
+    this.savingAvailability = true;
+    this.vendorService.updateMyAvailability(state).subscribe({
+      next: async v => {
+        this.savingAvailability = false;
+        this.applyAvailability(v);
+        this.days = draftDays;
+        const toast = await this.toastController.create({ message, duration: 2500, color: 'success', position: 'top' });
+        await toast.present();
+      },
+      error: async err => {
+        this.savingAvailability = false;
+        if (this.saved) this.ordersPaused = this.saved.ordersPaused;
+        const toast = await this.toastController.create({ message: err.error?.message || 'Greška pri čuvanju', duration: 3000, color: 'danger' });
+        await toast.present();
+      }
+    });
+  }
+
   saveAvailability() {
     this.savingAvailability = true;
     this.vendorService.updateMyAvailability({
       ordersPaused: this.ordersPaused,
       openingHours: this.days.filter(d => d.open).map(d => ({ day: d.day, from: d.from, to: d.to })),
-      closedDates: this.closedDates
+      closedDates: this.closedDates,
+      earlyCloseToday: this.earlyCloseToday
     }).subscribe({
       next: async v => {
         this.savingAvailability = false;

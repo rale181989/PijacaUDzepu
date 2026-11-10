@@ -10,6 +10,7 @@ export interface VendorToday {
   ready: number;
   inDelivery: number;
   toPrepare: { productName: string; unit: string; quantity: number; orders: number }[];
+  awaitingAnswer: { productName: string; unit: string; quantity: number; orders: number }[];
   todayOrders: number;
   todayCompleted: number;
   todayGoodsTotal: number;

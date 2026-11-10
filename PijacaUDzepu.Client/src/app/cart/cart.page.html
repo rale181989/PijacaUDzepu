@@ -5,7 +5,8 @@
     </ion-buttons>
     <ion-title>{{ 'cart.title' | t }}</ion-title>
     <ion-buttons slot="end" *ngIf="items.length > 0">
-      <ion-button (click)="clearCart()" color="danger">
+      <!-- Belo na zelenom (crveno na zelenom se slabo čitalo) -->
+      <ion-button (click)="clearCart()" color="light">
         <ion-icon name="trash-outline" slot="start"></ion-icon>
         {{ 'cart.clear' | t }}
       </ion-button>
@@ -28,15 +29,15 @@
         </ion-thumbnail>
         <ion-label>
           <h3>{{ item.product.name }}</h3>
-          <p>{{ item.product.vendorName }}</p>
+          <p>{{ item.product.vendorName }} · {{ item.product.marketName }}<span *ngIf="item.product.stallLabel">, {{ 'home.stall' | t }} {{ item.product.stallLabel }}</span></p>
           <p class="price">{{ item.product.price | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel(item.product.unit) }}</p>
         </ion-label>
         <div class="quantity-controls" slot="end">
-          <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity - 1)">
+          <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity - 1)" [attr.aria-label]="('a11y.less' | t) + ': ' + item.product.name">
             <ion-icon name="remove-circle-outline"></ion-icon>
           </ion-button>
           <span class="quantity">{{ item.quantity }}</span>
-          <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity + 1)">
+          <ion-button fill="clear" size="small" (click)="updateQuantity(item.product.id, item.quantity + 1)" [attr.aria-label]="('a11y.more' | t) + ': ' + item.product.name">
             <ion-icon name="add-circle-outline"></ion-icon>
           </ion-button>
         </div>
@@ -86,6 +87,13 @@
       <span>{{ 'cart.total' | t }}</span>
       <strong>{{ cartService.total | number:'1.0-0' }} {{ 'din' | t }}</strong>
     </div>
+    <!-- Ukupno sa dostavom odmah, ne tek u potvrdi; dostava se plaća po tezgi -->
+    <div *ngIf="courierFee > 0" class="total-row delivery">
+      <span>{{ 'cart.withDelivery' | t }}<span *ngIf="vendorCount > 1"> ({{ vendorCount }} × {{ courierFee | number:'1.0-0' }})</span></span>
+      <strong>{{ cartService.total + totalCourierFee | number:'1.0-0' }} {{ 'din' | t }}</strong>
+    </div>
+    <p *ngIf="marketNames.length > 1" class="option-hint warn">{{ 'cart.pickupPlaces' | t }}: {{ marketNames.join(', ') }}.</p>
+    <p *ngIf="missingFields.length > 0" class="option-hint warn">{{ 'cart.missing' | t }}: {{ missingFields.join(', ') }}.</p>
 
     <!-- Dva načina: rezervacija (kupac sam preuzima) ili dostava preko Eko kurira -->
     <div class="checkout-options">

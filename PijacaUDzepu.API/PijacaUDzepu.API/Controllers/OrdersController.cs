@@ -115,6 +115,12 @@ public class OrdersController : BaseApiController
         }
     }
 
+    // Gostujuće porudžbine sa ovog uređaja prelaze na nalog kupca (posle registracije ili prijave)
+    [Authorize(Policy = "RequireCustomer")]
+    [HttpPost("claim")]
+    public async Task<IActionResult> ClaimGuestOrders(ClaimOrdersDto dto) =>
+        Ok(new { claimed = await _orderService.ClaimGuestOrders(User.GetUserId(), dto.TrackingCodes) });
+
     // Broj porudžbina kupca u toku (crveni broj na ikonici "Moje porudžbine")
     [HttpGet("my-active-count")]
     public async Task<IActionResult> GetMyActiveCount()
@@ -169,7 +175,7 @@ public class OrdersController : BaseApiController
             var order = await _orderService.GetOrderById(id);
             var userId = User.GetUserId();
 
-            if ((order.CustomerId == null || order.CustomerId != userId) && order.CourierId != userId)
+            if (!User.IsInRole("SuperAdmin") && (order.CustomerId == null || order.CustomerId != userId) && order.CourierId != userId)
             {
                 var vendorId = await GetCurrentVendorId();
                 if (vendorId == null || order.VendorId != vendorId.Value)

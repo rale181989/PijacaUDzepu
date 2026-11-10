@@ -4,6 +4,7 @@ import { CartService } from '../services/cart.service';
 import { VendorService } from '../services/vendor.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
+import { OrderService } from '../services/order.service';
 import { Product, ProductCategory, PRODUCT_CATEGORIES, ProductSort, ProductUnit } from '../models/product.model';
 import { vendorClosedText } from '../services/vendor-status';
 import { FavoritesService } from '../services/favorites.service';
@@ -14,7 +15,7 @@ import { Stall } from '../models/stall.model';
 import { ToastController } from '@ionic/angular/lazy';
 import { environment } from '../../environments/environment';
 import { TranslateService } from '../services/translate.service';
-import { describeConnectionError } from '../services/connection-error';
+import { describeConnectionError, isConnectionError } from '../services/connection-error';
 
 @Component({
   selector: 'app-home',
@@ -45,6 +46,7 @@ export class HomePage implements OnInit {
   selectedQty: Record<number, number> = {};
   vendorPhoneCache: Record<number, string[]> = {};
   connectionError: string | null = null;
+  connectionTitle = '';
 
   showModal: 'market' | 'vendor' | 'stall' | 'category' | 'sort' | null = null;
   filterSearch = { market: '', vendor: '', stall: '', category: '' };
@@ -67,10 +69,14 @@ export class HomePage implements OnInit {
     return vendors.filter(v => this.normalize(v.name).includes(term));
   }
 
+  // Samo tezge sa prodavcem, poređane kao brojevi (1, 2, … 10), ne kao tekst (1, 10, 11, 2)
   get searchedStalls(): Stall[] {
-    if (!this.filterSearch.stall) return this.stalls;
+    const occupied = this.stalls
+      .filter(s => this.vendors.some(v => v.stallId === s.id))
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+    if (!this.filterSearch.stall) return occupied;
     const term = this.normalize(this.filterSearch.stall);
-    return this.stalls.filter(s =>
+    return occupied.filter(s =>
       this.normalize(s.label).includes(term) ||
       this.normalize('Tezga ' + s.label).includes(term)
     );
@@ -93,7 +99,8 @@ export class HomePage implements OnInit {
     private toastController: ToastController,
     public ts: TranslateService,
     public favorites: FavoritesService,
-    private authService: AuthService
+    private authService: AuthService,
+    private orderService: OrderService
   ) {
     this.ts.lang$.subscribe(() => this.rebuildCategories());
   }
@@ -111,10 +118,38 @@ export class HomePage implements OnInit {
     ];
   }
 
+  // Cena dostave po tezgi (za objašnjenje na početnoj i upozorenje o novoj tezgi u korpi)
+  courierFee = 0;
+  // Kratko objašnjenje "Kako radi" dok ga kupac ne zatvori
+  showHowItWorks = (() => { try { return localStorage.getItem('howItWorksSeen') !== '1'; } catch { return true; } })();
+  // Grupe u kojima ima robe (prazne se ne nude u filteru); null = još nije učitano
+  private availableCategories: string[] | null = null;
+
   ngOnInit() {
     this.loadMarkets();
     this.loadVendors();
     this.loadProducts();
+    this.loadCategories();
+    this.orderService.getDeliveryOptions().subscribe({ next: o => this.courierFee = o.courierFee, error: () => {} });
+  }
+
+  closeHowItWorks() {
+    this.showHowItWorks = false;
+    try { localStorage.setItem('howItWorksSeen', '1'); } catch {}
+  }
+
+  howFeeText(): string {
+    return this.ts.t('home.how2').replace('{0}', String(this.courierFee || 300));
+  }
+
+  loadCategories() {
+    this.productService.getCategories(this.selectedMarketId, this.selectedVendorId && this.selectedVendorId > 0 ? this.selectedVendorId : null)
+      .subscribe({ next: c => this.availableCategories = c, error: () => this.availableCategories = null });
+  }
+
+  // U korpi je već ovoliko ovog proizvoda (brojač na kartici se posle dodavanja vraća na 0)
+  inCart(productId: number): number {
+    return this.cartService.getQuantity(productId);
   }
 
   loadMarkets() {
@@ -155,7 +190,8 @@ export class HomePage implements OnInit {
       },
       error: err => {
         this.loading = false;
-        this.connectionError = describeConnectionError(err);
+        this.connectionError = describeConnectionError(err, k => this.ts.t(k));
+        this.connectionTitle = this.ts.t(isConnectionError(err) ? 'home.noConnection' : 'error.serverTitle');
       }
     });
   }
@@ -223,9 +259,12 @@ export class HomePage implements OnInit {
   }
 
   get searchedCategories() {
-    if (!this.filterSearch.category) return this.categories;
+    const offered = this.availableCategories
+      ? this.categories.filter(c => this.availableCategories!.includes(c.value) || c.value === this.selectedCategory)
+      : this.categories;
+    if (!this.filterSearch.category) return offered;
     const term = this.normalize(this.filterSearch.category);
-    return this.categories.filter(c => this.normalize(c.label).includes(term));
+    return offered.filter(c => this.normalize(c.label).includes(term));
   }
 
   openFilterModal(type: 'market' | 'vendor' | 'stall' | 'category' | 'sort') {
@@ -242,6 +281,7 @@ export class HomePage implements OnInit {
       this.stallService.getByMarket(marketId).subscribe(s => this.stalls = s);
     }
     this.loadProducts();
+    this.loadCategories();
   }
 
   selectVendor(vendorId: number | null | undefined) {
@@ -255,6 +295,7 @@ export class HomePage implements OnInit {
       this.selectedStallId = null;
     }
     this.loadProducts();
+    this.loadCategories();
   }
 
   selectStall(stall: Stall | null) {
@@ -351,13 +392,17 @@ export class HomePage implements OnInit {
   }
 
   async addSelectedToCart(product: Product) {
-    const qty = this.getSelectedQty(product.id);
-    if (qty <= 0) return;
+    // "Dodaj" bez biranja količine dodaje 1 (ranije nije radilo ništa)
+    const qty = this.getSelectedQty(product.id) || 1;
+    // Nova tezga u korpi: dostava kurirom se plaća po tezgi, pa kupac to sazna odmah, a ne tek u korpi
+    const items = this.cartService.getItems();
+    const newVendor = items.length > 0 && !items.some(i => i.product.vendorId === product.vendorId);
     this.cartService.addToCart(product, qty);
     this.selectedQty[product.id] = 0;
+    const feeNote = newVendor && this.courierFee > 0 ? ' ' + this.ts.t('home.newVendorFee').replace('{0}', String(this.courierFee)) : '';
     const toast = await this.toastController.create({
-      message: `${product.name} x${qty} ${this.ts.t('cart.addedToCart')}`,
-      duration: 1500,
+      message: `${product.name} x${qty} ${this.ts.t('cart.addedToCart')}.${feeNote}`,
+      duration: feeNote ? 4500 : 1500,
       position: 'bottom',
       color: 'success'
     });

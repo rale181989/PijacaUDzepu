@@ -228,8 +228,8 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Pronađite proizvode');
   s.steps([
-    { h: 'Filteri', d: 'Suzite izbor po pijaci, prodavcu i grupi proizvoda (voće, povrće, začinsko bilje, med…).' },
-    { h: 'Pretraga po nazivu', d: 'Upišite deo naziva proizvoda. Kvačice nisu obavezne: „sljive“ nalazi i „šljive“.' },
+    { h: 'Filteri', d: 'Suzite izbor po pijaci, prodavcu i grupi proizvoda; nude se samo grupe u kojima ima robe. Posle izbora pijace možete izabrati i tezgu.' },
+    { h: 'Pretraga po nazivu', d: 'Upišite deo naziva. Kvačice i jednina nisu bitne: „sljiva“ nalazi i „Šljive“, a „jabuka“ nalazi „Jabuke“.' },
     { h: 'Redosled', d: 'Dugme sa strelicama: po nazivu, po ceni ili najnovije prvo. Kod cene birate i jedinicu mere (kg, komad, veza…), jer se cene porede samo za istu jedinicu.' },
     { h: 'Meni ☰', d: 'Početna strana, vaše porudžbine, prijava, registracija i izbor jezika.' }
   ]);
@@ -241,9 +241,9 @@ async function build() {
   s.title('Dodajte proizvode u korpu');
   s.steps([
     { h: 'Kartica proizvoda', d: 'Naziv, prodavac, pijaca i broj tezge, telefon prodavca i cena po jedinici mere.' },
-    { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite.' },
-    { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno). Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
-    { h: 'Više prodavaca u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca. Svaki prodavac dobija svoj deo porudžbine.' }
+    { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite; bez toga „Dodaj“ dodaje jedan.' },
+    { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno), a na kartici piše koliko je već u korpi. Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
+    { h: 'Više prodavaca u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca; svaki dobija svoj deo porudžbine. Dostava Eko kurirom se plaća po tezgi – aplikacija vas upozori kad dodate robu sa nove tezge.' }
   ]);
   s.phone('c-home-products', RIGHT_X, PHONE_Y, PHONE_H, 'Kartice proizvoda sa količinom i dugmetom Dodaj',
     [[1, 0.40, 0.312], [2, 0.04, 0.459], [3, 0.40, 0.505]]);
@@ -252,9 +252,9 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Proverite korpu');
   s.steps([
-    { h: 'Izmena količine', d: 'Dugmićima − i + menjate količinu; kada spustite na nulu, proizvod se uklanja.' },
+    { h: 'Izmena količine', d: 'Dugmićima − i + menjate količinu (ne više nego što prodavac ima); na nuli se proizvod uklanja. Ako je prodavac u međuvremenu promenio cenu, korpa pokazuje novu i javi vam.' },
     { h: 'Isprazni', d: 'Briše sve iz korpe (aplikacija prvo traži potvrdu).' },
-    { h: 'Podaci za porudžbinu', d: 'Ime i prezime i telefon su obavezni. E-mail je opcioni: na njega stiže link za praćenje. Adresa je potrebna samo za dostavu kurirom.' }
+    { h: 'Podaci za porudžbinu', d: 'Ime i prezime i telefon su obavezni, adresa samo za dostavu kurirom; korpa ispiše šta još fali. E-mail je opcioni: na njega stiže link za praćenje. Ispod je ukupno sa dostavom.' }
   ]);
   s.phone('c-cart', RIGHT_X, PHONE_Y, PHONE_H, 'Korpa sa tri proizvoda i poljima za podatke',
     [[1, 0.955, 0.15], [2, 1.11, 0.035], [3, 0.75, 0.465]]);
@@ -282,7 +282,7 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Pratite porudžbinu bez naloga');
   s.steps([
-    { h: 'Link za praćenje', d: 'Posle porudžbine dobijate link. Sačuvajte ga ili pošaljite sebi dugmetom „Podeli / kopiraj link“.' },
+    { h: 'Link za praćenje', d: 'Posle porudžbine piše „Hvala!” i ukupan iznos cele kupovine. Sačuvajte link ili ga pošaljite sebi dugmetom „Podeli / kopiraj link“.' },
     { h: 'Status uživo', d: 'Promene stižu same, uz zvučni signal: potvrda prodavca, kurir na putu, isporuka.' },
     { h: 'Iznos za plaćanje', d: 'Roba i dostava zajedno; toliko plaćate prodavcu ili kuriru.' },
     { h: 'Uvek pri ruci', n: '✓', d: 'Telefon pamti vaše porudžbine: u meniju ☰ su pod „Moje porudžbine“. Link važi 30 dana od poslednje promene.' }
@@ -294,7 +294,7 @@ async function build() {
   s = new S('Sadrzaj - dva ekrana', 'Kupci', 'kupac');
   s.title('Nalog kupca');
   s.steps([
-    { h: 'Registracija', d: 'Nalog nije obavezan. Pri registraciji upisujete telefon i adresu (sprat i stan po želji); oni se sami upisuju u korpu.' },
+    { h: 'Registracija', d: 'Nalog nije obavezan. Upisujete telefon i adresu (sprat, stan i e-mail po želji); oni se sami upisuju u korpu. Porudžbine koje ste sa tog telefona napravili kao gost prelaze na nalog.' },
     { h: 'Moje porudžbine', d: 'Ikonica gore desno, pored korpe: crveni broj su porudžbine u toku i „poskoči” kad stigne promena. Spisak sa statusom, iznosom, načinom preuzimanja, porukom prodavca i imenom kurira. Odbijena ili nedostavljena porudžbina je crvena, sa razlogom.' },
     { h: 'Detalji', n: '→', d: 'Dodir na porudžbinu otvara detalje (sledeća strana).' }
   ], 0.6, 1.75, 5.2);
@@ -306,12 +306,12 @@ async function build() {
   s.title('Detalji porudžbine');
   s.steps([
     { h: 'Tok porudžbine', d: 'Korak po korak, sa vremenom: poručeno, prodavac potvrdio, dodeljen kurir, kurir preuzeo robu, dostavljeno.' },
-    { h: 'Poruka prodavca', d: 'Npr. kada možete doći po robu ili da li nečega nema.' },
+    { h: 'Poruka prodavca', d: 'Npr. kada možete doći po robu. Kod preuzimanja na tezgi: pijaca, tezga, adresa, „Kako da stignem” i „Pozovi prodavca”.' },
     { h: 'Kurir', d: 'Kada je kurir dodeljen, vidite njegovo ime i telefon.' },
     { h: 'Za plaćanje', n: '✓', d: 'Roba + Eko kurir. Plaća se gotovinom pri preuzimanju.' }
   ]);
   s.phone('c-order-detail', RIGHT_X, PHONE_Y, PHONE_H, 'Detalji porudžbine sa tokom porudžbine, porukom prodavca i kurirom',
-    [[1, 0.93, 0.35], [2, 0.93, 0.68], [3, 0.93, 0.79]]);
+    [[1, 0.93, 0.63], [2, 0.93, 0.86], [3, 0.93, 0.96]]);
 
   // Omiljeni, ocene, poruči ponovo
   s = new S('Sadrzaj - dva ekrana', 'Kupci', 'kupac');
@@ -354,39 +354,39 @@ async function build() {
   s.steps([
     { h: 'Pozivnica', d: 'Nalog otvara administrator. Na e-mail vam stiže pozivnica, a preko nje birate lozinku.' },
     { h: 'Jezik', d: 'Srpski, engleski ili ruski: izbor važi za ceo meni.' },
-    { h: 'Porudžbine', d: 'Ikonica gore desno na svakoj stranici, sa crvenim brojem porudžbina koje čekaju vaš odgovor (odmah raste kad stigne nova). Tab „Aktivne” su porudžbine u toku, a „Završene” završene i odbijene.' },
+    { h: 'Porudžbine', d: 'Posle prijave stižete pravo na porudžbine (meni „Moja tezga”). Ikonica gore desno ima crveni broj porudžbina koje čekaju vaš odgovor. Tab „Aktivne” su porudžbine u toku, a „Završene” završene i odbijene.' },
     { h: 'Profil, proizvodi, odjava', n: '✓', d: 'Ostale stavke vode do profila tezge, spiska proizvoda i dodavanja novog proizvoda. Kao prodavac ne vidite ponudu i korpu: za kupovinu se odjavite ili koristite kupčev nalog.' }
   ]);
-  s.phone('v-menu', RIGHT_X, PHONE_Y, PHONE_H, 'Meni prodavca', [[2, 0.62, 0.096], [3, 0.56, 0.435]]);
+  s.phone('v-menu', RIGHT_X, PHONE_Y, PHONE_H, 'Meni prodavca', [[2, 0.62, 0.096], [3, 0.56, 0.2]]);
 
   // 14. Nova porudžbina
   s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');
   s.title('Nova porudžbina: potvrdite ili odbijte');
   s.steps([
     { h: 'Zvono', d: 'Dok imate porudžbinu na čekanju, telefon zvoni i vibrira na svakih nekoliko sekundi.' },
-    { h: 'Šta je poručeno', d: 'Kupac i telefon, adresa, stavke, iznos i način: „Eko kurir“ ili „Rezervacija – lično preuzimanje“.' },
-    { h: 'Potvrdi ili Odbij', d: 'Uz potvrdu možete napisati poruku kupcu, npr. „Spremno za 30 min, tezga 14“. Kod odbijanja je razlog obavezan: kupac ga dobija u aplikaciji i e-mailom. Zvono staje kada odgovorite na sve.' }
+    { h: 'Šta je poručeno', d: 'Kupac, telefon (dodirom ga pozovete), adresa, stavke, iznos i način: „Eko kurir“ ili „Rezervacija – lično preuzimanje“.' },
+    { h: 'Potvrdi ili Odbij', d: 'Uz potvrdu možete napisati poruku kupcu, npr. „Spremno za 30 min, tezga 14“. Kod odbijanja izaberite gotov razlog („Nestalo je robe”, „Danas ne radim”…) ili napišite svoj: kupac ga dobija u aplikaciji i e-mailom. Zvono staje kada odgovorite na sve.' }
   ]);
   s.phone('v-orders', RIGHT_X, PHONE_Y, PHONE_H, 'Porudžbina na čekanju sa dugmadima Potvrdi i Odbij',
-    [[2, 1.11, 0.35], [3, 0.65, 0.43]]);
+    [[2, 1.11, 0.35], [3, 0.65, 0.59]]);
 
   // 15. Priprema i predaja
   s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');
   s.title('Pripremite i predajte robu');
   s.steps([
-    { h: 'Spremno', d: 'Kada je roba spakovana, pritisnite „Spremno“. Kupac, a kod dostave i kurir, dobijaju obaveštenje.' },
-    { h: 'Rezervacija', d: 'Kada kupac dođe na tezgu i preuzme robu, pritisnite „Kupac preuzeo“.' },
+    { h: 'Spremno', d: 'Kada je roba spakovana, jedan dodir na „Spremno“. Kupac, a kod dostave i kurir, dobijaju obaveštenje.' },
+    { h: 'Rezervacija', d: 'Kada kupac dođe na tezgu i preuzme robu, pritisnite „Kupac preuzeo“ i potvrdite.' },
     { h: 'Eko kurir', d: 'Vidite ime i telefon kurira koji dolazi po robu. Porudžbinu završava kurir posle isporuke. Završena prelazi u tab „Završene”; ako ju je zatvorio administrator, to piše na kartici.' }
   ]);
   s.phone('v-orders-more', RIGHT_X, PHONE_Y, PHONE_H, 'Potvrđene porudžbine sa dugmetom Spremno i podacima kurira',
-    [[1, 0.42, 0.28], [3, 0.93, 0.585]]);
+    [[1, 0.42, 0.46], [3, 0.93, 0.81]]);
 
   // 16. Proizvodi
   s = new S('Sadrzaj - dva ekrana', 'Prodavci', 'prodavac');
   s.title('Ponuda i cene');
   s.steps([
-    { h: 'Dostupno da/ne', d: 'Prekidač skida proizvod iz ponude kada nestane robe i vraća ga kada je ponovo imate.' },
-    { h: 'Novi proizvod', d: 'Dugme + dodaje proizvod.' },
+    { h: 'Dostupno da/ne', d: 'Prekidač skida proizvod iz ponude kada nestane robe i vraća ga kada je ponovo imate; skinut proizvod je posivljen, sa oznakom „Nije u ponudi”.' },
+    { h: 'Novi proizvod', d: 'Okruglo dugme + dole desno dodaje proizvod.' },
     { h: 'Izmena', d: 'Dodir na proizvod: naziv, cena, jedinica, grupa, klasa, napomena i slika. Izabrana slika se odmah vidi, sama se smanjuje i čuva se dugmetom Sačuvaj.' }
   ], 0.6, 1.75, 5.2);
   s.phone('v-products', LEFT_X, PHONE_Y, PHONE_H, 'Spisak proizvoda prodavca', [[1, 0.77, 0.117], [2, 0.72, 0.955]]);
@@ -396,9 +396,9 @@ async function build() {
   s = new S('Sadrzaj - dva ekrana', 'Prodavci', 'prodavac');
   s.title('Stanje, cene i pregled dana');
   s.steps([
-    { h: 'Brza izmena', d: 'Ikonica cenovnika na listi: nova cena i količina na stanju, bez otvaranja proizvoda.' },
+    { h: 'Brza izmena', d: 'Dugme „Cena” na listi: nova cena i količina na stanju, bez otvaranja proizvoda.' },
     { h: 'Količina na stanju', d: 'Opciono. Porudžbine je umanjuju; na nuli proizvod izlazi iz ponude, a odbijena porudžbina je vraća. Kupac ne može da poruči više nego što imate.' },
-    { h: 'Pregled dana', d: 'Meni → Pregled dana: koliko čega treba spremiti za sve porudžbine u toku, šta je pri kraju i današnji promet.' }
+    { h: 'Pregled dana', d: 'Meni → Pregled dana: šta treba spremiti (samo porudžbine koje ste prihvatili), šta još čeka vaš odgovor, šta je pri kraju i današnji promet.' }
   ], 0.6, 1.75, 5.2);
   s.phone('v-quick', LEFT_X, PHONE_Y, PHONE_H, 'Brza izmena cene i stanja na listi proizvoda', [[1, 0.88, 0.3], [2, 0.5, 0.56]]);
   s.phone('v-today', RIGHT_X, PHONE_Y, PHONE_H, 'Pregled dana: šta treba spremiti', [[3, 0.9, 0.32]]);
@@ -418,8 +418,8 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');
   s.title('Radno vreme i neradni dani');
   s.steps([
-    { h: 'Pauza', d: 'Prekidač „Privremeno ne primam porudžbine” – npr. kad nestane robe ili napuštate tezgu.' },
-    { h: 'Radno vreme', d: 'Označite dane i vreme kada primate porudžbine. Bez označenih dana porudžbine stižu u svako doba.' },
+    { h: 'Pauza', d: 'Prekidač „Privremeno ne primam porudžbine” važi odmah – npr. kad nestane robe ili napuštate tezgu.' },
+    { h: 'Radno vreme', d: '„Samo danas”: „Danas ne radim” ili „Danas zatvaram u …”, bez menjanja rasporeda. U nedeljnom rasporedu označite sve dane kada radite; neoznačeni dani su neradni.' },
     { h: 'Neradni dani', d: 'Odmor ili praznik: dodajte datum. Prošli datumi se brišu sami.' },
     { h: 'Šta vidi kupac', n: '✓', d: 'Van radnog vremena kupac vidi „Zatvoreno · otvara se sutra u 07:00” i ne može da poruči.' }
   ]);
@@ -499,7 +499,7 @@ async function build() {
   await tip(1.75, 'MdSupportAgent', 'green', 'Tehnička podrška', 'U meniju ili podnožju strane: „Pošalji pitanje“. Odgovor stiže na e-mail koji navedete.');
   await tip(3.05, 'MdNotificationsActive', 'carrot', 'Zvuk i obaveštenja', 'Kada aplikacija zatraži dozvolu za obaveštenja, dozvolite je. Dok radite, ne utišavajte telefon.');
   await tip(4.35, 'MdPhoneAndroid', 'sky', 'Prodavci i kuriri: aplikacija otvorena', 'Dok ste na tezgi ili na smeni, držite aplikaciju otvorenu: tada zvono sigurno radi.');
-  await tip(5.65, 'MdLock', 'forest', 'Lozinka', 'Najmanje 8 znakova; ne delite je sa drugima. Posle 10 pogrešnih pokušaja nalog se zaključava na 15 minuta.');
+  await tip(5.65, 'MdLock', 'forest', 'Lozinka', 'Najmanje 8 znakova i bar jedno malo slovo; ne delite je. Posle 10 pogrešnih pokušaja prijava sa tog uređaja se zaključava na 15 minuta.');
   s.phone('c-support', RIGHT_X, PHONE_Y, PHONE_H, 'Forma za tehničku podršku');
 
   await pres.writeFile({ fileName: OUT });

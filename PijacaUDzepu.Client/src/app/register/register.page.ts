@@ -13,7 +13,7 @@ import { RegisterDto } from '../models/user.model';
 })
 export class RegisterPage {
   model: RegisterDto = {
-    userName: '', password: '', firstName: '', lastName: '', phoneNumber: '', address: '', floor: '', apartment: ''
+    userName: '', password: '', firstName: '', lastName: '', email: '', phoneNumber: '', address: '', floor: '', apartment: ''
   };
   loading = false;
 
@@ -34,10 +34,16 @@ export class RegisterPage {
   async register() {
     if (!this.canSubmit) return;
     this.loading = true;
-    this.authService.register(this.model).subscribe({
-      next: () => {
+    const dto = { ...this.model, email: this.model.email?.trim() || undefined };
+    this.authService.register(dto).subscribe({
+      next: async res => {
         this.loading = false;
         this.router.navigateByUrl('/home');
+        // Dobrodošlica: bez nje nije bilo jasno da je kupac prijavljen
+        const toast = await this.toastController.create({
+          message: this.ts.t('register.welcome').replace('{0}', res.user.firstName), duration: 3000, color: 'success', position: 'top'
+        });
+        await toast.present();
       },
       error: async (err) => {
         this.loading = false;

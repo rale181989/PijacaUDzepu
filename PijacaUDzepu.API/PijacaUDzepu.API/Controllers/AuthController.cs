@@ -28,7 +28,7 @@ public class AuthController : BaseApiController
     {
         try
         {
-            var result = await _authService.Login(dto);
+            var result = await _authService.Login(dto, RequestIp.Of(HttpContext));
             return Ok(result);
         }
         catch (UnauthorizedAccessException ex)

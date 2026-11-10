@@ -19,6 +19,7 @@ export interface Vendor {
   ordersPaused: boolean;
   openingHours: DeliveryScheduleEntry[];
   closedDates: string[];
+  earlyCloseToday?: string | null;
   isOpen: boolean;
   closedReason?: 'Paused' | 'ClosedDay' | 'Hours' | 'Inactive' | null;
   opensAt?: string | null;
@@ -30,6 +31,8 @@ export interface VendorAvailabilityInput {
   ordersPaused: boolean;
   openingHours: DeliveryScheduleEntry[];
   closedDates: string[];
+  // "HH:mm": danas se zatvara ranije (samo danas); null = po rasporedu
+  earlyCloseToday?: string | null;
 }
 
 export interface VendorInput {

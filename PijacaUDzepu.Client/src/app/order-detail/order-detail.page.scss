@@ -60,3 +60,11 @@ ion-card-header {
   margin-bottom: 10px;
   color: var(--ion-text-color);
 }
+
+.pickup-card {
+  strong { display: flex; align-items: center; gap: 6px; color: var(--ion-text-color); }
+  .vendor-line { margin: 6px 0 2px; color: var(--ion-text-color); font-weight: 600; }
+  .contact-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .muted { color: var(--ion-color-medium); }
+  .small { font-size: 12px; }
+}

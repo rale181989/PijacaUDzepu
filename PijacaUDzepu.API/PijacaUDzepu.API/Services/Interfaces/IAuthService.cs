@@ -5,7 +5,7 @@ namespace PijacaUDzepu.API.Services.Interfaces;
 
 public interface IAuthService
 {
-    Task<AuthResponseDto> Login(LoginDto dto);
+    Task<AuthResponseDto> Login(LoginDto dto, string clientIp);
     Task<AuthResponseDto> Register(RegisterDto dto);
     Task<UserDto> CreateVendorAdmin(CreateVendorAdminDto dto);
     Task<UserDto> CreateCourier(CreateCourierDto dto);

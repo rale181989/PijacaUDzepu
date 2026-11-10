@@ -27,19 +27,25 @@ public static class VendorAvailability
         var today = DateOnly.FromDateTime(now);
         var closedDates = vendor.ClosedDates ?? new List<DateOnly>();
         var hours = vendor.OpeningHours?.Where(h => IsValid(h)).ToList() ?? new List<DeliveryScheduleEntry>();
+
+        // "Danas zatvaram u ...": posle tog vremena dan se računa kao neradni, a pre njega se zatvara ranije
+        TimeOnly? earlyClose = vendor.EarlyCloseDate == today && TryParseTime(vendor.EarlyCloseTime, out var early) ? early : null;
+        if (earlyClose is { } ec && TimeOnly.FromDateTime(now) >= ec)
+            closedDates = closedDates.Append(today).ToList();
         var closedToday = closedDates.Contains(today);
 
         if (hours.Count == 0)
             return closedToday
                 ? new(false, ReasonClosedDay, NextOpening(today, now, closedDates, hours), null)
-                : new(true, null, null, null);
+                : new(true, null, null, earlyClose?.ToString("HH:mm"));
 
         var todayHours = hours.FirstOrDefault(h => h.Day == IsoDay(today));
         if (!closedToday && todayHours != null)
         {
             var from = today.ToDateTime(ParseTime(todayHours.From));
             var to = today.ToDateTime(ParseTime(todayHours.To));
-            if (now >= from && now < to) return new(true, null, null, todayHours.To);
+            var closesAt = earlyClose is { } e && e < ParseTime(todayHours.To) ? e.ToString("HH:mm") : todayHours.To;
+            if (now >= from && now < to) return new(true, null, null, closesAt);
         }
 
         return new(false, closedToday ? ReasonClosedDay : ReasonHours, NextOpening(today, now, closedDates, hours), null);
@@ -88,6 +94,6 @@ public static class VendorAvailability
 
     private static TimeOnly ParseTime(string value) => TryParseTime(value, out var t) ? t : TimeOnly.MinValue;
 
-    private static bool TryParseTime(string? value, out TimeOnly time) =>
+    public static bool TryParseTime(string? value, out TimeOnly time) =>
         TimeOnly.TryParseExact(value ?? "", new[] { "HH:mm", "H:mm" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
 }

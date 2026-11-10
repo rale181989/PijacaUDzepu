@@ -69,13 +69,27 @@ public class AccountTests
     public async Task Account_locks_after_ten_wrong_passwords()
     {
         var userName = await Register("lock");
-        var api = await _factory.As();
-        for (var i = 0; i < 10; i++)
-            await api.Send(HttpMethod.Post, "/api/auth/login", new { userName, password = "pogresna" + i });
+        var http = _factory.CreateClient();
+        Task<HttpResponseMessage> Login(string password, string ip)
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login") { Content = JsonContent.Create(new { userName, password }) };
+            req.Headers.Add("X-Forwarded-For", ip);
+            return http.SendAsync(req);
+        }
 
-        var res = await api.Send(HttpMethod.Post, "/api/auth/login", new { userName, password = "lozinka123" });
-        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
-        Assert.Contains("zaključan", await Api.Message(res));
+        // Napadač sa jedne adrese: deseta pogrešna lozinka zaključava prijavu sa te adrese
+        // (jedanaesti pokušaj bi ionako odbilo ograničenje od 10 prijava u minutu)
+        for (var i = 0; i < 9; i++)
+            await Login("pogresna" + i, "10.240.0.1");
+        var attacker = await Login("pogresna9", "10.240.0.1");
+        Assert.Equal(HttpStatusCode.Unauthorized, attacker.StatusCode);
+        Assert.Contains("zaključan", await Api.Message(attacker));
+
+        // Sa iste adrese ni ispravna lozinka ne prolazi (ni posle isteka minuta za ograničenje prijava)
+        Assert.NotEqual(HttpStatusCode.OK, (await Login("lozinka123", "10.240.0.1")).StatusCode);
+
+        // Vlasnik sa svog uređaja se i dalje prijavljuje: napadač ne može da mu zaključa nalog (nalaz V4)
+        Assert.Equal(HttpStatusCode.OK, (await Login("lozinka123", "10.240.0.2")).StatusCode);
     }
 
     [Fact]

@@ -5,3 +5,20 @@
 }
 
 .stock { color: var(--ion-color-medium); &.low { color: var(--ion-color-danger); font-weight: 600; } }
+
+// Proizvod skinut iz ponude: posivljen, sa natpisom
+ion-item.off {
+  ion-thumbnail img { filter: grayscale(1); opacity: 0.5; }
+  h2, p { color: var(--ion-color-medium); }
+}
+.off-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--ion-color-medium);
+  vertical-align: middle;
+}
