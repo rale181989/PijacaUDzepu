@@ -11,11 +11,12 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 **Kupac** (nalog nije obavezan)
 - Katalog sa filterima (pijaca, prodavac, grupa), pretragom bez kvačica (polje čitljivo i na uskim telefonima) i sortiranjem; kod sortiranja po ceni bira se jedinica mere
 - Grupe proizvoda: voće, povrće, začinsko bilje, mahunarke, pečurke, mlečni proizvodi, jaja, meso, med i pčelinji proizvodi, zimnica, suvo voće i orašasti plodovi, kolači, kućna hemija, ostalo
-- Korpa sa robom više prodavaca; svaki prodavac dobija svoj deo porudžbine
+- Kupac prvo bira pijacu (aplikacija je pamti); jedna porudžbina je sa jedne pijace, pa roba sa druge pijace ne može u istu korpu – aplikacija nudi „Zadrži korpu” ili „Isprazni korpu i dodaj”
+- Korpa sa robom više prodavaca iste pijace; svaki prodavac dobija svoj deo porudžbine; uz stavku jedinica i iznos, a broj na korpi je broj stavki
 - Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
 - Registracija traži telefon i adresu (sprat i stan opciono); upisuju se sami u korpu, a menjaju se u „Moj nalog”
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
-- Na početnoj kratko „Kako radi”; „Dodaj” odmah dodaje 1, a kartica pokazuje koliko je u korpi; pri dodavanju sa nove tezge aplikacija kaže da se dostava plaća po tezgi
+- Na početnoj kratko „Kako radi”; „Dodaj” odmah dodaje 1; − i + menjaju za pola kilograma ili litra (komadi, veze i pakovanja idu po jedan), a kartica pokazuje koliko je u korpi; pri dodavanju sa nove tezge aplikacija kaže da se dostava plaća po tezgi
 - Pretraga razume jedninu i sitne greške („jabuka” nalazi „Jabuke”); filter nudi samo grupe i tezge u kojima ima robe
 - Korpa: prodavac, pijaca i tezga uz svaku stavku, ukupno sa dostavom, šta još treba upisati; posle poručivanja „Hvala!” i ukupan iznos cele kupovine
 - Detalji porudžbine: gde se preuzima (pijaca, tezga, adresa, „Kako da stignem”) i „Pozovi prodavca”
@@ -28,13 +29,14 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Jezici: srpski, engleski, ruski – i poruke o greškama sa servera stižu na izabranom jeziku; iznosi u srpskom formatu („1.200 din”), ispravna množina („2 stavke”)
 - Pristupačnost: dozvoljeno uvećavanje, vidljiv fokus tastature, natpisi na dugmadima za čitače ekrana
 - Sajt može da se instalira kao aplikacija (i na iPhone-u: Safari → Podeli → „Dodaj na početni ekran”); link poslat na WhatsApp/Viber prikazuje logo i opis
-- Ikonica aplikacije, ekran pri pokretanju i favicon su iz loga; verzija aplikacije piše u „Moj nalog”; dok se spisak učitava, prikazuju se sive kartice umesto spinera
+- Zvanični logo (zeleni krug sa tezgom na telefonu) je u meniju, na prijavi i ikonica instalirane aplikacije; ekran pri pokretanju i favicon su iz istog loga; verzija aplikacije piše u „Moj nalog”; dok se spisak učitava, prikazuju se sive kartice umesto spinera
 
 **Prodavac**
 - Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost; dupli dodir na „Sačuvaj” ne pravi duplikat (fotografija sa telefona se smanjuje već u aplikaciji i odmah se vidi na formi; ako slanje slike ne uspe, forma to jasno kaže)
 - Porudžbine i van menija: ikonica gore desno na svim stranicama prodavca, sa crvenim brojem porudžbina na čekanju (raste odmah kad stigne nova i „poskoči”)
 - Porudžbine u tabovima „Aktivne” i „Završene” (završene, odbijene, otkazane), po stranama; zvono dok ima porudžbina na čekanju
 - Posle prijave prodavac stiže na porudžbine; telefon kupca se poziva dodirom
+- Rok za odgovor: na kartici piše „Odgovorite do …” (kupac vidi „Prodavac odgovara do …”); porudžbina bez odgovora za 15 minuta sama se odbija (kupac dobija razlog, roba se vraća na stanje), a posle 10 minuta stiže opomena
 - Potvrdi / odbij (gotovi razlozi jednim dodirom ili svoj tekst; kupac razlog dobija i e-mailom) / spremno (jedan dodir) / kupac preuzeo (uz potvrdu)
 - Radno vreme po danima, neradni dani i pauza („privremeno ne primam porudžbine”, važi odmah); „Samo danas”: „Danas ne radim” i „Danas zatvaram u …” bez menjanja nedeljnog rasporeda; van radnog vremena kupac vidi kad se tezga otvara i ne može da poruči
 - Količina na stanju (opciono): porudžbine je umanjuju, na nuli proizvod izlazi iz ponude
@@ -44,7 +46,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 
 **Eko kurir**
 - Smena; zvono za nove dostave dok ih ne prihvati ili odbije
-- Dostavu dobija tek kada je prodavac potvrdi; prihvati (prvi dobija dostavu, od tada je njegova) ili odbij (sklanja se samo njemu)
+- Dostavu dobija tek kada je prodavac potvrdi, a kod korpe sa više tezgi tek kada odgovore svi prodavci (odbijene otpadaju, ostale idu dalje), pa ne kreće na pola rute; prihvati (prvi dobija dostavu, od tada je njegova) ili odbij (sklanja se samo njemu)
 - Preuzeo sam robu (kupac vidi da je roba kod kurira) → isporučeno, ili „Nije dostavljeno” uz obavezan razlog (vide ga kupac, prodavac i administrator; stanje se vraća); tabovi „Moje” (dostave u toku) i „Završene” (po stranama)
 - Porudžbina od više tezgi iste korpe: grupisano, „Prihvati sve”, ruta sa svim tezgama u Google mapama
 - Dnevni obračun: naplaćeno od kupaca, koliko se predaje kom prodavcu, zarada
@@ -54,7 +56,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Pijace, tezge, prodavci (pozivnice e-mailom), korisnici (pretraga, po stranama), kuriri
 - Tehnička podrška (pitanja sa sajta)
 - Izveštaji: porudžbine, kupci, kuriri (gde i koliko su vozili), prodavci (promet, odbijanja i razlozi, vreme odgovora, ocena) i najprodavaniji proizvodi – za izabrani period ili sve; svaka tabela se izvozi u Excel
-- Upozorenje kada porudžbina predugo čeka prodavca (15 min) ili kurira (20 min); prodavcu ponovo zazvoni
+- Upozorenje kada porudžbina predugo čeka prodavca (10 min, posle 15 se sama odbija) ili kurira (20 min); prodavcu ponovo zazvoni
 - Otvorene porudžbine (najstarije prve): porudžbinu koja je slučajno ostala otvorena administrator završava jednim dugmetom; ostaje trag „Zatvorio administrator … · datum” koji vide prodavac, kurir i kupac
 
 **Nalog (sve uloge)**
@@ -95,7 +97,7 @@ cd PijacaUDzepu.API
 dotnet test PijacaUDzepu.API.Tests     # pokreće ceo API nad posebnom bazom PijacaUDzepu_Test (lokalni Postgres)
 ```
 Pokrivaju: podelu korpe po prodavcima i iznose, „prvi kurir dobija porudžbinu”, stanje (bez prodaje preko stanja),
-zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji, sliku proizvoda bez ekstenzije u imenu, razdvajanje aktivnih i završenih porudžbina, zabranu kupovine prodavcima i kuririma, nalaze iz testiranja agentima (`docs/testiranje/`), zatvaranje zaostale porudžbine od strane administratora, tok dostave (kurir tek posle potvrde prodavca), „nije dostavljeno” sa razlogom i brisanje naloga.
+zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji, sliku proizvoda bez ekstenzije u imenu, razdvajanje aktivnih i završenih porudžbina, zabranu kupovine prodavcima i kuririma, nalaze iz testiranja agentima (`docs/testiranje/`), zatvaranje zaostale porudžbine od strane administratora, tok dostave (kurir tek posle potvrde prodavca, a kod više tezgi tek kada odgovore sve), automatsko odbijanje porudžbine bez odgovora, odbijanje korpe sa dve pijace, „nije dostavljeno” sa razlogom i brisanje naloga.
 
 ## Praćenje grešaka
 Ako je na serveru podešen `SENTRY_DSN`, greške iz produkcije stižu u Sentry (sa detaljima, bez ličnih podataka).

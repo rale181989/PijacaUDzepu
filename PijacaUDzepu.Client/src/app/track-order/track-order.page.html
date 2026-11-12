@@ -40,7 +40,7 @@
       <!-- Jedna kupovina može biti više porudžbina (po tezgi): ukupan iznos na jednom mestu -->
       <p class="purchase-total">
         {{ 'track.purchaseTotal' | t }}: <strong>{{ groupTotal(group) | number:'1.0-0' }} {{ 'din' | t }}</strong>
-        <span *ngIf="group.orders.length > 1" class="muted"> · {{ group.orders.length }} {{ 'track.parts' | t }}</span>
+        <span *ngIf="activeCount(group) > 1" class="muted"> · {{ activeCount(group) }} {{ 'track.parts' | t }}</span>
       </p>
       <!-- Link za praćenje: gost ga čuva ili šalje sebi -->
       <div class="link-box">
@@ -76,13 +76,15 @@
           </p>
 
           <div *ngIf="order.status === 'Rejected'" class="vendor-message rejected">
-            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>
-            <p *ngIf="order.vendorMessage">{{ order.vendorMessage }}</p>
+            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>
+            <p *ngIf="order.autoRejected">{{ 'order.autoRejectedText' | t }}</p>
+            <p *ngIf="order.vendorMessage && !order.autoRejected">{{ order.vendorMessage }}</p>
           </div>
           <div *ngIf="order.status === 'NotDelivered'" class="vendor-message rejected">
             <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.notDeliveredTitle' | t }}</strong>
             <p>{{ order.notDeliveredReason }}</p>
           </div>
+          <p *ngIf="order.status === 'Pending' && order.respondBy" class="respond-by">{{ ('order.respondBy' | t).replace('{0}', (order.respondBy | date:'HH:mm') ?? '') }}</p>
           <div *ngIf="order.status !== 'Rejected' && order.status !== 'Cancelled' && order.status !== 'NotDelivered'" class="progress-box">
             <app-order-progress [order]="order"></app-order-progress>
           </div>
@@ -103,21 +105,21 @@
                 <p *ngIf="order.courierPhone"><a [href]="'tel:' + order.courierPhone">{{ order.courierPhone }}</a></p>
                 <p *ngIf="order.status === 'InDelivery'">{{ 'order.onTheWay' | t }}</p>
               </ng-container>
-              <strong *ngIf="!order.courierName && (order.status === 'Confirmed' || order.status === 'ReadyForPickup')">{{ 'order.courierPending' | t }}</strong>
+              <strong *ngIf="!order.courierName && (order.status === 'Confirmed' || order.status === 'ReadyForPickup')">{{ (order.courierOfferedAt ? 'order.courierPending' : 'order.waitingOtherVendors') | t }}</strong>
               <p *ngIf="order.deliveryAddress" class="muted">{{ 'order.deliveryAddress' | t }}: {{ ownAddress(group.code) || order.deliveryAddress }}</p>
             </div>
           </div>
 
           <ion-list lines="none" class="items" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
             <ion-item *ngFor="let item of order.items">
-              <ion-label><p>{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p></ion-label>
+              <ion-label><p>{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p></ion-label>
               <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} {{ 'din' | t }}</ion-note>
             </ion-item>
           </ion-list>
 
           <p class="total" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
             {{ 'order.amountToPay' | t }}: <strong>{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</strong>
-            <span *ngIf="order.deliveryFee > 0" class="muted">({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span>
+            <span *ngIf="order.deliveryFee > 0" class="muted">&nbsp;({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span>
           </p>
           <p class="muted">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
 

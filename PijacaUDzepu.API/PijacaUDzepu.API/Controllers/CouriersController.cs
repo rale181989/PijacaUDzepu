@@ -110,6 +110,10 @@ public class CouriersController : BaseApiController
         {
             return NotFound(new { message = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpPost("orders/{id}/picked-up")]

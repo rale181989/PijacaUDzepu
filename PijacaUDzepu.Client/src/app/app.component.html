@@ -5,7 +5,8 @@
       <ion-toolbar color="primary">
         <ion-title>
           <div class="menu-header-brand">
-            <img src="assets/logo.svg" [alt]="'app.title' | t" class="menu-logo" />
+            <img src="assets/logo.png" alt="" class="menu-logo" />
+            <span class="brand-name">{{ 'app.title' | t }}</span>
           </div>
         </ion-title>
         <ion-buttons slot="end">
@@ -142,7 +143,8 @@
   <div class="desktop-nav">
     <div class="desktop-nav-inner">
       <a [routerLink]="authService.isStaff ? authService.staffHome : '/home'" class="nav-brand">
-        <img src="assets/logo.svg" [alt]="'app.title' | t" class="nav-logo" />
+        <img src="assets/logo.png" alt="" class="nav-logo" />
+        <span class="brand-name">{{ 'app.title' | t }}</span>
       </a>
 
       <nav class="nav-links">

@@ -28,7 +28,7 @@ export class AppComponent {
     private router: Router
   ) {
     this.cartService.cart$.subscribe(items => {
-      this.cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
+      this.cartCount = items.length; // broj stavki, ne zbir količina
     });
   }
 

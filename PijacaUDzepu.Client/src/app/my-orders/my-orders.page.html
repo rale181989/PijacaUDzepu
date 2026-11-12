@@ -36,11 +36,12 @@
       <ion-card-content>
         <!-- Odbijena ili nedostavljena porudžbina: crvena kartica, stavke i iznos precrtani, ispod razlog -->
         <ng-container *ngIf="order.status === 'Rejected' || order.status === 'NotDelivered'; else regular">
-          <p *ngFor="let item of order.items" class="struck">{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p>
+          <p *ngFor="let item of order.items" class="struck">{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p>
           <p class="total struck">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</p>
           <div class="reject-reason">
-            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.status === 'Rejected' ? 'order.rejectedTitle' : 'order.notDeliveredTitle') | t }}</strong>
-            <p *ngIf="order.status === 'Rejected' && order.vendorMessage">{{ order.vendorMessage }}</p>
+            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.status !== 'Rejected' ? 'order.notDeliveredTitle' : order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>
+            <p *ngIf="order.autoRejected">{{ 'order.autoRejectedText' | t }}</p>
+            <p *ngIf="order.status === 'Rejected' && order.vendorMessage && !order.autoRejected">{{ order.vendorMessage }}</p>
             <p *ngIf="order.status === 'NotDelivered' && order.notDeliveredReason">{{ order.notDeliveredReason }}</p>
           </div>
         </ng-container>

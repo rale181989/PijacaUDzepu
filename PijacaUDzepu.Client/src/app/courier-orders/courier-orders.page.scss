@@ -173,3 +173,10 @@ ion-segment-button {
   background: rgba(var(--ion-color-danger-rgb), 0.1);
   color: var(--ion-color-danger-shade);
 }
+
+// Na 320 px "Odbij" ne sme da se prelomi u dva reda
+.decision ion-button {
+  white-space: nowrap;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}

@@ -67,8 +67,11 @@ const openMenu = page => page.evaluate(async () => { await document.querySelecto
   // Kupac bez naloga (gost); okvir "Kako radi" je već zatvoren, da filteri stoje gde ih oznake pokazuju
   await asUser(page, null);
   await page.evaluate(() => localStorage.setItem('howItWorksSeen', '1'));
+  // Prvi put kupac bira pijacu; ostali snimci početne su za Futošku pijacu
+  await shot(page, 'c-market', '/home');
+  await page.evaluate(() => localStorage.setItem('market', '1'));
   await shot(page, 'c-home', '/home');
-  await shot(page, 'c-home-products', '/home', scrollContent(520));
+  await shot(page, 'c-home-products', '/home', scrollContent(550));
   await shot(page, 'c-menu', '/home', openMenu);
 
   // Korpa sa proizvodima

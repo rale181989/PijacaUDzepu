@@ -336,8 +336,9 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     return colors[status] || 'medium';
   }
 
-  getUnitLabel(unit: string): string {
-    return this.ts.t('unit.' + unit) || unit;
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty?: number): string {
+    return this.ts.unit(unit, qty);
   }
 
   mapsUrl(address?: string): string {

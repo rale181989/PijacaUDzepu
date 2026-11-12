@@ -87,6 +87,15 @@ ion-content::part(scroll) {
   display: flex;
   flex-direction: column;
 }
+// Kartice (ion-card ima overflow: hidden) bi se u koloni skupile i odsekle sadržaj na dugim stranicama
+ion-content > * {
+  flex-shrink: 0;
+}
 app-footer {
   margin-top: auto;
+}
+
+// Uski telefoni (320 px): naslov strane manji, da stane "Porudžbina #166" pored dugmadi
+@media (max-width: 360px) {
+  ion-toolbar ion-title { font-size: 17px; }
 }

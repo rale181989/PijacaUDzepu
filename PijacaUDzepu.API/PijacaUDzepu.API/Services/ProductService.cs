@@ -236,7 +236,8 @@ public class ProductService : IProductService
     public async Task<ProductDto> QuickUpdate(int productId, int vendorId, QuickProductUpdateDto dto)
     {
         var product = await _context.Products
-            .Include(p => p.Vendor)
+            .Include(p => p.Vendor).ThenInclude(v => v.Market)
+            .Include(p => p.Vendor).ThenInclude(v => v.Stall)
             .FirstOrDefaultAsync(p => p.Id == productId && p.VendorId == vendorId)
             ?? throw new KeyNotFoundException(L.T("Proizvod nije pronađen."));
 

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using PijacaUDzepu.API.Services.Interfaces;
 
 namespace PijacaUDzepu.API.Tests;
 
@@ -12,7 +14,7 @@ public class QaFindingsTests
 
     public QaFindingsTests(ApiFactory factory) => _factory = factory;
 
-    private record Product(int Id, int VendorId, string Name, decimal Price, string Unit);
+    private record Product(int Id, int VendorId, string Name, decimal Price, string Unit, string MarketName = "");
     private record Paged<T>(List<T> Items, int TotalCount);
 
     private async Task<Product> FindProduct(Api api, Func<Product, bool> match) =>
@@ -379,5 +381,125 @@ public class QaFindingsTests
             statuses.Add((await http.SendAsync(req)).StatusCode);
         }
         Assert.Contains(HttpStatusCode.TooManyRequests, statuses);
+    }
+
+    // ---- Drugi krug (docs/testiranje/2026-11-12-agenti.md); oznake T… i K… iz tog izveštaja ----
+
+    private static object Courier(params (int productId, decimal quantity)[] items) => new
+    {
+        items = items.Select(i => new { productId = i.productId, quantity = i.quantity }),
+        fulfillment = "Courier",
+        contactPhone = "0641234567",
+        deliveryAddress = "Bulevar oslobođenja 12, Novi Sad"
+    };
+
+    private static object PickupOf(params int[] productIds) => new
+    {
+        items = productIds.Select(id => new { productId = id, quantity = 1m }),
+        fulfillment = "Pickup",
+        contactPhone = "0641234567"
+    };
+
+    // T13: isti proizvod dva puta; T7: poruka za dve pijace nabraja samo drugu, ne i pijacu prve stavke
+    [Fact]
+    public async Task R2_T13_T7_same_product_twice_is_refused_and_only_the_other_market_is_named()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var first = await FindProduct(kupac, p => p.VendorId == 1);
+        var other = await FindProduct(kupac, p => p.VendorId == 4);
+
+        var dup = await kupac.Send(HttpMethod.Post, "/api/orders", PickupOf(first.Id, first.Id));
+        Assert.Equal(HttpStatusCode.BadRequest, dup.StatusCode);
+        Assert.Contains("više puta", await Api.Message(dup));
+
+        var twoMarkets = await kupac.Send(HttpMethod.Post, "/api/orders", PickupOf(first.Id, other.Id));
+        Assert.Equal(HttpStatusCode.BadRequest, twoMarkets.StatusCode);
+        var named = (await Api.Message(twoMarkets)).Split(": ").Last();
+        Assert.Contains(other.MarketName, named);
+        Assert.DoesNotContain(first.MarketName, named);
+    }
+
+    // T12: kurir dobija tačan razlog zašto ne može da prihvati; T11: ne može unapred da odbije neponuđenu porudžbinu
+    [Fact]
+    public async Task R2_T11_T12_courier_cannot_take_or_decline_an_order_before_it_is_offered()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var kurir = await _factory.As("kurir2", "kurir1234");
+        (await kurir.Send(HttpMethod.Put, "/api/couriers/me/shift", new { isOnShift = true })).EnsureSuccessStatusCode();
+        var p2 = await FindProduct(kupac, p => p.VendorId == 2);
+        var p3 = await FindProduct(kupac, p => p.VendorId == 3);
+
+        var orders = await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", Courier((p2.Id, 1), (p3.Id, 1))));
+        var id = orders[0].GetProperty("id").GetInt32();
+        var accept = await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/accept");
+        Assert.Equal(HttpStatusCode.Conflict, accept.StatusCode);
+        Assert.Contains("još nije spremna", await Api.Message(accept));
+        Assert.Equal(HttpStatusCode.Conflict, (await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/decline")).StatusCode);
+
+        // K2: prodavac koji poslednji potvrdi u odgovoru vidi da su kuriri dobili porudžbinu
+        var jovana = await _factory.As("jovana", "vendor1234");
+        var nikola = await _factory.As("nikola", "vendor1234");
+        foreach (var o in orders)
+        {
+            var vendor = o.GetProperty("vendorId").GetInt32() == 2 ? jovana : nikola;
+            var res = await Api.Read<JsonElement>(await vendor.Send(HttpMethod.Put, $"/api/orders/{o.GetProperty("id").GetInt32()}/status", new { status = "Confirmed" }));
+            if (o.Equals(orders[^1])) Assert.Equal(JsonValueKind.String, res.GetProperty("courierOfferedAt").ValueKind);
+        }
+
+        var pickup = (await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", PickupOf(p2.Id))))[0];
+        var takePickup = await kurir.Send(HttpMethod.Post, $"/api/couriers/orders/{pickup.GetProperty("id").GetInt32()}/accept");
+        Assert.Equal(HttpStatusCode.Conflict, takePickup.StatusCode);
+        Assert.Contains("na tezgi", await Api.Message(takePickup));
+    }
+
+    // P1: server sam odbija samo porudžbine iz poslednja 2 sata i označi ih (autoRejected); T1: prodavac posle toga
+    // ne može da potvrdi istu porudžbinu
+    [Fact]
+    public async Task R2_P1_T1_auto_reject_skips_old_orders_and_cannot_be_overwritten()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var nikola = await _factory.As("nikola", "vendor1234");
+        var product = await FindProduct(kupac, p => p.VendorId == 3);
+        var recent = (await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", PickupOf(product.Id))))[0].GetProperty("id").GetInt32();
+        var old = (await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", PickupOf(product.Id))))[0].GetProperty("id").GetInt32();
+
+        await using (var conn = new Npgsql.NpgsqlConnection(ApiFactory.ConnectionString))
+        {
+            await conn.OpenAsync();
+            foreach (var (id, age) in new[] { (recent, "20 minutes"), (old, "3 hours") })
+            {
+                await using var cmd = new Npgsql.NpgsqlCommand(
+                    $"UPDATE \"Orders\" SET \"CreatedAt\" = now() - interval '{age}' WHERE \"Id\" = {id}", conn);
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        using (var scope = _factory.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<IOrderService>().RejectUnansweredOrders();
+
+        var rejected = await kupac.Get<JsonElement>($"/api/orders/{recent}");
+        Assert.Equal("Rejected", rejected.GetProperty("status").GetString());
+        Assert.True(rejected.GetProperty("autoRejected").GetBoolean());
+        Assert.Equal("Pending", (await kupac.Get<JsonElement>($"/api/orders/{old}")).GetProperty("status").GetString());
+
+        var late = await nikola.Send(HttpMethod.Put, $"/api/orders/{recent}/status", new { status = "Confirmed" });
+        Assert.Equal(HttpStatusCode.BadRequest, late.StatusCode);
+        (await nikola.Send(HttpMethod.Put, $"/api/orders/{old}/status", new { status = "Rejected", message = "Test" })).EnsureSuccessStatusCode();
+    }
+
+    // T14: tuđa porudžbina je 404 (ne 400); brza izmena vraća proizvod sa pijacom
+    [Fact]
+    public async Task R2_T14_foreign_order_is_not_found_and_quick_update_keeps_the_market()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var jovana = await _factory.As("jovana", "vendor1234");
+        var milan = await _factory.As("milan", "vendor1234");
+        var product = await FindProduct(kupac, p => p.VendorId == 2);
+        var id = (await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", PickupOf(product.Id))))[0].GetProperty("id").GetInt32();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await milan.Send(HttpMethod.Put, $"/api/orders/{id}/status", new { status = "Confirmed" })).StatusCode);
+        (await jovana.Send(HttpMethod.Put, $"/api/orders/{id}/status", new { status = "Rejected", message = "Test" })).EnsureSuccessStatusCode();
+
+        var quick = await Api.Read<JsonElement>(await jovana.Send(HttpMethod.Patch, $"/api/products/{product.Id}/quick", new { price = product.Price }));
+        Assert.Equal(product.MarketName, quick.GetProperty("marketName").GetString());
     }
 }

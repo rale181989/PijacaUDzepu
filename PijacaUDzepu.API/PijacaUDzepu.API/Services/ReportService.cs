@@ -306,17 +306,18 @@ public class ReportService : IReportService
         };
     }
 
-    // Porudžbine koje trenutno čekaju prodavca ili kurira duže od 15 minuta
+    // Porudžbine koje trenutno čekaju prodavca duže od 10 minuta (posle 15 se same odbijaju) ili kurira duže od 15
     public async Task<List<WaitingOrderDto>> GetWaitingOrders()
     {
+        var pendingBefore = DateTime.UtcNow.AddMinutes(-10);
         var before = DateTime.UtcNow.AddMinutes(-15);
         var orders = await _context.Orders
-            // Kurira porudžbina čeka od potvrde prodavca
-            .Where(o => (o.Status == OrderStatus.Pending && o.CreatedAt < before) ||
-                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && (o.RespondedAt ?? o.CreatedAt) < before &&
+            // Kurira porudžbina čeka od trenutka kada je ponuđena kuririma
+            .Where(o => (o.Status == OrderStatus.Pending && o.CreatedAt < pendingBefore) ||
+                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && o.CourierOfferedAt != null && o.CourierOfferedAt < before &&
                  (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup)))
             .OrderBy(o => o.CreatedAt)
-            .Select(o => new { o.Id, VendorName = o.Vendor.Name, o.Status, o.Fulfillment, o.CreatedAt, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.RespondedAt ?? o.CreatedAt })
+            .Select(o => new { o.Id, VendorName = o.Vendor.Name, o.Status, o.Fulfillment, o.CreatedAt, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.CourierOfferedAt ?? o.CreatedAt })
             .Take(100)
             .ToListAsync();
         var now = DateTime.UtcNow;

@@ -17,7 +17,7 @@ export class CartButtonComponent implements OnDestroy {
 
   constructor(cartService: CartService, public authService: AuthService) {
     this.sub = cartService.cart$.subscribe(items => {
-      this.count = items.reduce((sum, i) => sum + i.quantity, 0);
+      this.count = items.length; // broj stavki (1,5 kg + 2 veze = 2), ne zbir količina
     });
   }
 

@@ -68,6 +68,11 @@ export class TrackOrderPage implements OnInit, OnDestroy {
       .reduce((sum, o) => sum + o.amountToPay, 0);
   }
 
+  // Porudžbine kupovine koje se plaćaju (bez odbijenih i otkazanih)
+  activeCount(group: TrackedGroup): number {
+    return group.orders.filter(o => !['Rejected', 'Cancelled', 'NotDelivered'].includes(o.status)).length;
+  }
+
   ownAddress(code: string): string | null {
     return this.guestOrders.addressFor(code);
   }
@@ -213,7 +218,8 @@ export class TrackOrderPage implements OnInit, OnDestroy {
     return map[status] || 'medium';
   }
 
-  getUnitLabel(unit: string): string {
-    return this.ts.t('unit.' + unit) || unit;
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty?: number): string {
+    return this.ts.unit(unit, qty);
   }
 }

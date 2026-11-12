@@ -67,6 +67,11 @@ ion-card-header {
 
 // Kupac: svaki podatak u svom redu; telefon se poziva dodirom
 .customer { margin: 6px 0; }
+.guest-info.respond-by {
+  color: var(--ion-color-warning-shade);
+  font-weight: 600;
+  ion-icon { color: var(--ion-color-warning-shade); }
+}
 .guest-info.phone {
   color: var(--ion-color-primary);
   text-decoration: none;

@@ -28,6 +28,12 @@ export interface Order {
   courierAssignedAt?: string;
   // Prodavac je odgovorio (potvrdio ili odbio)
   respondedAt?: string | null;
+  // Kuriri su dobili porudžbinu; null dok ne odgovore svi prodavci iz iste korpe
+  courierOfferedAt?: string | null;
+  // Rok za odgovor prodavca na porudžbinu na čekanju; posle toga je server sam odbija
+  respondBy?: string | null;
+  // Server ju je sam odbio jer prodavac nije odgovorio na vreme
+  autoRejected?: boolean;
   pickedUpAt?: string;
   deliveredAt?: string;
   items: OrderItem[];

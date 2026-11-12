@@ -5,7 +5,7 @@ import { VendorService } from '../services/vendor.service';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
 import { OrderService } from '../services/order.service';
-import { Product, ProductCategory, PRODUCT_CATEGORIES, ProductSort, ProductUnit } from '../models/product.model';
+import { Product, ProductCategory, PRODUCT_CATEGORIES, ProductSort, ProductUnit, quantityStep, roundQty } from '../models/product.model';
 import { vendorClosedText } from '../services/vendor-status';
 import { FavoritesService } from '../services/favorites.service';
 import { AuthService } from '../services/auth.service';
@@ -126,10 +126,12 @@ export class HomePage implements OnInit {
   private availableCategories: string[] | null = null;
 
   ngOnInit() {
+    // Ponuda se gleda za jednu pijacu: ona iz korpe, pa poslednja izabrana; prvi put kupac bira
+    let stored: number | null = null;
+    try { stored = Number(localStorage.getItem('market')) || null; } catch {}
+    this.startMarket = this.cartService.marketId ?? stored;
     this.loadMarkets();
     this.loadVendors();
-    this.loadProducts();
-    this.loadCategories();
     this.orderService.getDeliveryOptions().subscribe({ next: o => this.courierFee = o.courierFee, error: () => {} });
   }
 
@@ -152,8 +154,38 @@ export class HomePage implements OnInit {
     return this.cartService.getQuantity(productId);
   }
 
+  // Pijaca iz korpe ili zapamćena; bira se tek kad se pijace učitaju, da se ne traži roba nepostojeće pijace
+  private startMarket: number | null = null;
+
   loadMarkets() {
-    this.marketService.getAll().subscribe(m => this.markets = m);
+    this.marketService.getAll().subscribe({
+      next: m => {
+        this.markets = m;
+        const wanted = this.selectedMarketId ?? this.startMarket;
+        this.startMarket = null;
+        if (wanted && m.some(x => x.id === wanted)) {
+          if (wanted !== this.selectedMarketId) this.selectMarket(wanted);
+        } else if (m.length === 1) {
+          // Samo jedna pijaca: nema šta da se bira
+          this.selectMarket(m[0].id);
+        } else if (wanted) {
+          // Zapamćena pijaca više ne postoji: kupac bira ponovo, a ona se briše
+          this.selectMarket(null);
+        }
+      },
+      // Bez spiska pijaca (nema veze): ostaje zapamćena, da se vidi bar poruka o grešci za njenu robu
+      error: () => { if (this.startMarket) this.selectMarket(this.startMarket); }
+    });
+  }
+
+  // Korpa je sa druge pijace od one koja se gleda (dodavanje odavde traži pražnjenje korpe)
+  get cartFromOtherMarket(): string | null {
+    const id = this.cartService.marketId;
+    return id && this.selectedMarketId && id !== this.selectedMarketId ? this.cartService.marketName : null;
+  }
+
+  vendorsLabel(count: number): string {
+    return `${count} ${this.ts.plural(count, 'vendors')}`;
   }
 
   loadVendors() {
@@ -164,6 +196,7 @@ export class HomePage implements OnInit {
   }
 
   loadProducts(reset = true) {
+    if (!this.selectedMarketId) return;
     if (reset) {
       this.products = [];
       this.hasMore = true;
@@ -274,6 +307,10 @@ export class HomePage implements OnInit {
 
   selectMarket(marketId: number | null) {
     this.selectedMarketId = marketId;
+    try {
+      if (marketId) localStorage.setItem('market', String(marketId));
+      else localStorage.removeItem('market');
+    } catch {}
     this.selectedVendorId = null;
     this.selectedStallId = null;
     this.stalls = [];
@@ -378,16 +415,16 @@ export class HomePage implements OnInit {
   }
 
   increaseQty(product: Product) {
-    // Ne više nego što ima na stanju (kad prodavac prati stanje)
-    const next = this.getSelectedQty(product.id) + 1;
-    if (product.stockQuantity != null && next > product.stockQuantity) return;
+    // Korak 0,5 za kg i litar, 1 za ostalo; ne više nego što ima na stanju (kad prodavac prati stanje)
+    const next = roundQty(this.getSelectedQty(product.id) + quantityStep(product.unit));
+    if (product.stockQuantity != null && roundQty(next + this.inCart(product.id)) > product.stockQuantity) return;
     this.selectedQty[product.id] = next;
   }
 
   decreaseQty(product: Product) {
     const current = this.getSelectedQty(product.id);
     if (current > 0) {
-      this.selectedQty[product.id] = current - 1;
+      this.selectedQty[product.id] = Math.max(0, roundQty(current - quantityStep(product.unit)));
     }
   }
 
@@ -396,15 +433,28 @@ export class HomePage implements OnInit {
     const qty = this.getSelectedQty(product.id) || 1;
     // Nova tezga u korpi: dostava kurirom se plaća po tezgi, pa kupac to sazna odmah, a ne tek u korpi
     const items = this.cartService.getItems();
-    const newVendor = items.length > 0 && !items.some(i => i.product.vendorId === product.vendorId);
-    this.cartService.addToCart(product, qty);
+    const otherMarket = this.cartService.isOtherMarket(product);
+    const newVendor = items.length > 0 && !items.some(i => i.product.vendorId === product.vendorId) && !otherMarket;
+    // Korpa sa druge pijace se prazni pre dodavanja, pa je tada pre bilo 0
+    const before = otherMarket ? 0 : this.cartService.getQuantity(product.id);
+    if (!(await this.cartService.addOrAsk(product, qty))) return;
     this.selectedQty[product.id] = 0;
+    // Stanje može da ograniči količinu: poruka kaže koliko je zaista dodato
+    const after = this.cartService.getQuantity(product.id);
+    const added = roundQty(after - before);
+    const amount = (n: number) => `${this.ts.num(n)} ${this.getUnitLabel(product.unit, n)}`;
     const feeNote = newVendor && this.courierFee > 0 ? ' ' + this.ts.t('home.newVendorFee').replace('{0}', String(this.courierFee)) : '';
+    const message = added <= 0
+      ? this.ts.t('cart.stockFull').replace('{0}', product.name).replace('{1}', amount(after))
+      : added < qty
+        ? this.ts.t('cart.stockPart').replace('{0}', product.name).replace('{1}', amount(added)) + feeNote
+        // "Paradajz 1,5 kg dodato u korpu" (ne "x1.5")
+        : `${product.name} ${amount(qty)} ${this.ts.t('cart.addedToCart')}.${feeNote}`;
     const toast = await this.toastController.create({
-      message: `${product.name} x${qty} ${this.ts.t('cart.addedToCart')}.${feeNote}`,
-      duration: feeNote ? 4500 : 1500,
+      message,
+      duration: feeNote || added < qty ? 4500 : 1500,
       position: 'bottom',
-      color: 'success'
+      color: added < qty ? 'warning' : 'success'
     });
     await toast.present();
   }
@@ -416,8 +466,9 @@ export class HomePage implements OnInit {
     }
   }
 
-  getUnitLabel(unit: string): string {
-    return this.ts.t('unit.' + unit) || unit;
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty?: number): string {
+    return this.ts.unit(unit, qty);
   }
 
   closedText(product: Product): string {
@@ -437,6 +488,7 @@ export class HomePage implements OnInit {
   }
 
   doRefresh(event: any) {
+    if (!this.selectedMarketId) this.loadMarkets();
     this.loadProducts(true);
     setTimeout(() => event.target.complete(), 500);
   }

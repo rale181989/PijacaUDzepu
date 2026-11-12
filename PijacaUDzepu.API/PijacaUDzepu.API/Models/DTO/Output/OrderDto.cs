@@ -39,6 +39,12 @@ public class OrderDto
     public string? ClosedByAdminName { get; set; }
     public DateTime? ClosedByAdminAt { get; set; }
     public DateTime? RespondedAt { get; set; }
+    // Kuriri su dobili porudžbinu (null: čeka se da odgovore ostali prodavci iz korpe)
+    public DateTime? CourierOfferedAt { get; set; }
+    // Do kada prodavac mora da odgovori na porudžbinu na čekanju, posle toga se sama odbija
+    public DateTime? RespondBy { get; set; }
+    // Server ju je sam odbio jer prodavac nije odgovorio na vreme (klijent prikazuje prevedeni tekst, a ne razlog)
+    public bool AutoRejected { get; set; }
     public DateTime? PickedUpAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
 

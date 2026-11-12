@@ -5,6 +5,7 @@ import { CartService } from '../services/cart.service';
 import { OrderService } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
 import { CartItem } from '../models/cart.model';
+import { ProductUnit, quantityStep, roundQty } from '../models/product.model';
 import { FulfillmentType } from '../models/order.model';
 import { environment } from '../../environments/environment';
 import { TranslateService } from '../services/translate.service';
@@ -83,8 +84,35 @@ export class CartPage implements OnInit {
     });
   }
 
-  updateQuantity(productId: number, quantity: number) {
-    this.cartService.updateQuantity(productId, quantity);
+  async updateQuantity(productId: number, quantity: number) {
+    const value = roundQty(quantity);
+    // Na nuli stavka nestaje: kupac prvo potvrdi (lako se slučajno dodirne − jednom previše)
+    if (value <= 0) {
+      const item = this.items.find(i => i.product.id === productId);
+      const alert = await this.alertController.create({
+        header: this.ts.t('cart.removeTitle'),
+        message: this.ts.t('cart.removeText').replace('{0}', item?.product.name ?? ''),
+        buttons: [
+          { text: this.ts.t('cart.removeNo'), role: 'cancel' },
+          { text: this.ts.t('cart.removeYes'), role: 'confirm' }
+        ]
+      });
+      await alert.present();
+      if ((await alert.onDidDismiss()).role !== 'confirm') return;
+    }
+    this.cartService.updateQuantity(productId, value);
+  }
+
+  // Stara korpa (pre pravila "jedna pijaca") sa robom sa više pijaca: ostaje pijaca prve stavke
+  keepFirstMarket() {
+    const marketId = this.cartService.marketId;
+    for (const item of this.items.filter(i => i.product.marketId !== marketId))
+      this.cartService.removeFromCart(item.product.id);
+  }
+
+  // Korak dugmića − i +: 0,5 za kg i litar, 1 za ostalo
+  step(unit: ProductUnit): number {
+    return quantityStep(unit);
   }
 
   removeItem(productId: number) {
@@ -103,8 +131,9 @@ export class CartPage implements OnInit {
     await alert.present();
   }
 
-  getUnitLabel(unit: string): string {
-    return this.ts.t('unit.' + unit) || unit;
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty?: number): string {
+    return this.ts.unit(unit, qty);
   }
 
   getImageUrl(imageUrl?: string): string {
@@ -145,7 +174,8 @@ export class CartPage implements OnInit {
 
   get canReserve(): boolean {
     const hasName = this.authService.isLoggedIn || this.guestName.trim().length > 0;
-    return this.items.length > 0 && hasName && this.phone.trim().length > 0 && this.emailValid;
+    // Porudžbina je sa jedne pijace (server bi je inače odbio)
+    return this.items.length > 0 && this.marketNames.length <= 1 && hasName && this.phone.trim().length > 0 && this.emailValid;
   }
 
   get canCourier(): boolean {
@@ -159,8 +189,8 @@ export class CartPage implements OnInit {
 
     const goods = this.cartService.total;
     const message = fulfillment === 'Pickup'
-      ? `${this.ts.t('cart.reserveConfirm')} ${this.ts.t('cart.total')} ${goods.toFixed(0)} ${this.ts.t('din')}.`
-      : `${this.ts.t('cart.goods')}: ${goods.toFixed(0)} ${this.ts.t('din')} + ${this.ts.t('cart.ecoCourier')}: ${this.totalCourierFee.toFixed(0)} ${this.ts.t('din')} = ${(goods + this.totalCourierFee).toFixed(0)} ${this.ts.t('din')}. ${this.ts.t('cart.orderConfirm')}`;
+      ? `${this.ts.t('cart.reserveConfirm')} ${this.ts.t('cart.total')} ${this.ts.num(goods, 0)} ${this.ts.t('din')}.`
+      : `${this.ts.t('cart.goods')}: ${this.ts.num(goods, 0)} ${this.ts.t('din')} + ${this.ts.t('cart.ecoCourier')}: ${this.ts.num(this.totalCourierFee, 0)} ${this.ts.t('din')} = ${this.ts.num(goods + this.totalCourierFee, 0)} ${this.ts.t('din')}. ${this.ts.t('cart.orderConfirm')}`;
 
     const alert = await this.alertController.create({
       header: fulfillment === 'Pickup' ? this.ts.t('cart.reserve') : this.ts.t('cart.confirmTitle'),

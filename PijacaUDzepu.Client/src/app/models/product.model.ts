@@ -44,6 +44,16 @@ export interface QuickProductUpdate {
 
 export type ProductUnit = 'Kg' | 'Komad' | 'Veza' | 'Litar' | 'Gram' | 'Pakovanje' | 'Kutija' | 'Flasa';
 
+// Korak dugmića − i +: pola kilograma/litra, a komad, veza, pakovanje… samo celi (server odbija pola komada)
+export function quantityStep(unit: ProductUnit): number {
+  return unit === 'Kg' || unit === 'Litar' ? 0.5 : 1;
+}
+
+// Zaokruživanje na dve decimale, da 0.5 + 0.5… ne napravi 1.4999999
+export function roundQty(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export type ProductCategory = 'Voce' | 'Povrce' | 'ZacinskoBilje' | 'Mahunarke' | 'Pecurke' | 'MlecniProizvodi' | 'Jaja'
   | 'MesniProizvodi' | 'PcelinjiProizvodi' | 'Zimnica' | 'SuvoVoceIOrasasti' | 'Konditori' | 'KucnaHemija' | 'Ostalo';
 

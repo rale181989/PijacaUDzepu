@@ -46,14 +46,16 @@
             <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'order.directions' | t }}
           </ion-button>
         </div>
-        <p *ngIf="order.status === 'Pending' || order.status === 'Confirmed' || order.status === 'ReadyForPickup'" class="muted small">{{ 'order.cancelByPhone' | t }}</p>
+        <p *ngIf="order.status === 'Pending' && order.respondBy" class="respond-by">{{ ('order.respondBy' | t).replace('{0}', (order.respondBy | date:'HH:mm') ?? '') }}</p>
+        <p *ngIf="order.status === 'Pending' || order.status === 'Confirmed' || order.status === 'ReadyForPickup'" class="muted small">{{ (order.vendorPhones.length ? 'order.cancelByPhone' : 'order.cancelAtStall') | t }}</p>
       </ion-card-content>
     </ion-card>
 
     <ion-card *ngIf="order.status === 'Rejected'" class="vendor-message-card rejected">
       <ion-card-content>
-        <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.rejectedTitle' | t }}</strong>
-        <p *ngIf="order.vendorMessage">{{ order.vendorMessage }}</p>
+        <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>
+        <p *ngIf="order.autoRejected">{{ 'order.autoRejectedText' | t }}</p>
+        <p *ngIf="order.vendorMessage && !order.autoRejected">{{ order.vendorMessage }}</p>
       </ion-card-content>
     </ion-card>
 
@@ -96,7 +98,7 @@
             <p *ngIf="order.deliveredAt">{{ 'order.deliveredAt' | t }}: {{ order.deliveredAt | date:'dd.MM.yyyy HH:mm' }}</p>
           </div>
           <div *ngIf="!order.courierName">
-            <strong>{{ 'order.courierPending' | t }}</strong>
+            <strong>{{ (order.courierOfferedAt ? 'order.courierPending' : 'order.waitingOtherVendors') | t }}</strong>
           </div>
         </div>
       </ion-card-content>
@@ -109,7 +111,7 @@
       <ion-item *ngFor="let item of order.items">
         <ion-label>
           <h3>{{ item.productName }}</h3>
-          <p>{{ item.quantity }} {{ getUnitLabel(item.unit) }} x {{ item.unitPrice | number:'1.0-0' }} {{ 'din' | t }}</p>
+          <p>{{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }} × {{ item.unitPrice | number:'1.0-0' }} {{ 'din' | t }}</p>
         </ion-label>
         <ion-note slot="end" class="item-total">
           {{ item.totalPrice | number:'1.0-0' }} {{ 'din' | t }}

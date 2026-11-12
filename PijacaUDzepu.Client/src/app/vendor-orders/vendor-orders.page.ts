@@ -5,7 +5,7 @@ import { Order, OrderStatus } from '../models/order.model';
 import { ActionSheetController, AlertController, IonContent, ToastController } from '@ionic/angular/lazy';
 import { Subscription } from 'rxjs';
 import { PagerComponent } from '../shared/pager/pager.component';
-import { ordersWord } from '../shared/plural';
+import { ordersWord, srPlural } from '../shared/plural';
 
 @Component({
   selector: 'app-vendor-orders',
@@ -209,6 +209,12 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
     return map[status] || status;
   }
 
+  // Dostava bez kurira: kuriri dobijaju porudžbinu tek kada odgovore svi prodavci iz iste korpe
+  courierHint(order: Order): string {
+    if (order.status === 'Pending') return 'Kurir je dobija kada potvrdite (kod korpe sa više tezgi – kada odgovore sve)';
+    return order.courierOfferedAt ? 'Čeka se kurir' : 'Kurir kreće kada odgovore i ostale tezge iz korpe';
+  }
+
   getStatusColor(status: string): string {
     const map: Record<string, string> = {
       'Pending': 'warning', 'Confirmed': 'primary', 'Rejected': 'danger',
@@ -217,8 +223,19 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
     return map[status] || 'medium';
   }
 
-  getUnitLabel(unit: string): string {
-    switch (unit) { case 'Kg': return 'kg'; case 'Komad': return 'kom'; case 'Veza': return 'veza'; default: return unit; }
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty = 0): string {
+    switch (unit) {
+      case 'Kg': return 'kg';
+      case 'Gram': return 'g';
+      case 'Komad': return 'kom';
+      case 'Veza': return srPlural(qty, 'veza', 'veze', 'veza');
+      case 'Litar': return 'l';
+      case 'Pakovanje': return 'pak';
+      case 'Kutija': return 'kut';
+      case 'Flasa': return srPlural(qty, 'flaša', 'flaše', 'flaša');
+      default: return unit;
+    }
   }
 
   doRefresh(event: any) {

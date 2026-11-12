@@ -162,7 +162,7 @@
 
         <ion-list lines="none" class="order-items">
           <ion-item *ngFor="let item of order.items">
-            <ion-label><p>{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p></ion-label>
+            <ion-label><p>{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p></ion-label>
             <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} din</ion-note>
           </ion-item>
         </ion-list>

@@ -59,7 +59,8 @@ export class OrderActionsService {
       try {
         const product = await firstValueFrom(this.productService.getById(item.productId));
         if (product.isAvailable && product.vendorOpen !== false) {
-          this.cartService.addToCart(product, item.quantity);
+          // Korpa sa druge pijace: kupac bira da li je prazni (porudžbina je sa jedne pijace)
+          if (!(await this.cartService.addOrAsk(product, item.quantity))) return;
           added.push(product.name);
         } else {
           missing.push(item.productName);

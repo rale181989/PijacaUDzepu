@@ -43,3 +43,6 @@
 .footer-copy {
   margin: 0;
 }
+
+// E-mail se ne lomi usred adrese: ceo prelazi u novi red
+a[href^="mailto:"] { white-space: nowrap; }

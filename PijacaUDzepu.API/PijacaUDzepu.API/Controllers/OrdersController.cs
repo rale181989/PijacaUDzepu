@@ -202,7 +202,11 @@ public class OrdersController : BaseApiController
             var order = await _orderService.UpdateOrderStatus(id, vendorId.Value, dto.Status, dto.Message);
             return Ok(order);
         }
-        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }

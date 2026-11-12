@@ -26,6 +26,8 @@ public class Order
     public DateTime? RespondedAt { get; set; }
     // Kada je poslato upozorenje da porudžbina predugo čeka (OrderWatchdog), da se ne šalje ponovo
     public DateTime? WaitAlertSentAt { get; set; }
+    // Kada su kuriri dobili porudžbinu: tek kada se izjasne svi prodavci iz iste korpe (nijedna nije na čekanju)
+    public DateTime? CourierOfferedAt { get; set; }
 
     // Kontakt i adresa za dostavu, i za goste i za prijavljene kupce
     public string? ContactPhone { get; set; }

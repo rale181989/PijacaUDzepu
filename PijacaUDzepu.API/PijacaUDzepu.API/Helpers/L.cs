@@ -97,6 +97,9 @@ public static class L
 
         // Porudžbine
         ["Za dostavu kurirom unesite adresu."] = ("Enter an address for courier delivery.", "Для доставки курьером укажите адрес."),
+        ["Jedna porudžbina može biti samo sa jedne pijace (zbog dostave i preuzimanja). Uklonite iz korpe robu sa druge pijace: {0}."] =
+            ("One order can come from one market only (because of delivery and pickup). Remove the goods from the other market from your cart: {0}.",
+             "Один заказ может быть только с одного рынка (из-за доставки и самовывоза). Уберите из корзины товары с другого рынка: {0}."),
         ["Sledeći proizvodi nisu dostupni: {0}"] = ("These products are not available: {0}", "Следующие товары недоступны: {0}"),
         ["Proizvodi sa ID {0} nisu pronađeni."] = ("Products with ID {0} were not found.", "Товары с ID {0} не найдены."),
         ["{0}: na stanju je još samo {1}."] = ("{0}: only {1} left in stock.", "{0}: в наличии осталось только {1}."),
@@ -145,6 +148,9 @@ public static class L
 
         // Kuriri
         ["Uključite smenu da biste prihvatali porudžbine."] = ("Start your shift to accept orders.", "Начните смену, чтобы принимать заказы."),
+        ["Ovu porudžbinu kupac preuzima sam na tezgi."] = ("The customer picks this order up at the stall.", "Этот заказ покупатель забирает сам у прилавка."),
+        ["Porudžbina još nije spremna za kurira: čeka se odgovor prodavaca."] = ("The order is not ready for a courier yet: waiting for the vendors to answer.", "Заказ ещё не готов для курьера: ждём ответа продавцов."),
+        ["Isti proizvod je više puta u porudžbini. Osvežite korpu i poručite ponovo."] = ("The same product appears more than once in the order. Refresh the cart and order again.", "Один и тот же товар указан в заказе несколько раз. Обновите корзину и закажите снова."),
         ["Porudžbinu je već preuzeo drugi kurir ili više nije dostupna."] = ("Another courier has already taken this order or it is no longer available.", "Этот заказ уже взял другой курьер или он больше недоступен."),
         ["Ove porudžbine su već preuzete ili više nisu dostupne."] = ("These orders have already been taken or are no longer available.", "Эти заказы уже взяты или больше недоступны."),
         ["Robu možete preuzeti tek kada prodavac potvrdi porudžbinu."] = ("You can pick up the goods only after the vendor confirms the order.", "Забрать товар можно только после подтверждения заказа продавцом."),

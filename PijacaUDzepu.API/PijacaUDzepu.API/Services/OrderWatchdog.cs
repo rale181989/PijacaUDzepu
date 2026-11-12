@@ -7,10 +7,11 @@ using PijacaUDzepu.API.Services.Interfaces;
 
 namespace PijacaUDzepu.API.Services;
 
-// Svakog minuta traži porudžbine koje predugo čekaju: prodavca (na čekanju duže od Alerts:PendingMinutes,
-// podrazumevano 15) ili kurira (dostava bez kurira duže od Alerts:CourierMinutes, podrazumevano 20).
-// Admin dobija obaveštenje (SignalR "OrderWaiting" + push), a prodavcu ponovo zazvoni. Za svaku porudžbinu
-// samo jednom (Order.WaitAlertSentAt).
+// Svakog minuta: porudžbine na koje prodavac nije odgovorio za Orders:AutoRejectMinutes (podrazumevano 15)
+// odbija sam (OrderService.RejectUnansweredOrders), a traži i one koje predugo čekaju: prodavca (na čekanju duže
+// od Alerts:PendingMinutes, podrazumevano 10 - opomena pre automatskog odbijanja) ili kurira (ponuđena kuririma,
+// a bez kurira duže od Alerts:CourierMinutes, podrazumevano 20). Admin dobija obaveštenje (SignalR "OrderWaiting"
+// + push), a prodavcu ponovo zazvoni. Za svaku porudžbinu samo jednom (Order.WaitAlertSentAt).
 public class OrderWatchdog : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -22,7 +23,7 @@ public class OrderWatchdog : BackgroundService
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
-        _pendingLimit = TimeSpan.FromMinutes(config.GetValue("Alerts:PendingMinutes", 15));
+        _pendingLimit = TimeSpan.FromMinutes(config.GetValue("Alerts:PendingMinutes", 10));
         _courierLimit = TimeSpan.FromMinutes(config.GetValue("Alerts:CourierMinutes", 20));
     }
 
@@ -42,6 +43,7 @@ public class OrderWatchdog : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<DataContext>();
         var push = scope.ServiceProvider.GetRequiredService<IPushService>();
         var hub = scope.ServiceProvider.GetRequiredService<IHubContext<OrderHub>>();
+        await scope.ServiceProvider.GetRequiredService<IOrderService>().RejectUnansweredOrders();
 
         var now = DateTime.UtcNow;
         var pendingBefore = now - _pendingLimit;
@@ -49,10 +51,10 @@ public class OrderWatchdog : BackgroundService
         var waiting = await context.Orders
             .Where(o => o.WaitAlertSentAt == null && (
                 (o.Status == OrderStatus.Pending && o.CreatedAt < pendingBefore) ||
-                // Kurira porudžbina čeka od trenutka kada ju je prodavac potvrdio
-                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && (o.RespondedAt ?? o.CreatedAt) < courierBefore
+                // Kurira porudžbina čeka od trenutka kada je ponuđena kuririma (svi prodavci iz korpe odgovorili)
+                (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && o.CourierOfferedAt != null && o.CourierOfferedAt < courierBefore
                     && (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup))))
-            .Select(o => new { o.Id, o.VendorId, VendorName = o.Vendor.Name, o.Status, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.RespondedAt ?? o.CreatedAt })
+            .Select(o => new { o.Id, o.VendorId, VendorName = o.Vendor.Name, o.Status, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.CourierOfferedAt ?? o.CreatedAt })
             .ToListAsync();
         if (waiting.Count == 0) return;
 
@@ -72,7 +74,9 @@ public class OrderWatchdog : BackgroundService
             if (o.Status == OrderStatus.Pending)
             {
                 var vendorUsers = await context.VendorUsers.Where(vu => vu.VendorId == o.VendorId).Select(vu => vu.UserId).ToListAsync();
-                await push.SendAlarm(vendorUsers, $"order_{o.Id}", $"Porudžbina #{o.Id} čeka odgovor", $"Čeka već {minutes} min", "/vendor-orders");
+                var left = Math.Max(1, OrderService.AutoRejectMinutes - minutes);
+                await push.SendAlarm(vendorUsers, $"order_{o.Id}", $"Porudžbina #{o.Id} čeka odgovor",
+                    $"Još {left} min, pa se porudžbina sama otkazuje.", "/vendor-orders");
             }
         }
 

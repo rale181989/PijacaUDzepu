@@ -305,6 +305,9 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<int?>("CourierId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("CourierOfferedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 

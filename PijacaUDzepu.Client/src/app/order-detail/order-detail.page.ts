@@ -65,7 +65,8 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     return map[status] || 'medium';
   }
 
-  getUnitLabel(unit: string): string {
-    return this.ts.t('unit.' + unit) || unit;
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty?: number): string {
+    return this.ts.unit(unit, qty);
   }
 }

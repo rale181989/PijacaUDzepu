@@ -148,13 +148,18 @@ Bez ovoga obaveštenja stižu samo dok je aplikacija otvorena.
 ## 4a. Upozorenje za porudžbine koje čekaju (opciono)
 
 Server sam proverava svakog minuta i javlja adminu (obaveštenje u aplikaciji + push) kada porudžbina
-čeka prodavca duže od 15 minuta ili kurira duže od 20 minuta; prodavcu tada ponovo zazvoni.
+čeka prodavca duže od 10 minuta ili kurira duže od 20 minuta; prodavcu tada ponovo zazvoni („Još 5 min,
+pa se porudžbina sama otkazuje”). Porudžbinu na koju prodavac ne odgovori za 15 minuta server sam odbija
+(kupac dobija razlog „Prodavac nije odgovorio na vreme”), a ostale porudžbine iz iste korpe idu kuriru.
+Sama se odbijaju samo porudžbine iz poslednja 2 sata: posle nadogradnje stare zaboravljene porudžbine ne dobijaju
+odbijanje i e-mail, nego ih administrator zatvara u „Otvorene porudžbine” (pre puštanja pogledajte tu listu).
 Pragovi se menjaju na Render-u (bez novog APK-a):
 
 | Env varijabla | Podrazumevano |
 |---|---|
-| `Alerts__PendingMinutes` | `15` |
+| `Alerts__PendingMinutes` | `10` |
 | `Alerts__CourierMinutes` | `20` |
+| `Orders__AutoRejectMinutes` | `15` (rok za odgovor prodavca; opomena mora biti kraća) |
 
 ---
 

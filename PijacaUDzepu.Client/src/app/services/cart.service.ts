@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
+import { AlertController } from '@ionic/angular/lazy';
 import { BehaviorSubject } from 'rxjs';
 import { CartItem } from '../models/cart.model';
 import { Product } from '../models/product.model';
+import { TranslateService } from './translate.service';
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
@@ -9,8 +11,43 @@ export class CartService {
   private cartSource = new BehaviorSubject<CartItem[]>([]);
   cart$ = this.cartSource.asObservable();
 
-  constructor() {
+  constructor(private alertController: AlertController, private ts: TranslateService) {
     this.loadFromStorage();
+  }
+
+  // Jedna porudžbina = jedna pijaca (kurir ne obilazi više pijaca, kupac ne preuzima na više mesta).
+  // Pijaca robe u korpi; null kada je korpa prazna.
+  get marketId(): number | null {
+    return this.items[0]?.product.marketId ?? null;
+  }
+
+  get marketName(): string {
+    return this.items[0]?.product.marketName ?? '';
+  }
+
+  // Korpa je sa jedne pijace, a proizvod sa druge
+  isOtherMarket(product: Product): boolean {
+    return this.marketId != null && product.marketId !== this.marketId;
+  }
+
+  // Dodaje u korpu; proizvod sa druge pijace tek kada kupac pristane da isprazni korpu. Vraća da li je dodat.
+  async addOrAsk(product: Product, quantity: number = 1): Promise<boolean> {
+    if (this.isOtherMarket(product)) {
+      const alert = await this.alertController.create({
+        header: this.ts.t('cart.oneMarketTitle'),
+        message: this.ts.t('cart.oneMarketText').replace('{0}', this.marketName).replace('{1}', product.marketName),
+        buttons: [
+          { text: this.ts.t('cart.oneMarketKeep'), role: 'cancel' },
+          { text: this.ts.t('cart.oneMarketSwitch'), role: 'confirm' }
+        ]
+      });
+      await alert.present();
+      const { role } = await alert.onDidDismiss();
+      if (role !== 'confirm') return false;
+      this.clearCart();
+    }
+    this.addToCart(product, quantity);
+    return true;
   }
 
   get itemCount(): number {
@@ -21,6 +58,7 @@ export class CartService {
     return this.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   }
 
+  // Bez provere pijace; sa ekrana se dodaje preko addOrAsk
   addToCart(product: Product, quantity: number = 1) {
     const existing = this.items.find(i => i.product.id === product.id);
     if (existing) {

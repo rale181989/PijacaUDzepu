@@ -32,4 +32,5 @@ public interface IOrderService
     Task<CourierSettlementDto> GetCourierSettlement(int courierId, DateOnly date);
     Task<OrderDto> MarkPickedUp(int orderId, int courierId);
     Task<OrderDto> MarkDelivered(int orderId, int courierId);
+    Task<int> RejectUnansweredOrders();
 }

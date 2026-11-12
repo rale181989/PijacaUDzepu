@@ -114,21 +114,33 @@ ion-menu ion-item-divider {
   white-space: nowrap;
 }
 
-.nav-logo {
+// Logo je zeleni krug: beli obruč ga odvaja od zelene trake
+.nav-logo,
+.menu-logo {
+  width: 40px;
   height: 40px;
-  width: auto;
-  object-fit: contain;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  flex-shrink: 0;
+}
+.menu-logo {
+  width: 34px;
+  height: 34px;
 }
 
 .menu-header-brand {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.menu-logo {
-  height: 32px;
-  width: auto;
-  object-fit: contain;
+.brand-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-links {
@@ -296,11 +308,6 @@ ion-menu ion-item-divider {
   }
 }
 
-.menu-header-brand .menu-logo {
-  background: #fff;
-  border-radius: 8px;
-  padding: 3px 6px;
-}
 
 // Mnogo stavki (admin): linkovi se pomeraju vodoravno, a nalog i "Odjava" ostaju vidljivi desno
 .nav-links {
@@ -310,3 +317,9 @@ ion-menu ion-item-divider {
   a { flex: none; }
 }
 .nav-auth { flex: none; }
+
+// U meniju je mesta malo: duži naziv (engleski "Market in Your Pocket") prelazi u dva reda umesto da se odseče
+.menu-header-brand .brand-name {
+  white-space: normal;
+  line-height: 1.15;
+}

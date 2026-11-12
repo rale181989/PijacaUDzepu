@@ -37,7 +37,9 @@ export class MyOrdersPage implements OnInit, OnDestroy {
   }
 
   reorder(order: Order, event: Event) {
+    // Kartica je link (routerLink): bez preventDefault bi dodir otvorio detalj umesto korpe
     event.stopPropagation();
+    event.preventDefault();
     this.orderActions.reorder(order);
   }
 
@@ -111,8 +113,9 @@ export class MyOrdersPage implements OnInit, OnDestroy {
     return this.ts.t('status.' + status) || status;
   }
 
-  getUnitLabel(unit: string): string {
-    return this.ts.t('unit.' + unit) || unit;
+  // Uz količinu: "2 veze", "5 veza"
+  getUnitLabel(unit: string, qty?: number): string {
+    return this.ts.unit(unit, qty);
   }
 
   getStatusColor(status: string): string {

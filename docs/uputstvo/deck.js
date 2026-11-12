@@ -224,26 +224,37 @@ async function build() {
   };
   await section('01', 'Za kupce', 'Pretraga proizvoda, korpa, izbor između preuzimanja na tezgi i dostave, praćenje porudžbine.', 'MdShoppingBasket', 'carrot', 'Kupci');
 
+  // 4a. Izbor pijace
+  s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
+  s.title('Izaberite pijacu');
+  s.steps([
+    { h: 'Pijaca na početku', d: 'Pri prvom otvaranju birate pijacu na kojoj kupujete. Aplikacija je pamti, pa sledeći put odmah vidite njenu ponudu.' },
+    { h: 'Jedna porudžbina, jedna pijaca', d: 'Kurir robu skuplja na jednom mestu, a i vi preuzimate na jednom mestu. Zato su u korpi samo tezge sa iste pijace.' },
+    { h: 'Promena pijace', n: '✓', d: 'Pijacu menjate u prvom filteru gore. Ako je u korpi roba sa druge pijace, aplikacija vas pita da li da isprazni korpu: „Zadrži korpu” ili „Isprazni korpu i dodaj”.' }
+  ]);
+  s.phone('c-market', RIGHT_X, PHONE_Y, PHONE_H, 'Izbor pijace pri prvom otvaranju',
+    [[1, 0.93, 0.40], [2, 0.93, 0.15]]);
+
   // 4. Pretraga
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Pronađite proizvode');
   s.steps([
-    { h: 'Filteri', d: 'Suzite izbor po pijaci, prodavcu i grupi proizvoda; nude se samo grupe u kojima ima robe. Posle izbora pijace možete izabrati i tezgu.' },
+    { h: 'Filteri', d: 'Prvi filter je izabrana pijaca. Ispod suzite izbor po prodavcu, grupi proizvoda i tezgi; nude se samo grupe u kojima ima robe.' },
     { h: 'Pretraga po nazivu', d: 'Upišite deo naziva. Kvačice i jednina nisu bitne: „sljiva“ nalazi i „Šljive“, a „jabuka“ nalazi „Jabuke“.' },
     { h: 'Redosled', d: 'Dugme sa strelicama: po nazivu, po ceni ili najnovije prvo. Kod cene birate i jedinicu mere (kg, komad, veza…), jer se cene porede samo za istu jedinicu.' },
     { h: 'Meni ☰', d: 'Početna strana, vaše porudžbine, prijava, registracija i izbor jezika.' }
   ]);
   s.phone('c-home', RIGHT_X, PHONE_Y, PHONE_H, 'Početni ekran sa filterima, pretragom i dugmetom za redosled',
-    [[1, 0.96, 0.148], [2, 0.62, 0.251], [3, 0.913, 0.312], [4, -0.11, 0.035]]);
+    [[1, 0.96, 0.148], [2, 0.62, 0.30], [3, 0.97, 0.30], [4, -0.11, 0.035]]);
 
   // 5. Dodavanje u korpu
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Dodajte proizvode u korpu');
   s.steps([
     { h: 'Kartica proizvoda', d: 'Naziv, prodavac, pijaca i broj tezge, telefon prodavca i cena po jedinici mere.' },
-    { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite; bez toga „Dodaj“ dodaje jedan.' },
-    { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno), a na kartici piše koliko je već u korpi. Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
-    { h: 'Više prodavaca u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca; svaki dobija svoj deo porudžbine. Dostava Eko kurirom se plaća po tezgi – aplikacija vas upozori kad dodate robu sa nove tezge.' }
+    { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite: po pola kilograma ili litra, a komade i veze po jedan. Bez toga „Dodaj“ dodaje jedan.' },
+    { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno, broj na njoj je broj stavki), a na kartici piše koliko je već u korpi. Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
+    { h: 'Više tezgi u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca sa iste pijace; svaki dobija svoj deo porudžbine. Dostava Eko kurirom se plaća po tezgi – aplikacija vas upozori kad dodate robu sa nove tezge.' }
   ]);
   s.phone('c-home-products', RIGHT_X, PHONE_Y, PHONE_H, 'Kartice proizvoda sa količinom i dugmetom Dodaj',
     [[1, 0.40, 0.312], [2, 0.04, 0.459], [3, 0.40, 0.505]]);
@@ -252,12 +263,12 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
   s.title('Proverite korpu');
   s.steps([
-    { h: 'Izmena količine', d: 'Dugmićima − i + menjate količinu (ne više nego što prodavac ima); na nuli se proizvod uklanja. Ako je prodavac u međuvremenu promenio cenu, korpa pokazuje novu i javi vam.' },
+    { h: 'Izmena količine', d: 'Dugmićima − i + menjate količinu, po 0,5 kg ili l (ne više nego što prodavac ima); pored količine je jedinica, a uz cenu iznos stavke; pre uklanjanja na nuli aplikacija pita. Ako je prodavac u međuvremenu promenio cenu, korpa pokazuje novu i javi vam.' },
     { h: 'Isprazni', d: 'Briše sve iz korpe (aplikacija prvo traži potvrdu).' },
     { h: 'Podaci za porudžbinu', d: 'Ime i prezime i telefon su obavezni, adresa samo za dostavu kurirom; korpa ispiše šta još fali. E-mail je opcioni: na njega stiže link za praćenje. Ispod je ukupno sa dostavom.' }
   ]);
   s.phone('c-cart', RIGHT_X, PHONE_Y, PHONE_H, 'Korpa sa tri proizvoda i poljima za podatke',
-    [[1, 0.955, 0.15], [2, 1.11, 0.035], [3, 0.75, 0.465]]);
+    [[1, 0.955, 0.15], [2, 1.11, 0.035], [3, 0.62, 0.69]]);
 
   // 7. Način preuzimanja
   s = new S('Sadrzaj - jedan ekran', 'Kupci', 'kupac');
@@ -329,12 +340,12 @@ async function build() {
   s = new S('Sadrzaj - bez ekrana', 'Kupci', 'kupac');
   s.title('Šta znači status porudžbine');
   const statuses = [
-    ['Na čekanju', 'sun', 'Prodavac još nije odgovorio. Obično odgovara u roku od nekoliko minuta.'],
-    ['Potvrđena', 'green', 'Prodavac je prihvatio porudžbinu i priprema robu. Kod dostave tek tada kurir dobija porudžbinu.'],
+    ['Na čekanju', 'sun', 'Prodavac još nije odgovorio. Ima 15 minuta, posle toga se porudžbina sama otkazuje.'],
+    ['Potvrđena', 'green', 'Prodavac je prihvatio porudžbinu i priprema robu. Kurir je dobija kada odgovore svi prodavci iz vaše korpe.'],
     ['Spremna', 'sky', 'Roba je spakovana: dođite po nju na tezgu ili je kurir uskoro preuzima.'],
     ['U dostavi', 'carrot', 'Kurir je preuzeo robu i nosi je na vašu adresu.'],
     ['Završena', 'forest', 'Roba je preuzeta ili isporučena. Prijatno!'],
-    ['Odbijena', 'tomato', 'Prodavac ne može da ispuni porudžbinu, razlog je obično u njegovoj poruci.'],
+    ['Odbijena', 'tomato', 'Prodavac ne može da ispuni porudžbinu ili nije odgovorio za 15 minuta; razlog piše uz porudžbinu.'],
     ['Nije dostavljena', 'tomato', 'Kurir nije mogao da preda robu; razlog piše u porudžbini. Roba se vraća prodavcu.']
   ];
   for (const [i, [label, col, d]] of statuses.entries()) {
@@ -363,7 +374,7 @@ async function build() {
   s = new S('Sadrzaj - jedan ekran', 'Prodavci', 'prodavac');
   s.title('Nova porudžbina: potvrdite ili odbijte');
   s.steps([
-    { h: 'Zvono', d: 'Dok imate porudžbinu na čekanju, telefon zvoni i vibrira na svakih nekoliko sekundi.' },
+    { h: 'Zvono i rok', d: 'Dok imate porudžbinu na čekanju, telefon zvoni. Odgovorite u roku koji piše na kartici: posle 15 minuta porudžbina se sama otkazuje.' },
     { h: 'Šta je poručeno', d: 'Kupac, telefon (dodirom ga pozovete), adresa, stavke, iznos i način: „Eko kurir“ ili „Rezervacija – lično preuzimanje“.' },
     { h: 'Potvrdi ili Odbij', d: 'Uz potvrdu možete napisati poruku kupcu, npr. „Spremno za 30 min, tezga 14“. Kod odbijanja izaberite gotov razlog („Nestalo je robe”, „Danas ne radim”…) ili napišite svoj: kupac ga dobija u aplikaciji i e-mailom. Zvono staje kada odgovorite na sve.' }
   ]);
@@ -434,7 +445,7 @@ async function build() {
   s.title('Smena i nove dostave');
   s.steps([
     { h: 'Na smeni', d: 'Uključite prekidač da biste dobijali dostave. Van smene vam ne zvoni.' },
-    { h: 'Zvono', d: 'Dostava stiže kada je prodavac potvrdi. Dok postoji dostava na koju niste odgovorili, telefon zvoni i vibrira.' },
+    { h: 'Zvono', d: 'Dostava stiže kada odgovore svi prodavci iz kupčeve korpe, pa vozite celu rutu odjednom. Dok niste odgovorili, telefon zvoni.' },
     { h: 'Odakle i kuda', d: 'Prodavac, pijaca i tezga, adresa dostave, vrednost robe i vaša usluga. Ime i telefon kupca vidite tek kada prihvatite.' },
     { h: 'Odbij ili Prihvati', d: 'Dostavu dobija prvi kurir koji je prihvati. „Odbij“ je sklanja samo sa vašeg spiska.' }
   ]);

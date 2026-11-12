@@ -58,7 +58,7 @@
         <ion-list lines="none" class="order-items">
           <ion-item *ngFor="let item of order.items">
             <ion-label>
-              <p>{{ item.productName }} — {{ item.quantity }} {{ getUnitLabel(item.unit) }}</p>
+              <p>{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p>
             </ion-label>
             <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} din</ion-note>
           </ion-item>
@@ -80,8 +80,13 @@
         <div *ngIf="order.fulfillment === 'Courier'" class="guest-info">
           <ion-icon name="bicycle-outline"></ion-icon>
           <span *ngIf="order.courierName">Kurir: {{ order.courierName }}<a *ngIf="order.courierPhone" [href]="'tel:' + order.courierPhone"> · {{ order.courierPhone }}</a></span>
-          <span *ngIf="!order.courierName">{{ order.status === 'Pending' ? 'Kuriri je dobijaju kada potvrdite' : 'Čeka se kurir' }}</span>
+          <span *ngIf="!order.courierName">{{ courierHint(order) }}</span>
         </div>
+
+        <p *ngIf="order.status === 'Pending' && order.respondBy" class="guest-info respond-by">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>Odgovorite do {{ order.respondBy | date:'HH:mm' }}, inače se porudžbina sama otkazuje.</span>
+        </p>
 
         <p *ngIf="order.rating" class="rating">
           Ocena kupca: <span class="stars">{{ order.rating.vendorScore | stars }}</span>
@@ -89,7 +94,7 @@
         </p>
         <p *ngIf="order.vendorMessage" class="vendor-message" [class.reject-reason]="order.status === 'Rejected'">
           <ion-icon [name]="order.status === 'Rejected' ? 'close-circle-outline' : 'chatbubble-ellipses-outline'"></ion-icon>
-          {{ order.status === 'Rejected' ? 'Razlog odbijanja' : 'Vaš odgovor' }}: {{ order.vendorMessage }}
+          {{ order.autoRejected ? 'Niste odgovorili na vreme – porudžbina je automatski otkazana' : (order.status === 'Rejected' ? 'Razlog odbijanja: ' : 'Vaš odgovor: ') + order.vendorMessage }}
         </p>
 
         <p *ngIf="order.status === 'NotDelivered'" class="not-delivered">

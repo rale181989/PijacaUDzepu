@@ -68,3 +68,11 @@ ion-card-header {
   .muted { color: var(--ion-color-medium); }
   .small { font-size: 12px; }
 }
+
+// Rok za odgovor prodavca (dok je porudžbina na čekanju)
+.respond-by {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ion-color-warning-shade);
+}
