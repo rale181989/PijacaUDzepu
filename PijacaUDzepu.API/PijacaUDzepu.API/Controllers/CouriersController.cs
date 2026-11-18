@@ -98,6 +98,13 @@ public class CouriersController : BaseApiController
     public async Task<IActionResult> GetSettlement([FromQuery] DateOnly? date) =>
         Ok(await _orderService.GetCourierSettlement(User.GetUserId(), date ?? Helpers.LocalTime.Today));
 
+    [HttpDelete("orders/{id}/decline")]
+    public async Task<IActionResult> UndoDecline(int id)
+    {
+        await _orderService.UndoDeclineCourierOrder(id, User.GetUserId());
+        return NoContent();
+    }
+
     [HttpPost("orders/{id}/decline")]
     public async Task<IActionResult> DeclineOrder(int id)
     {

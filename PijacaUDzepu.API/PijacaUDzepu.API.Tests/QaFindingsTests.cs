@@ -502,4 +502,73 @@ public class QaFindingsTests
         var quick = await Api.Read<JsonElement>(await jovana.Send(HttpMethod.Patch, $"/api/products/{product.Id}/quick", new { price = product.Price }));
         Assert.Equal(product.MarketName, quick.GetProperty("marketName").GetString());
     }
+
+    // ---- Agent kurira (docs/testiranje/2026-11-12-agenti.md, grupa E); oznake R… iz tog izveštaja ----
+
+    private async Task<List<JsonElement>> ConfirmedCheckout(Api kupac, params (string vendor, int vendorId)[] stalls)
+    {
+        var products = new List<int>();
+        foreach (var s in stalls) products.Add((await FindProduct(kupac, p => p.VendorId == s.vendorId)).Id);
+        var orders = await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", Courier(products.Select(id => (id, 1m)).ToArray())));
+        foreach (var o in orders)
+        {
+            var vendorId = o.GetProperty("vendorId").GetInt32();
+            var vendor = await _factory.As(stalls.First(s => s.vendorId == vendorId).vendor, "vendor1234");
+            (await vendor.Send(HttpMethod.Put, $"/api/orders/{o.GetProperty("id").GetInt32()}/status", new { status = "Confirmed" })).EnsureSuccessStatusCode();
+        }
+        return orders;
+    }
+
+    // R1: dva kurira istovremeno "Prihvati sve" – jedan dobija celu korpu, drugi ništa; pojedinačno "Prihvati" na
+    // porudžbini iz korpe prihvata celu korpu
+    [Fact]
+    public async Task R1_a_checkout_is_never_split_between_couriers()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var kurir1 = await _factory.As("kurir1", "kurir1234");
+        var kurir2 = await _factory.As("kurir2", "kurir1234");
+        foreach (var k in new[] { kurir1, kurir2 })
+            (await k.Send(HttpMethod.Put, "/api/couriers/me/shift", new { isOnShift = true })).EnsureSuccessStatusCode();
+
+        var orders = await ConfirmedCheckout(kupac, ("dragan", 6), ("ana", 7));
+        var checkout = orders[0].GetProperty("checkoutId").GetString();
+        var results = await Task.WhenAll(
+            kurir1.Send(HttpMethod.Post, $"/api/couriers/checkouts/{checkout}/accept"),
+            kurir2.Send(HttpMethod.Post, $"/api/couriers/checkouts/{checkout}/accept"));
+        var winner = Assert.Single(results, r => r.StatusCode == HttpStatusCode.OK);
+        Assert.Single(results, r => r.StatusCode == HttpStatusCode.Conflict);
+        Assert.Equal(2, (await Api.Read<List<JsonElement>>(winner)).Count);
+
+        var second = await ConfirmedCheckout(kupac, ("bojan", 8), ("ivana", 9));
+        var single = await kurir1.Send(HttpMethod.Post, $"/api/couriers/orders/{second[0].GetProperty("id").GetInt32()}/accept");
+        Assert.Equal(HttpStatusCode.OK, single.StatusCode);
+        var other = await kupac.Get<JsonElement>($"/api/orders/{second[1].GetProperty("id").GetInt32()}");
+        Assert.Equal(JsonValueKind.String, other.GetProperty("courierName").ValueKind);
+        Assert.DoesNotContain(await kurir2.Get<List<JsonElement>>("/api/couriers/available-orders"),
+            o => second.Any(s => s.GetProperty("id").GetInt32() == o.GetProperty("id").GetInt32()));
+
+        // R5: nedostavljena roba je u obračunu kao "vratiti na tezgu", a ne u naplati
+        var id = second[0].GetProperty("id").GetInt32();
+        (await kurir1.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/picked-up")).EnsureSuccessStatusCode();
+        (await kurir1.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/not-delivered", new { reason = "Kupac se ne javlja" })).EnsureSuccessStatusCode();
+        var settlement = await kurir1.Get<JsonElement>("/api/couriers/settlement");
+        Assert.Contains(settlement.GetProperty("returns").EnumerateArray(), r => r.GetProperty("orderId").GetInt32() == id);
+        Assert.DoesNotContain(settlement.GetProperty("deliveries").EnumerateArray(), d => d.GetProperty("orderId").GetInt32() == id);
+    }
+
+    // R3: "Odbij" može da se poništi – porudžbina se vraća u spisak tog kurira
+    [Fact]
+    public async Task R3_courier_can_undo_a_decline()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var kurir2 = await _factory.As("kurir2", "kurir1234");
+        (await kurir2.Send(HttpMethod.Put, "/api/couriers/me/shift", new { isOnShift = true })).EnsureSuccessStatusCode();
+        var id = (await ConfirmedCheckout(kupac, ("milan", 4)))[0].GetProperty("id").GetInt32();
+
+        (await kurir2.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/decline")).EnsureSuccessStatusCode();
+        Assert.DoesNotContain(await kurir2.Get<List<JsonElement>>("/api/couriers/available-orders"), o => o.GetProperty("id").GetInt32() == id);
+        (await kurir2.Send(HttpMethod.Delete, $"/api/couriers/orders/{id}/decline")).EnsureSuccessStatusCode();
+        Assert.Contains(await kurir2.Get<List<JsonElement>>("/api/couriers/available-orders"), o => o.GetProperty("id").GetInt32() == id);
+        (await kurir2.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/accept")).EnsureSuccessStatusCode();
+    }
 }

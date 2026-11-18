@@ -109,7 +109,9 @@ export class MyOrdersPage implements OnInit, OnDestroy {
     return this.ts.plural(n, 'items');
   }
 
-  getStatusLabel(status: string): string {
+  // Kurirska porudžbina spremna kod prodavca čeka kurira (kupac ne treba da dođe po nju)
+  getStatusLabel(status: string, fulfillment?: string): string {
+    if (status === 'ReadyForPickup' && fulfillment === 'Courier') return this.ts.t('status.ReadyForCourier');
     return this.ts.t('status.' + status) || status;
   }
 

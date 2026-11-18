@@ -11,6 +11,19 @@ public class CourierSettlementDto
     public decimal Earned { get; set; }
     public List<VendorSettlementDto> Vendors { get; set; } = new();
     public List<SettlementDeliveryDto> Deliveries { get; set; } = new();
+    // Nije dostavljeno tog dana: roba se vraća na tezgu
+    public List<SettlementReturnDto> Returns { get; set; } = new();
+}
+
+public class SettlementReturnDto
+{
+    public int OrderId { get; set; }
+    public string VendorName { get; set; } = string.Empty;
+    public string? MarketName { get; set; }
+    public string? StallLabel { get; set; }
+    public string? VendorPhone { get; set; }
+    public string? Reason { get; set; }
+    public string Items { get; set; } = string.Empty;
 }
 
 public class VendorSettlementDto
@@ -18,6 +31,8 @@ public class VendorSettlementDto
     public int VendorId { get; set; }
     public string VendorName { get; set; } = string.Empty;
     public string? MarketName { get; set; }
+    public string? StallLabel { get; set; }
+    public string? VendorPhone { get; set; }
     public int Orders { get; set; }
     public decimal Amount { get; set; }
 }

@@ -19,7 +19,7 @@
       <ion-card-header>
         <ion-card-title>{{ order.vendorName }}</ion-card-title>
         <ion-badge [color]="getStatusColor(order.status)">
-          {{ getStatusLabel(order.status) }}
+          {{ getStatusLabel(order.status, order.fulfillment) }}
         </ion-badge>
       </ion-card-header>
       <ion-card-content>

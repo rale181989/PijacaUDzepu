@@ -1,6 +1,6 @@
 // Snimci za slajd kurira "Više tezgi i obračun" (k-group, k-route, k-settlement).
-// Menja LOKALNU bazu: kupac poruči od dva prodavca dostavu kurirom, kurir1 je prihvata ("Prihvati sve"),
-// prodavci potvrde, a jednu porudžbinu kurir isporuči (da obračun ne bude prazan).
+// Menja LOKALNU bazu: kupac poruči od dva prodavca dostavu kurirom, oba prodavca potvrde (tek tada je kurir vidi),
+// kurir1 je prihvata ("Prihvati sve"), a jednu porudžbinu isporuči (da obračun ne bude prazan).
 // Pokretanje: node shots-courier.js  (API na :5000, aplikacija na :8100)
 const puppeteer = require('puppeteer-core');
 const path = require('path');
@@ -25,6 +25,8 @@ const call = async (method, url, body, token) => {
     items: [{ productId: 1, quantity: 2 }, { productId: jovanaProduct.id, quantity: 1 }],
     fulfillment: 'Courier', contactPhone: '0641234567', deliveryAddress: 'Bulevar oslobođenja 12, Novi Sad'
   }, kupac.token);
+  await call('PUT', `/orders/${orders[0].id}/status`, { status: 'Confirmed' }, marko.token);
+  await call('PUT', `/orders/${orders[1].id}/status`, { status: 'Confirmed' }, jovana.token);
 
   const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
   const page = await b.newPage();
@@ -35,12 +37,16 @@ const call = async (method, url, body, token) => {
   await page.evaluate(a => { localStorage.clear(); localStorage.setItem('token', a.token); localStorage.setItem('user', JSON.stringify(a.user)); }, kurir);
   await page.goto(APP + '/courier-orders', { waitUntil: 'domcontentloaded' });
   await sleep(2000);
+  // Grupa ove korpe na vrh ekrana (u lokalnoj bazi mogu da čekaju i druge dostave)
+  // Red sa dugmadima grupe je prvi prethodni element sa klasom group-decision (iznad njega je natpis grupe)
+  const decisionOf = `id => { let e = [...document.querySelectorAll('.order-card')].find(c => c.innerText.includes('#' + id));
+    while (e && !e.classList.contains('group-decision')) e = e.previousElementSibling; return e; }`;
+  await page.evaluate((id, f) => eval(f)(id)?.previousElementSibling?.scrollIntoView(), orders[0].id, decisionOf);
+  await sleep(600);
   await page.screenshot({ path: path.join(OUT, 'k-group.png') });
 
-  await (await page.$('.group-banner ion-button')).click();
+  await page.evaluate((id, f) => [...eval(f)(id).querySelectorAll('ion-button')].find(b => /prihvati/i.test(b.innerText)).click(), orders[0].id, decisionOf);
   await sleep(2000);
-  await call('PUT', `/orders/${orders[0].id}/status`, { status: 'Confirmed' }, marko.token);
-  await call('PUT', `/orders/${orders[1].id}/status`, { status: 'Confirmed' }, jovana.token);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await sleep(1500);
   for (const btn of await page.$$('ion-segment-button')) if ((await btn.evaluate(e => e.getAttribute('value'))) === 'mine') await btn.click();

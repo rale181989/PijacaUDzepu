@@ -180,3 +180,26 @@ ion-segment-button {
   --padding-start: 8px;
   --padding-end: 8px;
 }
+
+// Tura sa više tezgi: dugmad ispod natpisa grupe
+.group-decision { margin: 0 12px 8px; }
+
+// Ruta: ukupno za naplatu
+.route-total { margin: 8px 0; font-size: 15px; }
+
+// Dugmad dovoljno velika za palac u pokretu (~44 px)
+ion-button { min-height: 44px; }
+
+// Kartica: datum i oznaka ne lome red na 320 px
+.order-card .card-top ion-card-subtitle { white-space: nowrap; }
+.order-card .card-top ion-badge { white-space: nowrap; }
+
+// Obračun: iznosi u jednom redu, "Predato" uz prodavca, roba za vraćanje
+.settlement {
+  .settlement-day { margin: 4px 0 8px; font-weight: 600; }
+  .nowrap { white-space: nowrap; }
+  .amount-col { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .amount-col ion-checkbox { font-size: 12px; }
+  .row.handed { opacity: 0.55; }
+  .row.return { background: rgba(var(--ion-color-danger-rgb), 0.06); }
+}

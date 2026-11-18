@@ -16,7 +16,7 @@
     </div>
 
     <section class="section">
-      <h3>{{ 'account.delivery' | t }}</h3>
+      <h3>{{ (authService.hasRole('Customer') ? 'account.delivery' : 'account.phoneOnly') | t }}</h3>
       <p *ngIf="authService.hasRole('Customer')" class="intro">{{ 'account.deliveryInfo' | t }}</p>
       <form (ngSubmit)="saveProfile()">
         <ion-item>

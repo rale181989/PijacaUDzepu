@@ -48,8 +48,9 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Smena; zvono za nove dostave dok ih ne prihvati ili odbije
 - Dostavu dobija tek kada je prodavac potvrdi, a kod korpe sa više tezgi tek kada odgovore svi prodavci (odbijene otpadaju, ostale idu dalje), pa ne kreće na pola rute; prihvati (prvi dobija dostavu, od tada je njegova) ili odbij (sklanja se samo njemu)
 - Preuzeo sam robu (kupac vidi da je roba kod kurira) → isporučeno, ili „Nije dostavljeno” uz obavezan razlog (vide ga kupac, prodavac i administrator; stanje se vraća); tabovi „Moje” (dostave u toku) i „Završene” (po stranama)
-- Porudžbina od više tezgi iste korpe: grupisano, „Prihvati sve”, ruta sa svim tezgama u Google mapama
-- Dnevni obračun: naplaćeno od kupaca, koliko se predaje kom prodavcu, zarada
+- Porudžbina od više tezgi iste korpe: grupisano, ide samo jednom kuriru („Prihvati sve” ili „Odbij turu”), ruta sa svim tezgama u Google mapama (za bicikl), ukupno za naplatu i „Isporučeno – cela tura”
+- „Odbij” se može vratiti dugmetom „Vrati”; „Preuzeo sam robu” traži potvrdu
+- Dnevni obračun: naplaćeno od kupaca, koliko se predaje kom prodavcu (tezga, telefon, kvačica „Predato”), zarada i roba koju treba vratiti na tezgu
 - Kurir ne vidi kupčev deo aplikacije i ne može da poručuje
 
 **Administrator**

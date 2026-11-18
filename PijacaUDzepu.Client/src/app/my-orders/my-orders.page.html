@@ -30,7 +30,7 @@
           {{ 'orders.order' | t }} #{{ order.id }} — {{ order.vendorName }}
         </ion-card-subtitle>
         <ion-badge [color]="getStatusColor(order.status)">
-          {{ getStatusLabel(order.status) }}
+          {{ getStatusLabel(order.status, order.fulfillment) }}
         </ion-badge>
       </ion-card-header>
       <ion-card-content>

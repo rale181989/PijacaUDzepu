@@ -447,7 +447,7 @@ async function build() {
     { h: 'Na smeni', d: 'Uključite prekidač da biste dobijali dostave. Van smene vam ne zvoni.' },
     { h: 'Zvono', d: 'Dostava stiže kada odgovore svi prodavci iz kupčeve korpe, pa vozite celu rutu odjednom. Dok niste odgovorili, telefon zvoni.' },
     { h: 'Odakle i kuda', d: 'Prodavac, pijaca i tezga, adresa dostave, vrednost robe i vaša usluga. Ime i telefon kupca vidite tek kada prihvatite.' },
-    { h: 'Odbij ili Prihvati', d: 'Dostavu dobija prvi kurir koji je prihvati. „Odbij“ je sklanja samo sa vašeg spiska.' }
+    { h: 'Odbij ili Prihvati', d: 'Dostavu dobija prvi kurir koji je prihvati. „Odbij“ je sklanja samo sa vašeg spiska; ako ste promašili, dodirnite „Vrati“ u poruci gore.' }
   ]);
   s.phone('k-available', RIGHT_X, PHONE_Y, PHONE_H, 'Nova dostava sa dugmadima Odbij i Prihvati',
     [[1, 0.76, 0.17], [3, 0.9, 0.36], [4, 0.36, 0.565]]);
@@ -457,8 +457,8 @@ async function build() {
   s.title('Dostava korak po korak');
   s.steps([
     { h: 'Moje dostave', d: 'Dostave u toku su na kartici „Moje“, sa imenom i telefonom kupca. Isporučene prelaze na karticu „Završene“.' },
-    { h: 'Adresa', d: 'Dodir na adresu otvara Google mape.' },
-    { h: 'Preuzeo sam robu', d: 'Kada prodavac potvrdi porudžbinu i preda vam robu.' },
+    { h: 'Adresa', d: 'Dodir na adresu otvara rutu u Google mapama: preko pijace do kupca, za bicikl.' },
+    { h: 'Preuzeo sam robu', d: 'Kada vam prodavac preda robu; aplikacija pita još jednom, jer kupac odmah dobija poruku.' },
     { h: 'Isporučeno', n: '4', d: 'Posle predaje robe i naplate: aplikacija vas pita da li ste naplatili tačan iznos. Ako robu niste mogli da predate, „Nije dostavljeno” uz obavezan razlog; robu vratite prodavcu.' }
   ]);
   s.phone('k-mine', RIGHT_X, PHONE_Y, PHONE_H, 'Prihvaćena dostava sa dugmetom Preuzeo sam robu',
@@ -468,9 +468,9 @@ async function build() {
   s = new S('Sadrzaj - dva ekrana', 'Kuriri', 'kurir');
   s.title('Više tezgi i obračun');
   s.steps([
-    { h: 'Ista dostava', d: 'Kupac je poručio od više prodavaca: dostave su grupisane. „Prihvati sve” uzima celu korpu odjednom.' },
-    { h: 'Ruta', d: 'U kartici „Moje”: tezge redom pa kupac, i dugme „Otvori rutu u mapama” sa svim usputnim tačkama.' },
-    { h: 'Obračun', d: 'Kartica „Obračun”: za izabrani dan koliko ste naplatili, koliko predajete kom prodavcu i vaša zarada.' }
+    { h: 'Ista dostava', d: 'Kupac je poručio od više prodavaca iste pijace: tura ide samo jednom kuriru. „Prihvati sve” uzima celu korpu, „Odbij turu” je sklanja.' },
+    { h: 'Ruta', d: 'U kartici „Moje”: tezge redom pa kupac, ukupno za naplatu, „Otvori rutu u mapama” i, kad je sve preuzeto, „Isporučeno – cela tura”.' },
+    { h: 'Obračun', d: 'Kartica „Obračun”: za izabrani dan koliko ste naplatili, koliko predajete kom prodavcu (tezga, telefon, kvačica „Predato”), vaša zarada i roba koju treba vratiti na tezgu.' }
   ], 0.6, 1.75, 5.2);
   s.phone('k-group', LEFT_X, PHONE_Y, PHONE_H, 'Grupisane dostave iste korpe sa dugmetom Prihvati sve', [[1, -0.11, 0.21]]);
   s.phone('k-settlement', RIGHT_X, PHONE_Y, PHONE_H, 'Dnevni obračun kurira', [[3, 1.11, 0.33]]);

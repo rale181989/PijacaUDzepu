@@ -65,7 +65,7 @@
             <ion-badge [color]="order.fulfillment === 'Pickup' ? 'warning' : 'tertiary'">
               {{ order.fulfillment === 'Pickup' ? ('order.pickup' | t) : ('order.deliveryFee' | t) }}
             </ion-badge>
-            <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
+            <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status, order.fulfillment) }}</ion-badge>
           </div>
         </ion-card-header>
 

@@ -764,8 +764,16 @@ public class OrderService : IOrderService
         return new PagedResult<OrderDto> { Items = items, TotalCount = totalCount, HasMore = finished && skip + take < totalCount };
     }
 
+    // Porudžbina iz korpe sa više tezgi se prihvata samo cela (AcceptCourierCheckout): kupac dobija jednog kurira
+    // i jednu turu, a ne dva kurira za istu adresu
     public async Task<OrderDto> AcceptCourierOrder(int orderId, int courierId)
     {
+        var checkoutId = await _context.Orders.Where(o => o.Id == orderId).Select(o => o.CheckoutId).FirstOrDefaultAsync();
+        if (checkoutId != null && await _context.Orders.CountAsync(o => o.CheckoutId == checkoutId
+                && o.Fulfillment == FulfillmentType.Courier && OpenStatuses.Contains(o.Status)) > 1)
+            return (await AcceptCourierCheckout(checkoutId.Value, courierId)).FirstOrDefault(o => o.Id == orderId)
+                ?? throw new InvalidOperationException(L.T("Porudžbinu je već preuzeo drugi kurir ili više nije dostupna."));
+
         if (!await _context.CourierProfiles.AnyAsync(c => c.UserId == courierId && c.IsOnShift))
             throw new UnauthorizedAccessException(L.T("Uključite smenu da biste prihvatali porudžbine."));
 
@@ -792,6 +800,12 @@ public class OrderService : IOrderService
             throw new InvalidOperationException(L.T("Porudžbinu je već preuzeo drugi kurir ili više nije dostupna."));
         }
 
+        return await NotifyCourierAccepted(orderId);
+    }
+
+    // Posle prihvatanja: nestaje kod ostalih kurira, prodavac i kupac saznaju ko dolazi
+    private async Task<OrderDto> NotifyCourierAccepted(int orderId)
+    {
         var order = await OrdersWithDetails().FirstAsync(o => o.Id == orderId);
         var courierName = $"{order.Courier!.FirstName} {order.Courier.LastName}".Trim();
 
@@ -832,27 +846,55 @@ public class OrderService : IOrderService
         await _pushService.CancelAlarm(new[] { courierId }, CourierAlarmTag(order.Id));
     }
 
-    // "Prihvati sve": sve slobodne porudžbine iste korpe (isti kupac i adresa, više tezgi).
-    // Svaka se prihvata posebno, pa ako je neku u međuvremenu uzeo drugi kurir, ostale se ipak prihvataju.
+    // "Prihvati sve": cela korpa (više tezgi, ista adresa) ide jednom kuriru, jednim uslovnim upisom. Ako je bilo
+    // koju porudžbinu iz korpe već uzeo drugi kurir, ne prihvata se ništa; kada dva kurira prihvate istovremeno, baza
+    // pušta samo prvog (drugi upis ne nađe slobodne redove ili dobije deadlock), pa se korpa nikad ne deli.
     public async Task<List<OrderDto>> AcceptCourierCheckout(Guid checkoutId, int courierId)
     {
+        if (!await _context.CourierProfiles.AnyAsync(c => c.UserId == courierId && c.IsOnShift))
+            throw new UnauthorizedAccessException(L.T("Uključite smenu da biste prihvatali porudžbine."));
+
+        var now = DateTime.UtcNow;
+        int updated;
+        try
+        {
+            updated = await _context.Orders
+                .Where(o => o.CheckoutId == checkoutId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null
+                    && o.CourierOfferedAt != null && CourierOfferStatuses.Contains(o.Status))
+                .Where(o => !_context.Orders.Any(s => s.CheckoutId == checkoutId && s.CourierId != null && s.CourierId != courierId
+                    && OpenStatuses.Contains(s.Status)))
+                .ExecuteUpdateAsync(set => set
+                    .SetProperty(o => o.CourierId, (int?)courierId)
+                    .SetProperty(o => o.CourierAssignedAt, (DateTime?)now)
+                    .SetProperty(o => o.UpdatedAt, now));
+        }
+        catch (Npgsql.PostgresException ex) when (ex.SqlState == "40P01")
+        {
+            updated = 0;
+        }
+        if (updated == 0)
+        {
+            var ready = await _context.Orders.AnyAsync(o => o.CheckoutId == checkoutId && o.CourierId == null
+                && o.CourierOfferedAt == null && OpenStatuses.Contains(o.Status));
+            throw new InvalidOperationException(ready
+                ? L.T("Porudžbina još nije spremna za kurira: čeka se odgovor prodavaca.")
+                : L.T("Ove porudžbine su već preuzete ili više nisu dostupne."));
+        }
+
         var ids = await _context.Orders
-            .Where(o => o.CheckoutId == checkoutId && o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && o.CourierOfferedAt != null && CourierOfferStatuses.Contains(o.Status))
-            .Where(o => !_context.CourierDeclines.Any(d => d.OrderId == o.Id && d.CourierId == courierId))
+            .Where(o => o.CheckoutId == checkoutId && o.CourierId == courierId && o.CourierAssignedAt == now)
             .Select(o => o.Id)
             .ToListAsync();
-        if (ids.Count == 0)
-            throw new InvalidOperationException(L.T("Ove porudžbine su već preuzete ili više nisu dostupne."));
-
         var accepted = new List<OrderDto>();
         foreach (var id in ids)
-        {
-            try { accepted.Add(await AcceptCourierOrder(id, courierId)); }
-            catch (InvalidOperationException) { }
-        }
-        if (accepted.Count == 0)
-            throw new InvalidOperationException(L.T("Ove porudžbine su već preuzete ili više nisu dostupne."));
+            accepted.Add(await NotifyCourierAccepted(id));
         return accepted;
+    }
+
+    // Kurir vraća porudžbinu koju je odbio (dodir "Vrati" odmah posle "Odbij")
+    public async Task UndoDeclineCourierOrder(int orderId, int courierId)
+    {
+        await _context.CourierDeclines.Where(d => d.OrderId == orderId && d.CourierId == courierId).ExecuteDeleteAsync();
     }
 
     // Dnevni obračun kurira za lokalni datum: porudžbine isporučene tog dana
@@ -867,7 +909,22 @@ public class OrderService : IOrderService
             .Select(o => new
             {
                 o.Id, o.VendorId, VendorName = o.Vendor.Name, MarketName = o.Vendor.Market.Name,
+                StallLabel = o.Vendor.Stall != null ? o.Vendor.Stall.Label : null, o.Vendor.Phones,
                 o.DeliveryAddress, o.TotalAmount, o.DeliveryFee, DeliveredAt = o.DeliveredAt!.Value
+            })
+            .ToListAsync();
+
+        // Nije dostavljeno tog dana: roba je kod kurira i vraća se na tezgu
+        var returns = await _context.Orders
+            .Where(o => o.CourierId == courierId && o.Status == OrderStatus.NotDelivered && o.NotDeliveredAt >= fromUtc && o.NotDeliveredAt < toUtc)
+            .OrderBy(o => o.NotDeliveredAt)
+            .Select(o => new SettlementReturnDto
+            {
+                OrderId = o.Id, VendorName = o.Vendor.Name, MarketName = o.Vendor.Market.Name,
+                StallLabel = o.Vendor.Stall != null ? o.Vendor.Stall.Label : null,
+                VendorPhone = o.Vendor.Phones.FirstOrDefault(),
+                Reason = o.NotDeliveredReason,
+                Items = string.Join(", ", o.Items.Select(i => i.ProductName))
             })
             .ToListAsync();
 
@@ -880,10 +937,11 @@ public class OrderService : IOrderService
             OwedToVendors = delivered.Sum(d => d.TotalAmount),
             Earned = delivered.Sum(d => d.DeliveryFee),
             Vendors = delivered
-                .GroupBy(d => new { d.VendorId, d.VendorName, d.MarketName })
+                .GroupBy(d => new { d.VendorId, d.VendorName, d.MarketName, d.StallLabel })
                 .Select(g => new VendorSettlementDto
                 {
                     VendorId = g.Key.VendorId, VendorName = g.Key.VendorName, MarketName = g.Key.MarketName,
+                    StallLabel = g.Key.StallLabel, VendorPhone = g.First().Phones.FirstOrDefault(),
                     Orders = g.Count(), Amount = g.Sum(d => d.TotalAmount)
                 })
                 .OrderByDescending(v => v.Amount)
@@ -892,7 +950,8 @@ public class OrderService : IOrderService
             {
                 OrderId = d.Id, DeliveredAt = d.DeliveredAt, VendorName = d.VendorName,
                 DeliveryAddress = d.DeliveryAddress, Goods = d.TotalAmount, Fee = d.DeliveryFee
-            }).ToList()
+            }).ToList(),
+            Returns = returns
         };
     }
 

@@ -12,8 +12,10 @@ export interface CourierSettlement {
   collected: number;
   owedToVendors: number;
   earned: number;
-  vendors: { vendorId: number; vendorName: string; marketName?: string; orders: number; amount: number }[];
+  vendors: { vendorId: number; vendorName: string; marketName?: string; stallLabel?: string; vendorPhone?: string; orders: number; amount: number }[];
   deliveries: { orderId: number; deliveredAt: string; vendorName: string; deliveryAddress?: string; goods: number; fee: number }[];
+  // Nije dostavljeno tog dana: roba se vraća na tezgu
+  returns: { orderId: number; vendorName: string; marketName?: string; stallLabel?: string; vendorPhone?: string; reason?: string; items: string }[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -75,5 +77,10 @@ export class CourierService {
   // Porudžbina nestaje samo ovom kuriru; ostali kuriri je i dalje vide
   declineOrder(id: number) {
     return this.http.post<void>(`${this.baseUrl}/orders/${id}/decline`, {});
+  }
+
+  // "Vrati" posle "Odbij": porudžbina se vraća u spisak ovog kurira
+  undoDecline(id: number) {
+    return this.http.delete<void>(`${this.baseUrl}/orders/${id}/decline`);
   }
 }
