@@ -254,7 +254,7 @@ async function build() {
     { h: 'Kartica proizvoda', d: 'Naziv, prodavac, pijaca i broj tezge, telefon prodavca i cena po jedinici mere.' },
     { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite: po pola kilograma ili litra, a komade i veze po jedan. Bez toga „Dodaj“ dodaje jedan.' },
     { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno, broj na njoj je broj stavki), a na kartici piše koliko je već u korpi. Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
-    { h: 'Više tezgi u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca sa iste pijace; svaki dobija svoj deo porudžbine. Dostava Eko kurirom se plaća po tezgi – aplikacija vas upozori kad dodate robu sa nove tezge.' }
+    { h: 'Više tezgi u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca sa iste pijace; svaki dobija svoj deo porudžbine. Dostava Eko kurirom se plaća jednom za celu korpu, bez obzira na broj tezgi.' }
   ]);
   s.phone('c-home-products', RIGHT_X, PHONE_Y, PHONE_H, 'Kartice proizvoda sa količinom i dugmetom Dodaj',
     [[1, 0.40, 0.312], [2, 0.04, 0.459], [3, 0.40, 0.505]]);
@@ -283,7 +283,7 @@ async function build() {
   await opt(1.75, 1, 'MdStorefront', 'green', 'Rezerviši – preuzimam sam',
     'Robu preuzimate na tezgi i plaćate na licu mesta. Prodavac potvrđuje rezervaciju i javlja kada je roba spremna.');
   await opt(3.75, 2, 'MdDeliveryDining', 'sky', 'Naruči – Eko kurir',
-    'Kurir donosi robu na vašu adresu, a plaćate mu pri dostavi. Cena dostave piše na dugmetu i plaća se posebno za svakog prodavca.');
+    'Kurir donosi robu na vašu adresu, a plaćate mu pri dostavi. Cena dostave piše na dugmetu i plaća se jednom po porudžbini, i kad je roba sa više tezgi.');
   await s.icon('MdInfo', 0.6, 5.85, 0.45, 'carrot');
   s.text('Porudžbina se trenutno ne može otkazati u aplikaciji. Ako se predomislite, pozovite prodavca; broj je na kartici proizvoda.', 1.2, 5.8, 7.3, 0.6, { size: 14 });
   s.phone('c-cart-checkout', RIGHT_X, PHONE_Y, PHONE_H, 'Dugmad Rezerviši – preuzimam sam i Naruči – Eko kurir',
@@ -340,7 +340,7 @@ async function build() {
   s = new S('Sadrzaj - bez ekrana', 'Kupci', 'kupac');
   s.title('Šta znači status porudžbine');
   const statuses = [
-    ['Na čekanju', 'sun', 'Prodavac još nije odgovorio. Ima 15 minuta, posle toga se porudžbina sama otkazuje.'],
+    ['Na čekanju', 'sun', 'Prodavac još nije odgovorio. Ima 15 minuta; posle 10 minuta dobijate poruku sa brojem prodavca da ga pozovete, a posle 15 se porudžbina te tezge sama otkazuje (ostala roba stiže bez nje).'],
     ['Potvrđena', 'green', 'Prodavac je prihvatio porudžbinu i priprema robu. Kurir je dobija kada odgovore svi prodavci iz vaše korpe.'],
     ['Spremna', 'sky', 'Roba je spakovana: dođite po nju na tezgu ili je kurir uskoro preuzima.'],
     ['U dostavi', 'carrot', 'Kurir je preuzeo robu i nosi je na vašu adresu.'],
@@ -468,9 +468,9 @@ async function build() {
   s = new S('Sadrzaj - dva ekrana', 'Kuriri', 'kurir');
   s.title('Više tezgi i obračun');
   s.steps([
-    { h: 'Ista dostava', d: 'Kupac je poručio od više prodavaca iste pijace: tura ide samo jednom kuriru. „Prihvati sve” uzima celu korpu, „Odbij turu” je sklanja.' },
+    { h: 'Ista dostava', d: 'Kupac je poručio od više prodavaca iste pijace: tura ide samo jednom kuriru. „Prihvati sve” uzima celu korpu, „Odbij turu” je sklanja. Usluga se naplaćuje jednom za celu turu.' },
     { h: 'Ruta', d: 'U kartici „Moje”: tezge redom pa kupac, ukupno za naplatu, „Otvori rutu u mapama” i, kad je sve preuzeto, „Isporučeno – cela tura”.' },
-    { h: 'Obračun', d: 'Kartica „Obračun”: za izabrani dan koliko ste naplatili, koliko predajete kom prodavcu (tezga, telefon, kvačica „Predato”), vaša zarada i roba koju treba vratiti na tezgu.' }
+    { h: 'Obračun', d: 'Kartica „Obračun”: za izabrani dan koliko ste naplatili, koliko predajete kom prodavcu (tezga, telefon, kvačica „Predato”), vaša zarada (jedna usluga po turi, ne po tezgi) i roba koju treba vratiti na tezgu.' }
   ], 0.6, 1.75, 5.2);
   s.phone('k-group', LEFT_X, PHONE_Y, PHONE_H, 'Grupisane dostave iste korpe sa dugmetom Prihvati sve', [[1, -0.11, 0.21]]);
   s.phone('k-settlement', RIGHT_X, PHONE_Y, PHONE_H, 'Dnevni obračun kurira', [[3, 1.11, 0.33]]);

@@ -11,7 +11,8 @@ namespace PijacaUDzepu.API.Services;
 // odbija sam (OrderService.RejectUnansweredOrders), a traži i one koje predugo čekaju: prodavca (na čekanju duže
 // od Alerts:PendingMinutes, podrazumevano 10 - opomena pre automatskog odbijanja) ili kurira (ponuđena kuririma,
 // a bez kurira duže od Alerts:CourierMinutes, podrazumevano 20). Admin dobija obaveštenje (SignalR "OrderWaiting"
-// + push), a prodavcu ponovo zazvoni. Za svaku porudžbinu samo jednom (Order.WaitAlertSentAt).
+// + push), a prodavcu ponovo zazvoni. Kupac (prijavljen: SignalR + push, gost: stranica za praćenje) dobija poruku
+// da prodavac još nije potvrdio, šta će biti ako se ne javi i broj prodavca da ga sam pozove. Za svaku porudžbinu samo jednom (Order.WaitAlertSentAt).
 public class OrderWatchdog : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -37,12 +38,14 @@ public class OrderWatchdog : BackgroundService
         }
     }
 
-    private async Task Check()
+    // Jedan krug provere (javno zbog testova)
+    public async Task Check()
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<DataContext>();
         var push = scope.ServiceProvider.GetRequiredService<IPushService>();
         var hub = scope.ServiceProvider.GetRequiredService<IHubContext<OrderHub>>();
+        var trackingHub = scope.ServiceProvider.GetRequiredService<IHubContext<TrackingHub>>();
         await scope.ServiceProvider.GetRequiredService<IOrderService>().RejectUnansweredOrders();
 
         var now = DateTime.UtcNow;
@@ -54,7 +57,15 @@ public class OrderWatchdog : BackgroundService
                 // Kurira porudžbina čeka od trenutka kada je ponuđena kuririma (svi prodavci iz korpe odgovorili)
                 (o.Fulfillment == FulfillmentType.Courier && o.CourierId == null && o.CourierOfferedAt != null && o.CourierOfferedAt < courierBefore
                     && (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.ReadyForPickup))))
-            .Select(o => new { o.Id, o.VendorId, VendorName = o.Vendor.Name, o.Status, Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.CourierOfferedAt ?? o.CreatedAt })
+            .Select(o => new
+            {
+                o.Id, o.VendorId, VendorName = o.Vendor.Name, o.Status, o.CustomerId, o.TrackingCode, o.Fulfillment,
+                // Kontakt telefon prodavca: kupac ga u opomeni dobija da sam pozove prodavca koji ćuti
+                VendorPhone = o.Vendor.Phones.FirstOrDefault(),
+                Since = o.Status == OrderStatus.Pending ? o.CreatedAt : o.CourierOfferedAt ?? o.CreatedAt,
+                // Ima li u korpi još tezgi (tada ostala roba kreće bez ove)
+                Others = o.CheckoutId != null && context.Orders.Any(x => x.CheckoutId == o.CheckoutId && x.Id != o.Id)
+            })
             .ToListAsync();
         if (waiting.Count == 0) return;
 
@@ -77,6 +88,23 @@ public class OrderWatchdog : BackgroundService
                 var left = Math.Max(1, OrderService.AutoRejectMinutes - minutes);
                 await push.SendAlarm(vendorUsers, $"order_{o.Id}", $"Porudžbina #{o.Id} čeka odgovor",
                     $"Još {left} min, pa se porudžbina sama otkazuje.", "/vendor-orders");
+
+                // Kupac zna da se čeka prodavac i šta sledi ako se ne javi (tekst prevodi klijent)
+                // rest: kurirska korpa sa više tezgi - ostala roba kreće bez ove; pickup: otkazuje se rezervacija
+                var rest = o.Others && o.Fulfillment == FulfillmentType.Courier;
+                var pickup = o.Fulfillment == FulfillmentType.Pickup;
+                var payload = new { orderId = o.Id, vendorName = o.VendorName, vendorPhone = o.VendorPhone, minutesLeft = left, rest, pickup };
+                if (o.TrackingCode != null)
+                    await trackingHub.Clients.Group(TrackingHub.GroupName(o.TrackingCode)).SendAsync("VendorLate", payload);
+                if (o.CustomerId.HasValue)
+                {
+                    await hub.Clients.Group($"user_{o.CustomerId.Value}").SendAsync("VendorLate", payload);
+                    var what = rest ? "ostala roba iz korpe kreće bez njegove"
+                        : pickup ? "rezervacija se sama otkazuje" : "porudžbina se sama otkazuje";
+                    await push.SendToUsers(new[] { o.CustomerId.Value }, $"Porudžbina #{o.Id} – {o.VendorName}",
+                        $"Prodavac još nije potvrdio. Čekamo još {left} min, pa {what}."
+                        + (string.IsNullOrWhiteSpace(o.VendorPhone) ? "" : $" Pozovite prodavca: {o.VendorPhone}"), $"/order-detail/{o.Id}");
+                }
             }
         }
 

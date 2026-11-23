@@ -7,7 +7,7 @@ import * as signalR from '@microsoft/signalr';
 import { OrderService } from '../services/order.service';
 import { GuestOrdersService } from '../services/guest-orders.service';
 import { SoundService } from '../services/sound.service';
-import { rejectionText } from '../services/notification.service';
+import { rejectionText, vendorLateText, vendorLateButtons, VendorLate } from '../services/notification.service';
 import { OrderActionsService } from '../services/order-actions.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, CUSTOMER_CANCEL_ENABLED } from '../models/order.model';
@@ -131,6 +131,14 @@ export class TrackOrderPage implements OnInit, OnDestroy {
     };
     this.hub.on('OrderStatusChanged', onChange);
     this.hub.on('CourierAssigned', onChange);
+    this.hub.on('VendorLate', async (data: VendorLate) => {
+      this.sound.play('update');
+      const toast = await this.toastController.create({
+        message: vendorLateText(this.ts, data), duration: 15000, position: 'top', color: 'warning',
+        buttons: vendorLateButtons(this.ts, data)
+      });
+      await toast.present();
+    });
     // Posle ponovnog povezivanja pretplata se obnavlja
     this.hub.onreconnected(() => this.subscribeAll());
 

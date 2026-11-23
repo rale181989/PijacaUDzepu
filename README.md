@@ -16,7 +16,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
 - Registracija traži telefon i adresu (sprat i stan opciono); upisuju se sami u korpu, a menjaju se u „Moj nalog”
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
-- Na početnoj kratko „Kako radi”; „Dodaj” odmah dodaje 1; − i + menjaju za pola kilograma ili litra (komadi, veze i pakovanja idu po jedan), a kartica pokazuje koliko je u korpi; pri dodavanju sa nove tezge aplikacija kaže da se dostava plaća po tezgi
+- Na početnoj kratko „Kako radi”; „Dodaj” odmah dodaje 1; − i + menjaju za pola kilograma ili litra (komadi, veze i pakovanja idu po jedan), a kartica pokazuje koliko je u korpi; dostava Eko kurirom se plaća jednom po porudžbini (pijaci), bez obzira na broj tezgi
 - Pretraga razume jedninu i sitne greške („jabuka” nalazi „Jabuke”); filter nudi samo grupe i tezge u kojima ima robe
 - Korpa: prodavac, pijaca i tezga uz svaku stavku, ukupno sa dostavom, šta još treba upisati; posle poručivanja „Hvala!” i ukupan iznos cele kupovine
 - Detalji porudžbine: gde se preuzima (pijaca, tezga, adresa, „Kako da stignem”) i „Pozovi prodavca”
@@ -36,7 +36,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Porudžbine i van menija: ikonica gore desno na svim stranicama prodavca, sa crvenim brojem porudžbina na čekanju (raste odmah kad stigne nova i „poskoči”)
 - Porudžbine u tabovima „Aktivne” i „Završene” (završene, odbijene, otkazane), po stranama; zvono dok ima porudžbina na čekanju
 - Posle prijave prodavac stiže na porudžbine; telefon kupca se poziva dodirom
-- Rok za odgovor: na kartici piše „Odgovorite do …” (kupac vidi „Prodavac odgovara do …”); porudžbina bez odgovora za 15 minuta sama se odbija (kupac dobija razlog, roba se vraća na stanje), a posle 10 minuta stiže opomena
+- Rok za odgovor: na kartici piše „Odgovorite do …” (kupac vidi „Prodavac odgovara do …”); porudžbina bez odgovora za 15 minuta sama se odbija (kupac dobija razlog, roba se vraća na stanje), a posle 10 minuta stiže opomena prodavcu i poruka kupcu („Prodavac još nije potvrdio. Čekamo još 5 min, pa … Pozovite prodavca: 06…”, sa dugmetom „Pozovi”)
 - Potvrdi / odbij (gotovi razlozi jednim dodirom ili svoj tekst; kupac razlog dobija i e-mailom) / spremno (jedan dodir) / kupac preuzeo (uz potvrdu)
 - Radno vreme po danima, neradni dani i pauza („privremeno ne primam porudžbine”, važi odmah); „Samo danas”: „Danas ne radim” i „Danas zatvaram u …” bez menjanja nedeljnog rasporeda; van radnog vremena kupac vidi kad se tezga otvara i ne može da poruči
 - Količina na stanju (opciono): porudžbine je umanjuju, na nuli proizvod izlazi iz ponude

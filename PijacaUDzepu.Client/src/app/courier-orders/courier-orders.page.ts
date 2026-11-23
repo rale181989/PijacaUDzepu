@@ -152,6 +152,11 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  // Usluga kurira je jednom po turi (korpi sa jedne pijace) i stoji na jednoj porudžbini ture
+  feeOf(orders: Order[]): number {
+    return orders.reduce((sum, o) => sum + o.deliveryFee, 0);
+  }
+
   routeTotal(route: { orders: Order[] }): number {
     return route.orders.reduce((sum, o) => sum + o.amountToPay, 0);
   }

@@ -87,9 +87,9 @@
       <span>{{ 'cart.total' | t }}</span>
       <strong>{{ cartService.total | number:'1.0-0' }} {{ 'din' | t }}</strong>
     </div>
-    <!-- Ukupno sa dostavom odmah, ne tek u potvrdi; dostava se plaća po tezgi -->
+    <!-- Ukupno sa dostavom odmah, ne tek u potvrdi; dostava se plaća jednom po korpi (pijaci) -->
     <div *ngIf="courierFee > 0" class="total-row delivery">
-      <span>{{ 'cart.withDelivery' | t }}<span *ngIf="vendorCount > 1"> ({{ vendorCount }} × {{ courierFee | number:'1.0-0' }})</span></span>
+      <span>{{ 'cart.withDelivery' | t }}</span>
       <strong>{{ cartService.total + totalCourierFee | number:'1.0-0' }} {{ 'din' | t }}</strong>
     </div>
     <div *ngIf="marketNames.length > 1" class="option-hint warn">
@@ -118,7 +118,7 @@
         </ion-button>
         <p class="option-hint">
           {{ 'cart.courierHint' | t }}
-          <span *ngIf="vendorCount > 1"> {{ 'cart.perVendor' | t }}: {{ vendorCount }} × {{ courierFee | number:'1.0-0' }} {{ 'din' | t }}.</span>
+          <span *ngIf="vendorCount > 1"> {{ 'cart.oneFee' | t }}</span>
         </p>
         <p *ngIf="canReserve && !canCourier" class="option-hint warn">{{ 'cart.addressNeeded' | t }}</p>
       </div>

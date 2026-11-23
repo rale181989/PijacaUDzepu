@@ -167,7 +167,7 @@ Pragovi se menjaju na Render-u (bez novog APK-a):
 
 - [ ] Upisana dogovorena cena
 
-Trenutno je **300 din** po porudžbini (po prodavcu). Na Render-u:
+Trenutno je **300 din** po porudžbini, tj. po pijaci (jednom za celu korpu, bez obzira na broj tezgi). Na Render-u:
 
 | Env varijabla | Vrednost |
 |---|---|

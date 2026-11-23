@@ -11,6 +11,23 @@ import { Order } from '../models/order.model';
 import { environment } from '../../environments/environment';
 
 // Tekst obaveštenja o odbijenoj porudžbini (kupac u aplikaciji i gost na stranici za praćenje)
+export interface VendorLate { orderId: number; vendorName: string; vendorPhone?: string | null; minutesLeft: number; rest: boolean; pickup: boolean }
+
+export function vendorLateText(ts: TranslateService, data: VendorLate): string {
+  const key = data.rest ? 'order.vendorLateRest' : data.pickup ? 'order.vendorLatePickup' : 'order.vendorLate';
+  const call = data.vendorPhone ? ' ' + ts.t('order.vendorLateCall').replace('{0}', data.vendorPhone) : '';
+  return `#${data.orderId} ` + ts.t(key).replace('{0}', data.vendorName).replace('{1}', String(data.minutesLeft)) + call;
+}
+
+// Dugmad za opomenu: "Pozovi" otvara poziv prodavcu (ako ima broj), "OK" zatvara
+export function vendorLateButtons(ts: TranslateService, data: VendorLate) {
+  const phone = data.vendorPhone;
+  return [
+    ...(phone ? [{ text: ts.t('order.callVendorShort'), handler: () => { window.open('tel:' + phone.replace(/\s/g, ''), '_system'); } }] : []),
+    { text: 'OK', role: 'cancel' }
+  ];
+}
+
 export function rejectionText(ts: TranslateService, data: { orderId: number; vendorName?: string; message?: string }): string {
   const head = `${ts.t('orders.order')} #${data.orderId} ${ts.t('order.rejectedToast')}`;
   return data.message ? `${head}. ${data.vendorName}: ${data.message}` : `${head}.`;
@@ -273,6 +290,19 @@ export class NotificationService {
         this.orderUpdatedSubject.next(data.orderId);
         this.customerChanged();
         if (this.authService.hasRole('VendorAdmin')) this.loadPendingCount();
+      });
+    });
+
+    // Prodavac kasni sa potvrdom (watchdog posle Alerts:PendingMinutes): kupac zna koliko se još čeka i šta sledi
+    this.hubConnection.on('VendorLate', (data: VendorLate) => {
+      this.ngZone.run(async () => {
+        if (!this.authService.hasRole('Customer')) return;
+        this.sound.play('update');
+        const toast = await this.toastController.create({
+          message: vendorLateText(this.ts, data), duration: 15000, position: 'top', color: 'warning',
+          buttons: vendorLateButtons(this.ts, data)
+        });
+        await toast.present();
       });
     });
 

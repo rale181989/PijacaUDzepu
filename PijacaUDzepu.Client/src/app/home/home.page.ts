@@ -431,10 +431,7 @@ export class HomePage implements OnInit {
   async addSelectedToCart(product: Product) {
     // "Dodaj" bez biranja količine dodaje 1 (ranije nije radilo ništa)
     const qty = this.getSelectedQty(product.id) || 1;
-    // Nova tezga u korpi: dostava kurirom se plaća po tezgi, pa kupac to sazna odmah, a ne tek u korpi
-    const items = this.cartService.getItems();
     const otherMarket = this.cartService.isOtherMarket(product);
-    const newVendor = items.length > 0 && !items.some(i => i.product.vendorId === product.vendorId) && !otherMarket;
     // Korpa sa druge pijace se prazni pre dodavanja, pa je tada pre bilo 0
     const before = otherMarket ? 0 : this.cartService.getQuantity(product.id);
     if (!(await this.cartService.addOrAsk(product, qty))) return;
@@ -443,16 +440,15 @@ export class HomePage implements OnInit {
     const after = this.cartService.getQuantity(product.id);
     const added = roundQty(after - before);
     const amount = (n: number) => `${this.ts.num(n)} ${this.getUnitLabel(product.unit, n)}`;
-    const feeNote = newVendor && this.courierFee > 0 ? ' ' + this.ts.t('home.newVendorFee').replace('{0}', String(this.courierFee)) : '';
     const message = added <= 0
       ? this.ts.t('cart.stockFull').replace('{0}', product.name).replace('{1}', amount(after))
       : added < qty
-        ? this.ts.t('cart.stockPart').replace('{0}', product.name).replace('{1}', amount(added)) + feeNote
+        ? this.ts.t('cart.stockPart').replace('{0}', product.name).replace('{1}', amount(added))
         // "Paradajz 1,5 kg dodato u korpu" (ne "x1.5")
-        : `${product.name} ${amount(qty)} ${this.ts.t('cart.addedToCart')}.${feeNote}`;
+        : `${product.name} ${amount(qty)} ${this.ts.t('cart.addedToCart')}.`;
     const toast = await this.toastController.create({
       message,
-      duration: feeNote || added < qty ? 4500 : 1500,
+      duration: added < qty ? 4500 : 1500,
       position: 'bottom',
       color: added < qty ? 'warning' : 'success'
     });

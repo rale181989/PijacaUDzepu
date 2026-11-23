@@ -30,7 +30,7 @@ public class OrderFlowTests
     };
 
     [Fact]
-    public async Task Cart_with_two_vendors_is_split_into_orders_with_fee_per_vendor()
+    public async Task Cart_with_two_vendors_is_split_into_orders_with_one_fee_per_checkout()
     {
         var kupac = await _factory.As("kupac", "kupac1234");
         var marko = (await VendorProducts(kupac, 1))[0];
@@ -45,8 +45,13 @@ public class OrderFlowTests
         Assert.Equal(orders[0].CheckoutId, orders[1].CheckoutId);
         var forMarko = orders.Single(o => o.VendorId == 1);
         Assert.Equal(marko.Price * 2, forMarko.TotalAmount);
-        Assert.Equal(fee, forMarko.DeliveryFee);
-        Assert.Equal(forMarko.TotalAmount + fee, forMarko.AmountToPay);
+        // Usluga kurira je po pijaci (korpi), ne po tezgi: nosi je prva porudžbina
+        var first = orders.MinBy(o => o.Id)!;
+        Assert.Equal(fee, first.DeliveryFee);
+        Assert.Equal(fee, orders.Sum(o => o.DeliveryFee));
+        Assert.Equal(first.TotalAmount + fee, first.AmountToPay);
+        var second = orders.MaxBy(o => o.Id)!;
+        Assert.Equal(second.TotalAmount, second.AmountToPay);
     }
 
     [Fact]

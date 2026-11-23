@@ -571,4 +571,66 @@ public class QaFindingsTests
         Assert.Contains(await kurir2.Get<List<JsonElement>>("/api/couriers/available-orders"), o => o.GetProperty("id").GetInt32() == id);
         (await kurir2.Send(HttpMethod.Post, $"/api/couriers/orders/{id}/accept")).EnsureSuccessStatusCode();
     }
+
+    // R12 (odluka vlasnika): usluga kurira je jednom po pijaci (korpi), ne po tezgi; kada prodavac porudžbine
+    // koja nosi uslugu odbije, usluga prelazi na ostatak korpe
+    [Fact]
+    public async Task R12_courier_fee_is_charged_once_per_checkout()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var fee = (await kupac.Get<JsonElement>("/api/orders/delivery-options")).GetProperty("courierFee").GetDecimal();
+        var a = await FindProduct(kupac, p => p.VendorId == 6);
+        var b = await FindProduct(kupac, p => p.VendorId == 7);
+        var orders = (await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", Courier((a.Id, 1m), (b.Id, 1m)))))
+            .OrderBy(o => o.GetProperty("id").GetInt32()).ToList();
+        Assert.Equal(fee, orders.Sum(o => o.GetProperty("deliveryFee").GetDecimal()));
+        Assert.Equal(fee, orders[0].GetProperty("deliveryFee").GetDecimal());
+
+        var holderVendor = orders[0].GetProperty("vendorId").GetInt32() == 6 ? "dragan" : "ana";
+        var otherVendor = holderVendor == "dragan" ? "ana" : "dragan";
+        var holder = await _factory.As(holderVendor, "vendor1234");
+        (await holder.Send(HttpMethod.Put, $"/api/orders/{orders[0].GetProperty("id").GetInt32()}/status",
+            new { status = "Rejected", message = "Nestalo je robe" })).EnsureSuccessStatusCode();
+
+        var rest = await kupac.Get<JsonElement>($"/api/orders/{orders[1].GetProperty("id").GetInt32()}");
+        Assert.Equal(fee, rest.GetProperty("deliveryFee").GetDecimal());
+        Assert.Equal(rest.GetProperty("totalAmount").GetDecimal() + fee, rest.GetProperty("amountToPay").GetDecimal());
+        var rejected = await kupac.Get<JsonElement>($"/api/orders/{orders[0].GetProperty("id").GetInt32()}");
+        Assert.Equal(0m, rejected.GetProperty("deliveryFee").GetDecimal());
+
+        var other = await _factory.As(otherVendor, "vendor1234");
+        (await other.Send(HttpMethod.Put, $"/api/orders/{orders[1].GetProperty("id").GetInt32()}/status",
+            new { status = "Rejected", message = "Nestalo je robe" })).EnsureSuccessStatusCode();
+    }
+
+    // Posle Alerts:PendingMinutes bez odgovora prodavca kupac dobija opomenu sa brojem prodavca; upit watchdoga
+    // (telefon prodavca, ostale tezge iz korpe) mora da radi na Postgres-u, a porudžbina ostaje na čekanju
+    [Fact]
+    public async Task Watchdog_warns_the_customer_when_the_vendor_is_late()
+    {
+        var kupac = await _factory.As("kupac", "kupac1234");
+        var product = await FindProduct(kupac, p => p.VendorId == 5);
+        var id = (await Api.Read<List<JsonElement>>(await kupac.Send(HttpMethod.Post, "/api/orders", Courier((product.Id, 1m)))))[0].GetProperty("id").GetInt32();
+
+        await using (var conn = new Npgsql.NpgsqlConnection(ApiFactory.ConnectionString))
+        {
+            await conn.OpenAsync();
+            await using var cmd = new Npgsql.NpgsqlCommand(
+                $"UPDATE \"Orders\" SET \"CreatedAt\" = now() - interval '11 minutes' WHERE \"Id\" = {id}", conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        var watchdog = _factory.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>().OfType<PijacaUDzepu.API.Services.OrderWatchdog>().Single();
+        await watchdog.Check();
+
+        await using (var conn = new Npgsql.NpgsqlConnection(ApiFactory.ConnectionString))
+        {
+            await conn.OpenAsync();
+            await using var cmd = new Npgsql.NpgsqlCommand($"SELECT \"WaitAlertSentAt\" IS NOT NULL FROM \"Orders\" WHERE \"Id\" = {id}", conn);
+            Assert.True((bool)(await cmd.ExecuteScalarAsync())!);
+        }
+        Assert.Equal("Pending", (await kupac.Get<JsonElement>($"/api/orders/{id}")).GetProperty("status").GetString());
+
+        var jelena = await _factory.As("jelena", "vendor1234");
+        (await jelena.Send(HttpMethod.Put, $"/api/orders/{id}/status", new { status = "Rejected", message = "Nestalo je robe" })).EnsureSuccessStatusCode();
+    }
 }

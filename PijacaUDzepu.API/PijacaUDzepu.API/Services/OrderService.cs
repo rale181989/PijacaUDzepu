@@ -41,7 +41,8 @@ public class OrderService : IOrderService
     // Link za praćenje važi dok je porudžbina u toku i još 30 dana posle poslednje promene
     private static readonly TimeSpan TrackingValidity = TimeSpan.FromDays(30);
 
-    // Cena Eko kurira po porudžbini (po prodavcu); podešava se sa Delivery__CourierFee
+    // Cena Eko kurira po korpi, tj. po pijaci (korpa je uvek sa jedne pijace), bez obzira na broj tezgi;
+    // podešava se sa Delivery__CourierFee. Naplaćuje se na jednoj porudžbini korpe (MoveDeliveryFee).
     public decimal CourierFee => _config.GetValue<decimal?>("Delivery:CourierFee") ?? 300m;
 
     // Porudžbine u toku pre preuzimanja robe (na čekanju, potvrđene, spremne); bez "U dostavi"
@@ -333,7 +334,8 @@ public class OrderService : IOrderService
                 Note = note,
                 Status = OrderStatus.Pending,
                 Fulfillment = fulfillment,
-                DeliveryFee = fulfillment == FulfillmentType.Courier ? CourierFee : 0,
+                // Usluga jednom po korpi: nosi je prva porudžbina, ostale tezge iz iste korpe su bez nje
+                DeliveryFee = fulfillment == FulfillmentType.Courier && orders.Count == 0 ? CourierFee : 0,
                 Items = new List<OrderItem>()
             };
 
@@ -1001,6 +1003,7 @@ public class OrderService : IOrderService
         order.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
+        await MoveDeliveryFee(order);
         await NotifyStatusChanged(order, notifyCourier: false);
         await RestoreStock(order);
 
@@ -1116,6 +1119,7 @@ public class OrderService : IOrderService
     private async Task OfferToCouriersWhenReady(Order order)
     {
         if (order.Fulfillment != FulfillmentType.Courier) return;
+        await MoveDeliveryFee(order);
         var checkout = order.CheckoutId != null
             ? _context.Orders.Where(o => o.CheckoutId == order.CheckoutId)
             : _context.Orders.Where(o => o.Id == order.Id);
@@ -1139,6 +1143,30 @@ public class OrderService : IOrderService
             offer.CourierOfferedAt = now;
             await NotifyCouriersNewOrder(offer);
         }
+    }
+
+    // Usluga kurira se plaća jednom po korpi i stoji na jednoj njenoj porudžbini. Kada ta porudžbina propadne
+    // (odbijena, otkazana, nije dostavljena), usluga prelazi na najstariju porudžbinu iste korpe koja nije propala,
+    // da je kupac ipak plati za ostale tezge, a kurir je vidi u obračunu. Ako je propala cela korpa, ostaje gde je.
+    private static readonly OrderStatus[] FailedStatuses =
+        { OrderStatus.Rejected, OrderStatus.Cancelled, OrderStatus.NotDelivered };
+
+    private async Task MoveDeliveryFee(Order order)
+    {
+        if (order.CheckoutId == null || order.Fulfillment != FulfillmentType.Courier) return;
+        var orders = await _context.Orders
+            .Where(o => o.CheckoutId == order.CheckoutId && o.Fulfillment == FulfillmentType.Courier)
+            .OrderBy(o => o.Id)
+            .ToListAsync();
+        var alive = orders.Where(o => !FailedStatuses.Contains(o.Status)).ToList();
+        // Nema žive porudžbine ili neka već nosi uslugu (i stare korpe, gde je usluga bila na svakoj tezgi)
+        if (alive.Count == 0 || alive.Any(o => o.DeliveryFee > 0)) return;
+        var holder = orders.FirstOrDefault(o => FailedStatuses.Contains(o.Status) && o.DeliveryFee > 0);
+        if (holder == null) return;
+
+        alive[0].DeliveryFee = holder.DeliveryFee;
+        holder.DeliveryFee = 0;
+        await _context.SaveChangesAsync();
     }
 
     // Prodavac je potvrdio dostavu: kuriri na smeni je dobijaju i zvoni im dok je neko ne prihvati

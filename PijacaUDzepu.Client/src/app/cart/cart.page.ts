@@ -142,13 +142,13 @@ export class CartPage implements OnInit {
     return this.apiUrl + imageUrl;
   }
 
-  // Korpa se deli na porudžbinu po prodavcu, a kurir za svakog ide posebno
+  // Korpa se deli na porudžbinu po prodavcu, ali se usluga kurira plaća jednom (korpa je sa jedne pijace)
   get vendorCount(): number {
     return new Set(this.items.map(i => i.product.vendorId)).size;
   }
 
   get totalCourierFee(): number {
-    return this.courierFee * this.vendorCount;
+    return this.items.length > 0 ? this.courierFee : 0;
   }
 
   // Različite pijace u korpi: kod preuzimanja kupac ide na više mesta
