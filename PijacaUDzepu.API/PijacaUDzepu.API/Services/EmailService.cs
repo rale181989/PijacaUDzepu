@@ -56,7 +56,7 @@ public class EmailService : IEmailService
                 <td style=""padding: 8px; border-bottom: 1px solid #ddd;"">
                     <strong>#{o.Id} {Encode(o.Vendor.Name)}</strong><br>
                     <span style=""color: #666; font-size: 13px;"">
-                        {(o.Fulfillment == FulfillmentType.Pickup ? "Rezervacija – preuzimate kod prodavca" : "Dostava – Eko kurir")}
+                        {(o.Fulfillment == FulfillmentType.Pickup ? "Rezervacija – preuzimate kod prodavca" : "Dostava – kurir")}
                         · {string.Join(", ", o.Items.Select(i => Encode(i.ProductName)))}
                     </span>
                 </td>

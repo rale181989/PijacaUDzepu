@@ -335,7 +335,7 @@ export class AdminReportsPage {
   }
 
   fulfillmentLabel(f: FulfillmentType): string {
-    return f === 'Pickup' ? 'Lično preuzimanje' : 'Eko kurir';
+    return f === 'Pickup' ? 'Lično preuzimanje' : 'Kurir';
   }
 }
 

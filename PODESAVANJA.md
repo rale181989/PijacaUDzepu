@@ -58,7 +58,7 @@ Redom, pre nego što aplikaciju dobiju pravi kupci i prodavci. Stavke označene 
 **Preporučeno**
 - [ ] Push obaveštenja (Firebase) – odeljak 3: `google-services.json` i `pushEnabled` su urađeni, ostaje `FIREBASE_CREDENTIALS_JSON` na Render-u.
 - [ ] Praćenje grešaka (Sentry) – odeljak 8.
-- [ ] Cena Eko kurira – odeljak 4.
+- [ ] Cena kurira – odeljak 4.
 
 **Pravno i objava**
 - [ ] Podaci o firmi u pravnim tekstovima – odeljak 5 (🤖 upisuje kad dobije podatke).
@@ -182,7 +182,7 @@ Mapa je OpenStreetMap (besplatno, bez ključa i kartice).
 
 ---
 
-## 4. Cena Eko kurira
+## 4. Cena kurira
 
 - [ ] Upisana dogovorena cena
 

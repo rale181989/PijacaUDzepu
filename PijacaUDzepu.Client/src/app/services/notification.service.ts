@@ -268,7 +268,7 @@ export class NotificationService {
         this.ringAgain();
         this.pendingCountSubject.next(this.pendingCount + 1);
         this.orderUpdatedSubject.next(data.orderId);
-        const kind = data.fulfillment === 'Pickup' ? 'Nova rezervacija' : 'Nova porudžbina (Eko kurir)';
+        const kind = data.fulfillment === 'Pickup' ? 'Nova rezervacija' : 'Nova porudžbina (kurir)';
         await this.showToast(`${kind} #${data.orderId} – ${data.customerName}`, 'tertiary');
       });
     });

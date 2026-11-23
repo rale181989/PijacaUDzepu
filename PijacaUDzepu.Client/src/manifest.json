@@ -1,7 +1,7 @@
 {
   "name": "Pijaca u Džepu",
   "short_name": "Pijaca u Džepu",
-  "description": "Sveža roba sa novosadskih pijaca: preuzimanje na tezgi ili dostava Eko kurirom.",
+  "description": "Sveža roba sa novosadskih pijaca: preuzimanje na tezgi ili dostava kurirom.",
   "lang": "sr",
   "start_url": "/",
   "scope": "/",

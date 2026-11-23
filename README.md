@@ -1,7 +1,7 @@
 # Pijaca u Džepu
 
 Aplikacija za poručivanje sa novosadskih pijaca. Kupci biraju robu sa tezgi i preuzimaju je sami
-ili je dobijaju na adresu preko Eko kurira. Prodavci vode ponudu i porudžbine, kuriri dostave, a
+ili je dobijaju na adresu preko kurira. Prodavci vode ponudu i porudžbine, kuriri dostave, a
 administrator nalog prodavaca, kurira i izveštaje.
 
 Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https://pijacaudzepu.onrender.com>.
@@ -13,10 +13,10 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Grupe proizvoda: voće, povrće, začinsko bilje, mahunarke, pečurke, mlečni proizvodi, jaja, meso, med i pčelinji proizvodi, zimnica, suvo voće i orašasti plodovi, kolači, kućna hemija, ostalo
 - Kupac prvo bira pijacu (aplikacija je pamti); jedna porudžbina je sa jedne pijace, pa roba sa druge pijace ne može u istu korpu – aplikacija nudi „Zadrži korpu” ili „Isprazni korpu i dodaj”
 - Korpa sa robom više prodavaca iste pijace; svaki prodavac dobija svoj deo porudžbine; uz stavku jedinica i iznos, a broj na korpi je broj stavki
-- Rezervacija (preuzimanje na tezgi) ili dostava Eko kurirom
+- Rezervacija (preuzimanje na tezgi) ili dostava kurirom
 - Registracija traži telefon i adresu (sprat i stan opciono); upisuju se sami u korpu, a menjaju se u „Moj nalog”
 - Praćenje porudžbine bez naloga (link, opciono e-mail), statusi uživo
-- Na početnoj kratko „Kako radi”; „Dodaj” odmah dodaje 1; − i + menjaju za pola kilograma ili litra (komadi, veze i pakovanja idu po jedan), a kartica pokazuje koliko je u korpi; dostava Eko kurirom se plaća jednom po porudžbini (pijaci), bez obzira na broj tezgi
+- Na početnoj kratko „Kako radi”; „Dodaj” odmah dodaje 1; − i + menjaju za pola kilograma ili litra (komadi, veze i pakovanja idu po jedan), a kartica pokazuje koliko je u korpi; dostava kurirom se plaća jednom po porudžbini (pijaci), bez obzira na broj tezgi
 - Pretraga razume jedninu i sitne greške („jabuka” nalazi „Jabuke”); filter nudi samo grupe i tezge u kojima ima robe
 - Korpa: prodavac, pijaca i tezga uz svaku stavku, ukupno sa dostavom, šta još treba upisati; posle poručivanja „Hvala!” i ukupan iznos cele kupovine
 - Detalji porudžbine: gde se preuzima (pijaca, tezga, adresa, „Kako da stignem”) i „Pozovi prodavca”
@@ -45,7 +45,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Pregled dana: šta treba spremiti (samo prihvaćeno, zbir po proizvodu), šta još čeka vaš odgovor, šta je pri kraju, današnji promet
 - Prodavac ne vidi kupčev deo aplikacije (ponudu, korpu) i ne može da poručuje
 
-**Eko kurir**
+**Kurir**
 - Smena; zvono za nove dostave dok ih ne prihvati ili odbije
 - Dostavu dobija tek kada je prodavac potvrdi, a kod korpe sa više tezgi tek kada odgovore svi prodavci (odbijene otpadaju, ostale idu dalje), pa ne kreće na pola rute; prihvati (prvi dobija dostavu, od tada je njegova) ili odbij (sklanja se samo njemu)
 - Preuzeo sam robu (kupac vidi da je roba kod kurira) → isporučeno, ili „Nije dostavljeno” uz obavezan razlog (vide ga kupac, prodavac i administrator; stanje se vraća); tabovi „Moje” (dostave u toku) i „Završene” (po stranama)
