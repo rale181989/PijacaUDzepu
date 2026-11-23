@@ -68,3 +68,57 @@ jobs:
       # Slike proizvoda se obrađuju SkiaSharp-om: bez Linux biblioteke svaki upload na Render-u pada (bilo je)
       - name: SkiaSharp za Linux je u slici
         run: docker run --rm --entrypoint sh pijacaudzepu:ci -c "find / -name libSkiaSharp.so 2>/dev/null | grep -q linux-x64"
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: Postgres!
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Prazna baza: API je pri pokretanju napravi i napuni demo podacima (Development)
+      DATABASE_URL: Host=localhost;Port=5432;Database=PijacaUDzepu_E2E;Username=postgres;Password=Postgres!
+      TOKEN_KEY: e2e-only-jwt-key-for-PijacaUDzepu-not-used-anywhere-else-0123456789abcdef
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            PijacaUDzepu.Client/package-lock.json
+            e2e/package-lock.json
+      - name: Klijent (zavisnosti)
+        working-directory: PijacaUDzepu.Client
+        run: npm ci --legacy-peer-deps
+      - name: Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: API build
+        run: dotnet build PijacaUDzepu.API/PijacaUDzepu.API
+      - name: Testovi (Playwright pokreće API i klijent)
+        working-directory: e2e
+        run: npx playwright test
+      - name: Izveštaj kad padne
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7

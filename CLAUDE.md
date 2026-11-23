@@ -10,7 +10,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push and pull request, on Linux like Render: the API tests against a Postgres 16 service (`TEST_DATABASE_URL`), the client's lint (0 problems), unit tests and production build, and `docker build` of the image Render deploys, checking that the image contains SkiaSharp's `linux-x64/libSkiaSharp.so` (image uploads failed on Render once without it). Keep it green.
+`.github/workflows/ci.yml` runs on every push and pull request, on Linux like Render: the API tests against a Postgres 16 service (`TEST_DATABASE_URL`), the client's lint (0 problems), unit tests and production build, `docker build` of the image Render deploys, checking that the image contains SkiaSharp's `linux-x64/libSkiaSharp.so` (image uploads failed on Render once without it), and the E2E tests. Keep it green.
+
+### E2E tests (`e2e/`, Playwright)
+```
+cd e2e && npm ci && npx playwright install chromium
+npx playwright test                         # starts API (:5000, Development) and client (:4200) itself, or reuses running ones
+E2E_BASE_URL=http://localhost:8100 E2E_CHANNEL=chrome npx playwright test   # against an already running client, installed Chrome
+```
+- Flows on a Pixel 7 viewport: a guest picks a market and reserves (→ `/prati?nova=1`); a customer orders a courier, the vendor confirms, the courier accepts, picks up and delivers, the customer sees "Završena"; the vendor rejects with a ready reason and the customer sees the red box; UI login (wrong then right password, vendor lands on `/vendor-orders`), forgot password, staff kept out of the shop; the vendor's "Ovde sam" with a mocked GPS and the customer's map with "Do tezge"; the admin closes an open order (paging through `/admin-orders`).
+- Tests log in through the API and put the token into `localStorage` (`newPhone` in `tests/helpers.ts`); every browser context and API context sends its own `X-Forwarded-For`, so the login rate limit never trips. `openVendor` clears pause/hours of the demo vendor before ordering, `courierOnShift` puts `kurir1` on shift.
+- Ionic keeps hidden pages in the DOM: use the `visible()`/`button()`/`card()` helpers; `ion-button` moves `aria-label` to its inner button, so don't select by it.
+- They run one at a time against one database (they share the demo vendor and courier); in CI on an empty `PijacaUDzepu_E2E` database with one retry.
 
 ## Repository layout
 
