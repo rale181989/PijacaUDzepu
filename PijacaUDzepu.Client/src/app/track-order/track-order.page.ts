@@ -1,4 +1,4 @@
-import { directionsTo, marketPoint, stallPoint } from '../shared/maps';
+import { directionsTo, marketPoint, showPickupWay, stallPoint } from '../shared/maps';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
@@ -34,6 +34,8 @@ export class TrackOrderPage implements OnInit, OnDestroy {
   readonly stallPoint = stallPoint;
   readonly marketPoint = marketPoint;
   readonly directionsTo = directionsTo;
+  readonly showPickupWay = showPickupWay;
+  readonly encodeURIComponent = encodeURIComponent;
   mapOpen: Record<number, boolean> = {};
 
   toggleMap(orderId: number) {
@@ -141,6 +143,8 @@ export class TrackOrderPage implements OnInit, OnDestroy {
     };
     this.hub.on('OrderStatusChanged', onChange);
     this.hub.on('CourierAssigned', onChange);
+    // Prodavac je pomerio tačku tezge: mapa i "Do tezge" pokazuju novo mesto (bez poruke)
+    this.hub.on('StallLocationChanged', () => this.load());
     this.hub.on('VendorLate', async (data: VendorLate) => {
       this.sound.play('update');
       const toast = await this.toastController.create({

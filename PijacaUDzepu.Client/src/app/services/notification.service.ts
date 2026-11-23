@@ -95,6 +95,10 @@ export class NotificationService {
     return this.pendingCountSubject.value;
   }
 
+  // vendorId tezge čija se tačka na mapi promenila (StallLocationChanged)
+  private stallMovedSubject = new Subject<number>();
+  stallMoved$ = this.stallMovedSubject.asObservable();
+
   constructor(
     private authService: AuthService,
     private http: HttpClient,
@@ -304,6 +308,11 @@ export class NotificationService {
         });
         await toast.present();
       });
+    });
+
+    // Prodavac je pomerio ili uklonio tačku tezge: kurir i kupac sa otvorenom porudžbinom ponovo učitavaju
+    this.hubConnection.on('StallLocationChanged', (data: { vendorId: number }) => {
+      this.ngZone.run(() => this.stallMovedSubject.next(data.vendorId));
     });
 
     this.hubConnection.on('CourierAssigned', (data: any) => {

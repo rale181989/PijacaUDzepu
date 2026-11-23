@@ -10,5 +10,5 @@ public class FeaturesController : BaseApiController
 {
     [AllowAnonymous]
     [HttpGet]
-    public IActionResult Get() => Ok(new { stallLocation = Features.StallLocation });
+    public IActionResult Get() => Ok(new { stallLocation = Features.StallLocation, mapTileUrl = Features.TileUrl, mapAttribution = Features.TileAttribution });
 }

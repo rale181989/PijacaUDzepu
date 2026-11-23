@@ -421,7 +421,7 @@ async function build() {
     { h: 'Osnovni podaci', d: 'Naziv, pijaca i broj tezge: tako vas kupci pronalaze u filterima.' },
     { h: 'Opis i telefoni', d: 'Kratak opis ponude i jedan ili više brojeva telefona koje kupci vide.' },
     { h: 'Promena lozinke', d: 'Unesite trenutnu i dva puta novu lozinku.' },
-    { h: 'Tezga na mapi', n: '✓', d: 'Kada ste na tezgi, pritisnite „Ovde sam”: kurir i kupac koji je rezervisao vide tačno mesto. Ako tačka nije tačna, dodirnite mapu na pravo mesto i sačuvajte.' }
+    { h: 'Tezga na mapi', n: '✓', d: 'Na tezgi pritisnite „Ovde sam”: kurir i kupac koji je rezervisao vide tačno mesto. Ako je GPS neprecizan, dodirnite mapu na pravo mesto i „Sačuvaj tačku”.' }
   ]);
   s.phone('v-profile', RIGHT_X, PHONE_Y, PHONE_H, 'Profil tezge sa promenom lozinke',
     [[1, 0.95, 0.125], [2, 0.93, 0.32], [3, 0.93, 0.62]]);

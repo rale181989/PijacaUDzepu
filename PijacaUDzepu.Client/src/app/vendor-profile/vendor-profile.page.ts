@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController } from '@ionic/angular/lazy';
+import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { Capacitor } from '@capacitor/core';
 import { VendorService } from '../services/vendor.service';
 import { AuthService } from '../services/auth.service';
 import { MarketService } from '../services/market.service';
@@ -61,6 +62,9 @@ export class VendorProfilePage implements OnInit {
   locating = false;
   savingLocation = false;
   locationNote = '';
+  locationWarn = false;
+  gpsAccuracy: number | null = null;
+  savedAt: string | null = null;
 
   get locationDirty(): boolean {
     const a = this.draftPoint, b = this.savedPoint;
@@ -86,7 +90,8 @@ export class VendorProfilePage implements OnInit {
     private stallService: StallService,
     private toastController: ToastController,
     private ts: TranslateService,
-    public features: FeaturesService
+    public features: FeaturesService,
+    private alertController: AlertController
   ) {}
 
   ngOnInit() {
@@ -137,13 +142,16 @@ export class VendorProfilePage implements OnInit {
     this.marketName = v.marketName;
     this.marketPoint = v.marketLatitude != null && v.marketLongitude != null ? { lat: v.marketLatitude, lng: v.marketLongitude } : null;
     this.savedPoint = v.stallLatitude != null && v.stallLongitude != null ? { lat: v.stallLatitude, lng: v.stallLongitude } : null;
+    this.savedAt = v.stallLocationAt ?? null;
     this.draftPoint = this.savedPoint;
+    this.gpsAccuracy = null;
   }
 
-  // "Ovde sam": telefon uzima GPS (traži dozvolu za lokaciju) i tačka se odmah čuva
+  // "Ovde sam": telefon uzima GPS (traži dozvolu za lokaciju). Precizan GPS (do ±60 m) se odmah čuva; neprecizan se
+  // samo prikaže na mapi sa krugom preciznosti i čeka da prodavac dodirne tačno mesto i sačuva (ne prepisuje dobru tačku).
   useGps() {
     if (!navigator.geolocation) {
-      this.toast('Ovaj uređaj ne daje lokaciju. Dodirnite mapu na mesto tezge.', 'warning');
+      this.setNote('Ovaj uređaj ne daje lokaciju. Dodirnite mapu na mesto tezge, pa „Sačuvaj tačku”.', true);
       return;
     }
     this.locating = true;
@@ -152,15 +160,22 @@ export class VendorProfilePage implements OnInit {
         this.locating = false;
         const accuracy = Math.round(pos.coords.accuracy);
         this.draftPoint = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        this.saveLocation(accuracy > 60
-          ? `GPS je neprecizan (± ${accuracy} m) – proverite tačku na mapi i po potrebi je pomerite dodirom.`
-          : `Tačka je sačuvana (GPS ± ${accuracy} m).`);
+        this.gpsAccuracy = accuracy;
+        if (accuracy <= 60) {
+          this.saveLocation(`Tačka je sačuvana (GPS ± ${accuracy} m).`);
+        } else {
+          this.setNote(`GPS je neprecizan (± ${accuracy} m), pa tačka NIJE sačuvana. Plavi krug pokazuje gde ste možda. `
+            + 'Dodirnite tačno mesto tezge na mapi, pa „Sačuvaj tačku”, ili pokušajte ponovo napolju.', true);
+        }
       },
       err => {
         this.locating = false;
-        this.toast(err.code === err.PERMISSION_DENIED
-          ? 'Aplikacija nema dozvolu za lokaciju. Uključite je u podešavanjima telefona ili dodirnite mapu na mesto tezge.'
-          : 'Lokacija trenutno nije dostupna. Pokušajte ponovo napolju ili dodirnite mapu na mesto tezge.', 'warning');
+        const settings = Capacitor.isNativePlatform()
+          ? 'u podešavanjima telefona (Aplikacije → Pijaca u Džepu → Dozvole → Lokacija)'
+          : 'u podešavanjima pregledača za ovaj sajt (ikonica katanca pored adrese)';
+        this.setNote(err.code === err.PERMISSION_DENIED
+          ? `Aplikacija nema dozvolu za lokaciju. Uključite je ${settings} ili dodirnite mapu na mesto tezge, pa „Sačuvaj tačku”.`
+          : 'Lokacija trenutno nije dostupna. Pokušajte ponovo napolju ili dodirnite mapu na mesto tezge, pa „Sačuvaj tačku”.', true);
       },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
     );
@@ -168,42 +183,88 @@ export class VendorProfilePage implements OnInit {
 
   onMapPick(p: GeoPoint) {
     this.draftPoint = p;
-    this.locationNote = 'Tačka je pomerena – sačuvajte je.';
+    this.gpsAccuracy = null;
+    this.setNote('');
   }
 
-  saveLocation(note = 'Tačka je sačuvana.') {
+  private setNote(text: string, warn = false) {
+    this.locationNote = text;
+    this.locationWarn = warn;
+  }
+
+  // Nesačuvana tačka se odbacuje, prikazuje se sačuvana
+  discardLocation() {
+    this.draftPoint = this.savedPoint;
+    this.gpsAccuracy = null;
+    this.setNote('');
+  }
+
+  saveLocation(note = 'Tačka je sačuvana.'): Promise<boolean> {
     const p = this.draftPoint;
-    if (!p || this.savingLocation) return;
+    if (!p || this.savingLocation) return Promise.resolve(false);
     this.savingLocation = true;
-    this.vendorService.setMyLocation(p.lat, p.lng).subscribe({
+    return new Promise(resolve => this.vendorService.setMyLocation(p.lat, p.lng).subscribe({
       next: v => {
         this.savingLocation = false;
+        const accuracy = this.gpsAccuracy;
         this.applyLocation(v);
-        this.locationNote = note;
+        this.gpsAccuracy = accuracy;
+        this.setNote(note);
+        resolve(true);
       },
       error: err => {
         this.savingLocation = false;
-        this.draftPoint = this.savedPoint;
-        this.locationNote = '';
-        this.toast(err.error?.message || 'Tačka nije sačuvana.', 'danger');
+        this.setNote(err.error?.message || 'Tačka nije sačuvana.', true);
+        resolve(false);
       }
-    });
+    }));
   }
 
-  clearLocation() {
+  async clearLocation() {
     if (this.savingLocation) return;
+    const alert = await this.alertController.create({
+      header: 'Ukloniti tačku tezge?',
+      message: 'Kurir i kupci će videti samo pijacu i broj tezge, dok ponovo ne pritisnete „Ovde sam”.',
+      buttons: [
+        { text: 'Odustani', role: 'cancel' },
+        { text: 'Ukloni', role: 'destructive', handler: () => this.doClearLocation() }
+      ]
+    });
+    await alert.present();
+  }
+
+  private doClearLocation() {
     this.savingLocation = true;
     this.vendorService.clearMyLocation().subscribe({
       next: v => {
         this.savingLocation = false;
         this.applyLocation(v);
-        this.locationNote = 'Tačka je uklonjena – kurir i kupci vide samo pijacu i broj tezge.';
+        this.setNote('Tačka je uklonjena – kurir i kupci vide samo pijacu i broj tezge.');
       },
       error: err => {
         this.savingLocation = false;
-        this.toast(err.error?.message || 'Tačka nije uklonjena.', 'danger');
+        this.setNote(err.error?.message || 'Tačka nije uklonjena.', true);
       }
     });
+  }
+
+  // Odlazak sa stranice sa nesačuvanom tačkom: pitanje umesto tihog gubitka (canDeactivate u modulu)
+  async canLeave(): Promise<boolean> {
+    if (!this.locationDirty) return true;
+    const alert = await this.alertController.create({
+      header: 'Nova tačka tezge nije sačuvana',
+      message: 'Da li da je sačuvam pre izlaska?',
+      buttons: [
+        { text: 'Ostani', role: 'cancel' },
+        { text: 'Ne čuvaj', role: 'discard' },
+        { text: 'Sačuvaj', role: 'save' }
+      ]
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role === 'save') return this.saveLocation();
+    if (role === 'discard') { this.discardLocation(); return true; }
+    return false;
   }
 
   // Vreme prvog uključenog dana prepisuje se na sve uključene dane
@@ -297,6 +358,7 @@ export class VendorProfilePage implements OnInit {
 
   async save() {
     this.saving = true;
+    if (this.locationDirty) this.saveLocation();
     this.vendorService.updateMyVendor(this.model).subscribe({
       next: async () => {
         this.saving = false;

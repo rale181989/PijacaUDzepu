@@ -204,11 +204,12 @@ ion-button { min-height: 44px; }
   .row.return { background: rgba(var(--ion-color-danger-rgb), 0.06); }
 }
 
+/* Dva dugmeta iste širine u jednom redu: ne skaču kad se natpis promeni ("Tezga na mapi" / "Sakrij mapu") */
 .stall-map-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin: 6px 0;
 
-  ion-button { min-height: 44px; }
+  ion-button { min-height: 44px; margin: 0; --padding-start: 6px; --padding-end: 6px; white-space: normal; font-size: 13px; }
 }

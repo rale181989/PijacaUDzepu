@@ -1,4 +1,4 @@
-import { directionsTo, marketPoint, stallPoint } from '../shared/maps';
+import { directionsTo, marketPoint, showPickupWay, stallPoint } from '../shared/maps';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { OrderService } from '../services/order.service';
@@ -39,6 +39,10 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     this.sub = this.notificationService.orderUpdated$.subscribe(orderId => {
       if (orderId === id) this.orderService.getById(id).subscribe(o => this.order = o);
     });
+    // Prodavac je pomerio tačku tezge: mapa i "Do tezge" odmah pokazuju novo mesto
+    this.sub.add(this.notificationService.stallMoved$.subscribe(vendorId => {
+      if (this.order?.vendorId === vendorId) this.orderService.getById(id).subscribe(o => this.order = o);
+    }));
     if (id) {
       this.loading = true;
       this.orderService.getById(id).subscribe({
@@ -57,6 +61,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
   readonly stallPoint = stallPoint;
   readonly marketPoint = marketPoint;
   readonly directionsTo = directionsTo;
+  readonly showPickupWay = showPickupWay;
 
   // Kurirska porudžbina spremna kod prodavca čeka kurira (kupac ne treba da dođe po nju)
   getStatusLabel(status: string, fulfillment?: string): string {

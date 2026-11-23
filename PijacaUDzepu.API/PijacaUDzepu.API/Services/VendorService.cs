@@ -1,3 +1,6 @@
+using PijacaUDzepu.API.Models.Enums;
+using PijacaUDzepu.API.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PijacaUDzepu.API.DataAccess;
 using PijacaUDzepu.API.Helpers;
@@ -13,10 +16,15 @@ public class VendorService : IVendorService
     private readonly DataContext _context;
     private readonly IImageStorage _images;
 
-    public VendorService(DataContext context, IImageStorage images)
+    private readonly IHubContext<OrderHub> _hub;
+    private readonly IHubContext<TrackingHub> _trackingHub;
+
+    public VendorService(DataContext context, IImageStorage images, IHubContext<OrderHub> hub, IHubContext<TrackingHub> trackingHub)
     {
         _context = context;
         _images = images;
+        _hub = hub;
+        _trackingHub = trackingHub;
     }
 
     public async Task<List<VendorDto>> GetAllVendors(bool includeInactive = false)
@@ -71,6 +79,13 @@ public class VendorService : IVendorService
             .FirstOrDefaultAsync(v => v.Id == id)
             ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
+        // Druga pijaca ili tezga: stara tačka na mapi više ne važi (prodavac je ponovo postavlja na novoj tezgi)
+        if (vendor.MarketId != dto.MarketId || vendor.StallId != dto.StallId)
+        {
+            vendor.StallLatitude = null;
+            vendor.StallLongitude = null;
+            vendor.StallLocationAt = null;
+        }
         vendor.MarketId = dto.MarketId;
         vendor.StallId = dto.StallId;
         vendor.Name = dto.Name;
@@ -159,16 +174,41 @@ public class VendorService : IVendorService
         var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall).FirstOrDefaultAsync(v => v.Id == vendorId)
             ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
 
-        if (dto != null && vendor.Market.Latitude is double mLat && vendor.Market.Longitude is double mLng
-            && GeoDistance.Meters(mLat, mLng, dto.Latitude, dto.Longitude) > MaxStallDistanceMeters)
-            throw new InvalidOperationException(L.T("Tačka je predaleko od pijace {0}. Postavite je kada ste na tezgi ili je pomerite na mapi.", vendor.Market.Name));
+        if (dto != null)
+        {
+            if (dto.Latitude is not double lat || dto.Longitude is not double lng)
+                throw new InvalidOperationException(L.T("Lokacija nije ispravna."));
+            // Bez centra pijace ne može da se proveri da je tačka na pijaci (npr. kućna adresa)
+            if (vendor.Market.Latitude is not double mLat || vendor.Market.Longitude is not double mLng)
+                throw new InvalidOperationException(L.T("Pijaca {0} još nema centar na mapi. Javite se administratoru.", vendor.Market.Name));
+            if (GeoDistance.Meters(mLat, mLng, lat, lng) > MaxStallDistanceMeters)
+                throw new InvalidOperationException(L.T("Tačka je predaleko od pijace {0}. Postavite je kada ste na tezgi ili je pomerite na mapi.", vendor.Market.Name));
+        }
 
         vendor.StallLatitude = dto?.Latitude;
         vendor.StallLongitude = dto?.Longitude;
         vendor.StallLocationAt = dto == null ? null : DateTime.UtcNow;
         vendor.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        await NotifyStallMoved(vendor.Id);
         return MapToDto(vendor);
+    }
+
+    // Kurir i kupac sa otvorenom porudžbinom kod ove tezge odmah vide novu tačku (StallLocationChanged → ponovno učitavanje)
+    private async Task NotifyStallMoved(int vendorId)
+    {
+        var open = await _context.Orders
+            .Where(o => o.VendorId == vendorId && (o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed
+                || o.Status == OrderStatus.ReadyForPickup || o.Status == OrderStatus.InDelivery))
+            .Select(o => new { o.CustomerId, o.CourierId, o.TrackingCode })
+            .ToListAsync();
+        var payload = new { vendorId };
+        var users = open.SelectMany(o => new[] { o.CustomerId, o.CourierId }).Where(id => id != null).Distinct()
+            .Select(id => $"user_{id}").ToList();
+        if (users.Count > 0)
+            await _hub.Clients.Groups(users).SendAsync("StallLocationChanged", payload);
+        foreach (var code in open.Select(o => o.TrackingCode).Where(c => c != null).Distinct())
+            await _trackingHub.Clients.Group(TrackingHub.GroupName(code!)).SendAsync("StallLocationChanged", payload);
     }
 
     public async Task<string> UpdateVendorImage(int vendorId, IFormFile file)

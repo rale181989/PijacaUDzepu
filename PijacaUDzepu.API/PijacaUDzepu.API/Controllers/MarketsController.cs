@@ -33,7 +33,14 @@ public class MarketsController : BaseApiController
     [HttpPost]
     public async Task<IActionResult> Create(MarketInputDto dto)
     {
-        return Ok(await _marketService.Create(dto));
+        try
+        {
+            return Ok(await _marketService.Create(dto));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [Authorize(Policy = "RequireSuperAdmin")]
@@ -47,6 +54,10 @@ public class MarketsController : BaseApiController
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

@@ -45,8 +45,18 @@ public class MarketService : IMarketService
         return MapToDto(market);
     }
 
+    // Centar pijace: obe koordinate ili nijedna, i u Srbiji (zamenjene širina i dužina daju tačku van nje)
+    private static void ValidateCenter(MarketInputDto dto)
+    {
+        if (dto.Latitude is null != dto.Longitude is null)
+            throw new InvalidOperationException(L.T("Upišite obe koordinate centra pijace (npr. 45.2529, 19.8371)."));
+        if (dto.Latitude is double lat && dto.Longitude is double lng && !Features.InSerbia(lat, lng))
+            throw new InvalidOperationException(L.T("Centar pijace mora biti u Srbiji (npr. 45.2529, 19.8371). Proverite da širina i dužina nisu zamenjene."));
+    }
+
     public async Task<MarketDto> Create(MarketInputDto dto)
     {
+        ValidateCenter(dto);
         var market = new Market
         {
             Name = dto.Name,
@@ -63,6 +73,7 @@ public class MarketService : IMarketService
 
     public async Task<MarketDto> Update(int id, MarketInputDto dto)
     {
+        ValidateCenter(dto);
         var market = await _context.Markets.FindAsync(id)
             ?? throw new KeyNotFoundException(L.T("Pijaca nije pronađena"));
 

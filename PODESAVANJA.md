@@ -168,13 +168,15 @@ Pragovi se menjaju na Render-u (bez novog APK-a):
 Prodavac u „Moj profil” pritisne „Ovde sam” kada je na tezgi; tačku vide kurir i kupac koji je rezervisao robu.
 Mapa je OpenStreetMap (besplatno, bez ključa i kartice).
 
-- [ ] Proveriti centre pijaca u „Pijace” → izmeni → „Centar na mapi” (desni klik na mesto u Google mapama → kopiraj
-      koordinate, npr. `45.2522, 19.8306`). Demo pijace imaju približne centre; tačka tezge mora biti do 1,5 km od centra.
+- [ ] Proveriti centre pijaca u „Pijace” → izmeni → „Centar na mapi” (u Google mapama dugo držite prst na sredini
+      pijace, na računaru desni klik → kopirajte koordinate, npr. `45.2529, 19.8371`). Četiri demo pijace imaju centre iz
+      OpenStreetMap-a; pijaca bez centra ne prima tačke tezgi, a tačka tezge mora biti do 1,5 km od centra.
 - [ ] Novi APK posle ove izmene (Android dozvola za lokaciju je u APK-u).
 - Isključivanje bez novog koda i APK-a: na Render-u `Features__StallLocation` = `false` (mapa i dugme „Ovde sam”
   nestaju, sačuvane tačke ostaju u bazi i vraćaju se kad se ponovo uključi).
-- OpenStreetMap besplatne mape su za umeren saobraćaj. Ako aplikacija jako poraste, preći na besplatni paket
-  MapTiler-a ili Stadia Maps (menja se samo adresa mapa u `shared/stall-map`).
+- Podloga mape je OSM.de (besplatno, nazivi ulica latinicom ili dvojezično; neke ulice u OSM podacima imaju samo
+  ćirilicu). Menja se na Render-u bez novog APK-a: `Maps__TileUrl` (npr. `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
+  ili servis sa ključem kao MapTiler/Stadia Maps, za čistu latinicu i veći saobraćaj) i `Maps__Attribution`.
 - Google Play: lokacija se koristi samo dok je aplikacija otvorena (ne u pozadini), pa nije potrebna posebna
   izjava za lokaciju u pozadini; u obrascu „Data safety” navesti „Približna/tačna lokacija – funkcionalnost aplikacije”.
 

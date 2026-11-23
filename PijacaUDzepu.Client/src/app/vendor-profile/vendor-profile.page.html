@@ -133,19 +133,33 @@
   <div *ngIf="!loading && features.stallLocation" class="location-section">
     <h3>Lokacija tezge na mapi</h3>
     <p class="hint">Kada ste na tezgi, pritisnite „Ovde sam”. Tačku vide kurir koji dolazi po robu i kupac koji je rezervisao.
-      Ako tačka nije tačna, dodirnite mapu na pravo mesto i sačuvajte.</p>
-    <app-stall-map [market]="marketPoint" [stall]="draftPoint" [editable]="true" stallLabel="Moja tezga"
-                   [marketLabel]="marketName" [height]="260" (pointChange)="onMapPick($event)"></app-stall-map>
-    <p *ngIf="locationNote" class="location-note">{{ locationNote }}</p>
-    <p *ngIf="!savedPoint && !locationNote" class="location-note muted">Tačka još nije postavljena – kurir vidi samo pijacu i broj tezge.</p>
+      Isprekidani krug je pijaca. Ako tačka nije tačna, dodirnite mapu na pravo mesto i sačuvajte.</p>
+    <app-stall-map [market]="marketPoint" [stall]="draftPoint" [accuracy]="gpsAccuracy" [editable]="true" stallLabel="Moja tezga"
+                   [marketLabel]="marketName" [height]="240" (pointChange)="onMapPick($event)"></app-stall-map>
+
+    <div *ngIf="locationDirty" class="unsaved">
+      <strong>Nova tačka nije sačuvana.</strong>
+      <div class="location-actions">
+        <ion-button (click)="saveLocation()" [disabled]="savingLocation">
+          <ion-spinner *ngIf="savingLocation" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!savingLocation" name="checkmark-outline" slot="start"></ion-icon>
+          Sačuvaj tačku
+        </ion-button>
+        <ion-button fill="outline" color="medium" (click)="discardLocation()" [disabled]="savingLocation">Otkaži</ion-button>
+      </div>
+    </div>
+    <p *ngIf="locationNote" class="location-note" [class.warn]="locationWarn">{{ locationNote }}</p>
+    <p *ngIf="!locationNote && !locationDirty && savedPoint && savedAt" class="location-note muted">Sačuvana tačka: {{ savedAt | date:'dd.MM.yyyy. HH:mm' }}</p>
+    <p *ngIf="!locationNote && !locationDirty && !savedPoint" class="location-note muted">Tačka još nije postavljena – kurir vidi samo pijacu i broj tezge.</p>
     <div class="location-actions">
-      <ion-button (click)="useGps()" [disabled]="locating || savingLocation">
+      <ion-button [fill]="locationDirty ? 'outline' : 'solid'" (click)="useGps()" [disabled]="locating || savingLocation">
         <ion-spinner *ngIf="locating" name="crescent" slot="start"></ion-spinner>
         <ion-icon *ngIf="!locating" name="locate-outline" slot="start"></ion-icon>
         Ovde sam
       </ion-button>
-      <ion-button *ngIf="locationDirty" fill="outline" (click)="saveLocation()" [disabled]="savingLocation">Sačuvaj tačku</ion-button>
-      <ion-button *ngIf="savedPoint && !locationDirty" fill="clear" color="medium" (click)="clearLocation()" [disabled]="savingLocation">Ukloni tačku</ion-button>
+      <ion-button *ngIf="savedPoint && !locationDirty" fill="outline" color="danger" class="remove" (click)="clearLocation()" [disabled]="savingLocation">
+        Ukloni tačku
+      </ion-button>
     </div>
   </div>
 

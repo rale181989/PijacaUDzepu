@@ -23,6 +23,7 @@
         <ion-label>
           <h2>{{ market.name }}</h2>
           <p *ngIf="market.address">{{ market.address }}</p>
+          <p class="center" [class.missing]="!hasCenter(market)">{{ centerText(market) }}</p>
           <p *ngIf="market.description" class="desc">{{ market.description }}</p>
         </ion-label>
         <ion-badge slot="end" color="medium">{{ market.vendorCount }} prodav.</ion-badge>

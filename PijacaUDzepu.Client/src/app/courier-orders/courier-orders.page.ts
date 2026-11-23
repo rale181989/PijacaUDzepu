@@ -62,6 +62,10 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     });
     // Posle prekida veze (zaključan telefon) učitavaju se i porudžbine koje su stigle u međuvremenu
     this.sub.add(this.notificationService.resync$.subscribe(() => this.load()));
+    // Prodavac je pomerio tačku tezge: dostave u toku se ponovo učitavaju (nova tačka i ruta)
+    this.sub.add(this.notificationService.stallMoved$.subscribe(vendorId => {
+      if (this.mine.some(o => o.vendorId === vendorId && this.isActive(o.status))) this.loadMine();
+    }));
   }
 
   ionViewWillEnter() {
@@ -91,6 +95,10 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
       error: () => done()
     });
     this.notificationService.loadCourierAvailableCount();
+  }
+
+  private loadMine() {
+    this.courierService.getMyOrders().subscribe({ next: r => this.mine = r.items, error: () => {} });
   }
 
   doRefresh(event: any) {
@@ -131,7 +139,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     const total = orders.reduce((sum, o) => sum + o.amountToPay, 0);
     const alert = await this.alertController.create({
       header: 'Potvrda isporuke',
-      message: `Predali ste svih ${orders.length} porudžbine kupcu i naplatili ukupno ${total.toLocaleString('sr-Latn')} din?`,
+      message: `Predali ste ${this.allOrdersText(orders.length)} kupcu i naplatili ukupno ${total.toLocaleString('sr-Latn')} din?`,
       buttons: [
         { text: 'Ne', role: 'cancel' },
         {
@@ -279,7 +287,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
 
   // Aktivne dostave iste korpe (više tezgi) - ruta: tezge redom, pa kupac
   get routes(): { key: string; orders: Order[]; address?: string; mapsUrl: string }[] {
-    const cacheKey = this.mine.map(o => `${o.id}:${o.status}`).join(',');
+    const cacheKey = this.mine.map(o => `${o.id}:${o.status}:${o.stallLatitude},${o.stallLongitude}:${o.marketLatitude},${o.marketLongitude}`).join(',');
     if (this.routesCache?.key === cacheKey) return this.routesCache.value;
     const groups: { key: string; orders: Order[] }[] = [];
     for (const order of this.activeMine) {
@@ -287,6 +295,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
       const group = groups.find(g => g.key === order.checkoutId);
       if (group) group.orders.push(order); else groups.push({ key: order.checkoutId, orders: [order] });
     }
+    groups.forEach(g => g.orders.sort((a, b) => a.id - b.id));
     const routes = groups.filter(g => g.orders.length > 1).map(g => {
       const address = g.orders[0].deliveryAddress ?? undefined;
       return { ...g, address, mapsUrl: this.routeUrl(g.orders) };
@@ -301,6 +310,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
 
   selectTab(tab: 'available' | 'mine' | 'finished' | 'settlement') {
     this.tab = tab;
+    if (tab === 'mine') this.loadMine();
     if (tab === 'settlement') this.loadSettlement();
     if (tab === 'finished') this.loadFinished();
   }
@@ -451,14 +461,28 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
 
   // Ruta kroz pijacu (tezge) do kupca; bicikl je najbliži skuteru, a za mape je dovoljna ulica i broj.
   // Tezga sa tačkom na mapi ide u rutu po koordinatama (tačno do tezge), ostale po adresi pijace.
+  // Robu koja je već preuzeta ("U dostavi") kurir nosi: ruta ide samo preko tezgi gde još treba da svrati, pa do kupca.
   routeUrl(orders: Order[]): string {
-    const stops = [...new Set(orders.map(o => {
-      const p = stallPoint(o);
-      return p ? pointText(p) : o.marketAddress || `${o.marketName}, Novi Sad`;
-    }))];
+    const stops = [...new Set([...orders].sort((a, b) => a.id - b.id)
+      .filter(o => o.status !== 'InDelivery')
+      .map(o => {
+        const p = stallPoint(o) ?? marketPoint(o);
+        return p ? pointText(p) : o.marketAddress || `${o.marketName}, Novi Sad`;
+      }))];
     return 'https://www.google.com/maps/dir/?api=1&travelmode=bicycling'
       + `&destination=${encodeURIComponent(this.streetOnly(orders[0].deliveryAddress))}`
-      + `&waypoints=${encodeURIComponent(stops.join('|'))}`;
+      + (stops.length ? `&waypoints=${encodeURIComponent(stops.join('|'))}` : '');
+  }
+
+  // "obe porudžbine", "sve 3 porudžbine", "svih 5 porudžbina"
+  private allOrdersText(n: number): string {
+    if (n === 2) return 'obe porudžbine';
+    return n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? `sve ${n} porudžbine` : `svih ${n} porudžbina`;
+  }
+
+  // Tačka za mapu i navigaciju do mesta preuzimanja: tezga, a ako je prodavac nije označio – centar pijace
+  pickupPoint(o: Order): GeoPoint | null {
+    return stallPoint(o) ?? marketPoint(o);
   }
 
   // Tezga na mapi (prodavac je pritisnuo "Ovde sam"): mapa se otvara na dodir, da kartice ostanu kratke
@@ -482,7 +506,7 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
 
   // Poruke gore, da ne pokriju dugmad "Odbij"/"Prihvati" i "Nije dostavljeno" (kao kod prodavca)
   private async toast(message: string, color: string) {
-    const toast = await this.toastController.create({ message, duration: 2500, color, position: 'top' });
+    const toast = await this.toastController.create({ message, duration: 2500, color, position: 'top', positionAnchor: 'courier-tabs' });
     await toast.present();
   }
 }

@@ -78,3 +78,6 @@ ion-card-header {
 }
 
 .map-hint { margin: 10px 0 6px; }
+
+/* Dugmad za poziv i put do tezge: dovoljno velika za palac */
+.contact-actions ion-button { min-height: 44px; }

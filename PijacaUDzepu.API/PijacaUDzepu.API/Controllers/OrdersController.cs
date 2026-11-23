@@ -1,3 +1,4 @@
+using PijacaUDzepu.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PijacaUDzepu.API.Controllers.Base;
@@ -182,6 +183,9 @@ public class OrdersController : BaseApiController
                     return Forbid();
             }
 
+            // Kupac kurirske porudžbine ne dobija tačku tezge (vidi je samo kad sam dolazi po robu)
+            if (order.CustomerId == userId && order.CourierId != userId && !User.IsInRole("SuperAdmin"))
+                order = OrderService.ForCustomer(order);
             return Ok(order);
         }
         catch (KeyNotFoundException ex)

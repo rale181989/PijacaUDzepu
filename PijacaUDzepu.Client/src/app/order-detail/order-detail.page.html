@@ -38,22 +38,23 @@
         <p class="vendor-line">{{ order.vendorName }} · {{ order.marketName }}<span *ngIf="order.stallLabel">, {{ 'home.stall' | t }} {{ order.stallLabel }}</span></p>
         <p *ngIf="order.marketAddress" class="muted">{{ order.marketAddress }}</p>
         <div class="contact-actions">
-          <ion-button *ngIf="order.vendorPhones?.length" size="small" [href]="'tel:' + order.vendorPhones[0]">
+          <ion-button *ngIf="order.vendorPhones?.length" [href]="'tel:' + order.vendorPhones[0]">
             <ion-icon name="call-outline" slot="start"></ion-icon> {{ 'order.callVendor' | t }}
           </ion-button>
-          <ion-button *ngIf="order.fulfillment === 'Pickup' && stallPoint(order) as point" size="small" fill="outline" target="_blank"
+          <ion-button *ngIf="showPickupWay(order) && stallPoint(order) as point" fill="outline" target="_blank"
                       [href]="directionsTo(point)">
             <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'map.toStall' | t }}
           </ion-button>
-          <ion-button *ngIf="order.fulfillment === 'Pickup' && !stallPoint(order) && order.marketAddress" size="small" fill="outline" target="_blank"
+          <ion-button *ngIf="showPickupWay(order) && !stallPoint(order) && order.marketAddress" fill="outline" target="_blank"
                       [href]="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(order.marketAddress)">
             <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'order.directions' | t }}
           </ion-button>
         </div>
         <!-- Prodavac je na tezgi pritisnuo "Ovde sam": kupac koji dolazi po robu vidi tačno mesto na pijaci -->
-        <ng-container *ngIf="order.fulfillment === 'Pickup' && stallPoint(order) as point">
+        <ng-container *ngIf="showPickupWay(order) && stallPoint(order) as point">
           <p class="muted small map-hint">{{ 'map.stallHint' | t }}</p>
           <app-stall-map [market]="marketPoint(order)" [stall]="point" [height]="200"
+                         [recenterLabel]="'map.recenter' | t" [gestureHint]="'map.gestures' | t"
                          [stallLabel]="order.stallLabel ? ('home.stall' | t) + ' ' + order.stallLabel : order.vendorName"
                          [marketLabel]="order.marketName || ''"></app-stall-map>
         </ng-container>

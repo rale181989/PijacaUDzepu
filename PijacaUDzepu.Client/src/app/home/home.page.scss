@@ -366,8 +366,39 @@ app-footer {
   &.active { border-color: var(--ion-color-danger); background: rgba(var(--ion-color-danger-rgb), 0.08); }
 }
 
-.how-it-works{margin:10px 12px 0;padding:8px 12px;border-radius:10px;background:var(--ion-color-light);font-size:13px;
-  ol{margin:4px 0 0;padding-left:18px}ion-button{margin:0}}
+// "Kako radi" preko celog ekrana (prvi ulazak)
+.how-it-works-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+.how-it-works {
+  width: 100%;
+  max-width: 440px;
+  max-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 20px 16px;
+  border-radius: 16px;
+  background: var(--ion-background-color, #fff);
+  color: var(--ion-text-color, #000);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  h2 { margin: 0 0 16px; text-align: center; font-size: 22px; font-weight: 700; color: var(--ion-color-primary-shade); }
+  .how-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+    ion-icon { flex-shrink: 0; font-size: 26px; color: var(--ion-color-primary); }
+    p { margin: 2px 0 0; font-size: 15px; line-height: 1.45; }
+  }
+  ion-button { margin: 8px 0 0; font-weight: 600; }
+}
 .in-cart{margin:2px 0 4px;text-align:center;font-size:12px;font-weight:600;color:var(--ion-color-primary)}
 
 // Izbor pijace pre ponude
@@ -409,7 +440,7 @@ ion-card ion-button[expand="block"] {
   ion-card ion-button[expand="block"] ion-icon { display: none; }
 }
 
-// Na računaru kartice pijaca u mreži, kao i okvir "Kako radi" (K14)
+// Na računaru kartice pijaca u mreži (K14)
 @media (min-width: 768px) {
   // Pun red do granice (u fleks koloni bi se sa margin: auto skupili na širinu teksta)
   .market-picker { max-width: 1000px; }
@@ -419,5 +450,4 @@ ion-card ion-button[expand="block"] {
     gap: 16px;
     .market-card { margin: 0; }
   }
-  .how-it-works { max-width: 976px; width: calc(100% - 24px); box-sizing: border-box; margin-left: auto; margin-right: auto; }
 }

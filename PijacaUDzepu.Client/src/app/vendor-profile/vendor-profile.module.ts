@@ -10,7 +10,7 @@ import { VendorProfilePage } from './vendor-profile.page';
   imports: [
     SharedModule,
     CommonModule, FormsModule, IonicModule,
-    RouterModule.forChild([{ path: '', component: VendorProfilePage }])
+    RouterModule.forChild([{ path: '', component: VendorProfilePage, canDeactivate: [(page: VendorProfilePage) => page.canLeave()] }])
   ],
   declarations: [VendorProfilePage]
 })

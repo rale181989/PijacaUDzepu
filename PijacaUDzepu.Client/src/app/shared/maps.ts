@@ -11,6 +11,12 @@ export function marketPoint(o: { marketLatitude?: number | null; marketLongitude
   return o.marketLatitude != null && o.marketLongitude != null ? { lat: o.marketLatitude, lng: o.marketLongitude } : null;
 }
 
+// Kupac ide po robu samo dok je rezervacija otvorena (ne posle odbijanja, otkazivanja ili preuzimanja)
+const OPEN_PICKUP = ['Pending', 'Confirmed', 'ReadyForPickup'];
+export function showPickupWay(o: { fulfillment: string; status: string }): boolean {
+  return o.fulfillment === 'Pickup' && OPEN_PICKUP.includes(o.status);
+}
+
 export function pointText(p: GeoPoint): string {
   return `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
 }

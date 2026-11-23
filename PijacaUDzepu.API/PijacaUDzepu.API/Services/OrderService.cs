@@ -95,7 +95,7 @@ public class OrderService : IOrderService
 
         await NotifyNewOrders(orders);
 
-        return orders.Select(MapToDto).ToList();
+        return orders.Select(o => ForCustomer(MapToDto(o))).ToList();
     }
 
     public async Task<List<OrderDto>> CreateGuestOrders(GuestOrderInputDto dto)
@@ -126,7 +126,7 @@ public class OrderService : IOrderService
         // Kod za praćenje dobija samo gost koji je poručio; prodavcu i kuririma se ne prikazuje
         return orders.Select(o =>
         {
-            var dto = MapToDto(o);
+            var dto = ForCustomer(MapToDto(o));
             dto.TrackingCode = o.TrackingCode;
             return dto;
         }).ToList();
@@ -385,11 +385,11 @@ public class OrderService : IOrderService
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var items = (await query
             .Skip(skip)
             .Take(take)
             .Select(o => MapToDto(o))
-            .ToListAsync();
+            .ToListAsync()).Select(ForCustomer).ToList();
 
         return new PagedResult<OrderDto>
         {
@@ -636,7 +636,7 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
 
         await _hubContext.Clients.Group($"vendor_{order.VendorId}").SendAsync("OrderRated", new { orderId = order.Id, vendorScore = dto.VendorScore });
-        return customerId != null ? MapToDto(order) : MapToTrackingDto(order);
+        return customerId != null ? ForCustomer(MapToDto(order)) : MapToTrackingDto(order);
     }
 
     public async Task<List<OrderDto>> GetTrackedOrders(string code)
@@ -691,9 +691,22 @@ public class OrderService : IOrderService
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(18)).Replace('+', '-').Replace('/', '_');
 
     // Stranicu za praćenje može da otvori svako ko ima link, pa adresa i telefon nisu prikazani u celosti
+    // Kupac vidi tezgu na mapi samo kada sam dolazi po robu (rezervacija); kod Eko kurira tačka mu ne treba
+    public static OrderDto ForCustomer(OrderDto dto)
+    {
+        if (dto.Fulfillment == FulfillmentType.Courier)
+        {
+            dto.StallLatitude = null;
+            dto.StallLongitude = null;
+            dto.MarketLatitude = null;
+            dto.MarketLongitude = null;
+        }
+        return dto;
+    }
+
     private static OrderDto MapToTrackingDto(Order o)
     {
-        var dto = MapToDto(o);
+        var dto = ForCustomer(MapToDto(o));
         dto.DeliveryAddress = MaskAddress(o.DeliveryAddress);
         dto.ContactPhone = MaskPhone(o.ContactPhone);
         dto.ClosedByAdminName = null; // gost vidi samo da je zatvorio administrator, ne i ko

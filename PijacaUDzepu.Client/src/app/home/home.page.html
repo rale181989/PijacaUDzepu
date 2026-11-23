@@ -16,15 +16,24 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Kako radi (dok kupac ne zatvori) -->
-  <div *ngIf="showHowItWorks" class="how-it-works">
-    <strong>{{ 'home.howTitle' | t }}</strong>
-    <ol>
-      <li>{{ 'home.how1' | t }}</li>
-      <li>{{ howFeeText() }}</li>
-      <li>{{ 'home.how3' | t }}</li>
-    </ol>
-    <ion-button size="small" fill="clear" (click)="closeHowItWorks()">{{ 'home.howClose' | t }}</ion-button>
+  <!-- Kako radi: preko celog ekrana pri prvom ulasku, nestaje na "Razumem" -->
+  <div *ngIf="showHowItWorks" slot="fixed" class="how-it-works-overlay" role="dialog" aria-modal="true" aria-labelledby="how-title">
+    <div class="how-it-works">
+      <h2 id="how-title">{{ 'home.howTitle' | t }}</h2>
+      <div class="how-step">
+        <ion-icon name="basket-outline"></ion-icon>
+        <p>{{ 'home.how1' | t }}</p>
+      </div>
+      <div class="how-step">
+        <ion-icon name="bicycle-outline"></ion-icon>
+        <p>{{ howFeeText() }}</p>
+      </div>
+      <div class="how-step">
+        <ion-icon name="cash-outline"></ion-icon>
+        <p>{{ 'home.how3' | t }}</p>
+      </div>
+      <ion-button expand="block" (click)="closeHowItWorks()">{{ 'home.howClose' | t }}</ion-button>
+    </div>
   </div>
 
   <!-- Prvo pijaca: jedna porudžbina je sa jedne pijace (kurir obilazi jednu pijacu) -->

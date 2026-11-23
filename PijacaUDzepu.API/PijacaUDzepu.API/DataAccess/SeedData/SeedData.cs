@@ -98,10 +98,10 @@ public static class Seed
         {
             var markets = new List<Market>
             {
-                new() { Name = "Futoška pijaca", Latitude = 45.2522, Longitude = 19.8306, Description = "Najveća novosadska pijaca sa širokim izborom svežeg voća, povrća i domaćih proizvoda.", Address = "Bulevar oslobođenja 30, Novi Sad", ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Futo%C5%A1ka_pijaca_NS_20.jpg/500px-Futo%C5%A1ka_pijaca_NS_20.jpg" },
-                new() { Name = "Riblja pijaca", Latitude = 45.2538, Longitude = 19.8430, Description = "Tradicionalna pijaca u centru grada, poznata po ribljim specijalitetima i svežem povrću.", Address = "Jevrejska ulica, Novi Sad", ImageUrl = "https://images.unsplash.com/photo-1514425263458-109317cc1321?w=600&h=400&fit=crop" },
-                new() { Name = "Limanska pijaca", Latitude = 45.2425, Longitude = 19.8437, Description = "Moderna pijaca na Limanu sa odličnom ponudom voća, povrća i začina.", Address = "Narodnog fronta 2, Novi Sad", ImageUrl = "https://images.unsplash.com/photo-1567306295427-94503f8300d7?w=600&h=400&fit=crop" },
-                new() { Name = "Najlon pijaca", Latitude = 45.2680, Longitude = 19.8455, Description = "Poznata novosadska pijaca sa raznovrsnom ponudom po pristupačnim cenama.", Address = "Temerinski put, Novi Sad", ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Najlon_pijaca.JPG/500px-Najlon_pijaca.JPG" },
+                new() { Name = "Futoška pijaca", Latitude = 45.2529, Longitude = 19.8371, Description = "Najveća novosadska pijaca sa širokim izborom svežeg voća, povrća i domaćih proizvoda.", Address = "Bulevar oslobođenja 30, Novi Sad", ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Futo%C5%A1ka_pijaca_NS_20.jpg/500px-Futo%C5%A1ka_pijaca_NS_20.jpg" },
+                new() { Name = "Riblja pijaca", Latitude = 45.2575, Longitude = 19.8510, Description = "Tradicionalna pijaca u centru grada, poznata po ribljim specijalitetima i svežem povrću.", Address = "Jevrejska ulica, Novi Sad", ImageUrl = "https://images.unsplash.com/photo-1514425263458-109317cc1321?w=600&h=400&fit=crop" },
+                new() { Name = "Limanska pijaca", Latitude = 45.2432, Longitude = 19.8372, Description = "Moderna pijaca na Limanu sa odličnom ponudom voća, povrća i začina.", Address = "Narodnog fronta 2, Novi Sad", ImageUrl = "https://images.unsplash.com/photo-1567306295427-94503f8300d7?w=600&h=400&fit=crop" },
+                new() { Name = "Najlon pijaca", Latitude = 45.2835, Longitude = 19.8324, Description = "Poznata novosadska pijaca sa raznovrsnom ponudom po pristupačnim cenama.", Address = "Temerinski put, Novi Sad", ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Najlon_pijaca.JPG/500px-Najlon_pijaca.JPG" },
             };
 
             context.Markets.AddRange(markets);
@@ -452,19 +452,21 @@ public static class Seed
         ("Kelj", ProductCategory.Povrce, ProductCategory.Povrce)
     };
 
-    // Približni centri demo pijaca u Novom Sadu (za mapu tezgi); administrator ih može ispraviti
-    private static readonly (string Name, double Lat, double Lng)[] DemoMarketLocations =
+    // Centri demo pijaca u Novom Sadu (OpenStreetMap, amenity=marketplace). Prva verzija je imala približne centre
+    // (Old), pomerene i do 2 km: ispravljaju se samo ako su još prazni ili stari, pa izmena administratora ostaje.
+    private static readonly (string Name, double OldLat, double OldLng, double Lat, double Lng)[] DemoMarketLocations =
     {
-        ("Futoška pijaca", 45.2522, 19.8306),
-        ("Riblja pijaca", 45.2538, 19.8430),
-        ("Limanska pijaca", 45.2425, 19.8437),
-        ("Najlon pijaca", 45.2680, 19.8455)
+        ("Futoška pijaca", 45.2522, 19.8306, 45.2529, 19.8371),
+        ("Riblja pijaca", 45.2538, 19.8430, 45.2575, 19.8510),
+        ("Limanska pijaca", 45.2425, 19.8437, 45.2432, 19.8372),
+        ("Najlon pijaca", 45.2680, 19.8455, 45.2835, 19.8324)
     };
 
     private static async Task FixDemoData(DataContext context)
     {
-        foreach (var (name, lat, lng) in DemoMarketLocations)
-            await context.Markets.Where(m => m.Name == name && m.Latitude == null)
+        foreach (var (name, oldLat, oldLng, lat, lng) in DemoMarketLocations)
+            await context.Markets.Where(m => m.Name == name
+                    && (m.Latitude == null || (m.Latitude == oldLat && m.Longitude == oldLng)))
                 .ExecuteUpdateAsync(set => set.SetProperty(m => m.Latitude, lat).SetProperty(m => m.Longitude, lng));
         foreach (var (name, oldUrl, newUrl) in DemoProductImageFixes)
             await context.Products.Where(p => p.Name == name && p.ImageUrl == oldUrl)

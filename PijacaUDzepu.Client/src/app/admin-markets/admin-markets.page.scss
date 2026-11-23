@@ -60,3 +60,6 @@ ion-chip {
     }
   }
 }
+
+.center { font-size: 12px; }
+.center.missing { color: var(--ion-color-warning-shade); }
