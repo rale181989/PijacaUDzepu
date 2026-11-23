@@ -46,7 +46,7 @@
         </ion-card-subtitle>
         <div class="badges">
           <ion-badge [color]="order.fulfillment === 'Pickup' ? 'warning' : 'tertiary'">
-            {{ order.fulfillment === 'Pickup' ? 'Rezervacija – lično preuzimanje' : 'Eko kurir' }}
+            {{ order.fulfillment === 'Pickup' ? 'Rezervacija – lično preuzimanje' : 'Kurir' }}
           </ion-badge>
           <ion-badge [color]="getStatusColor(order.status)">
             {{ getStatusLabel(order.status) }}

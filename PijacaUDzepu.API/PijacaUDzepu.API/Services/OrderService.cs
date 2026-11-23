@@ -41,7 +41,7 @@ public class OrderService : IOrderService
     // Link za praćenje važi dok je porudžbina u toku i još 30 dana posle poslednje promene
     private static readonly TimeSpan TrackingValidity = TimeSpan.FromDays(30);
 
-    // Cena Eko kurira po korpi, tj. po pijaci (korpa je uvek sa jedne pijace), bez obzira na broj tezgi;
+    // Cena kurira po korpi, tj. po pijaci (korpa je uvek sa jedne pijace), bez obzira na broj tezgi;
     // podešava se sa Delivery__CourierFee. Naplaćuje se na jednoj porudžbini korpe (MoveDeliveryFee).
     public decimal CourierFee => _config.GetValue<decimal?>("Delivery:CourierFee") ?? 300m;
 
@@ -1106,7 +1106,7 @@ public class OrderService : IOrderService
 
             // Zvoni prodavcu dok porudžbinu ne prihvati ili odbije
             await _pushService.SendAlarm(await VendorUserIds(order.VendorId), VendorAlarmTag(order.Id),
-                order.Fulfillment == FulfillmentType.Pickup ? $"Nova rezervacija #{order.Id}" : $"Nova porudžbina #{order.Id} (Eko kurir)",
+                order.Fulfillment == FulfillmentType.Pickup ? $"Nova rezervacija #{order.Id}" : $"Nova porudžbina #{order.Id} (kurir)",
                 $"{customerName} · {order.TotalAmount:0} din", "/vendor-orders");
 
             // Kuriri dobijaju porudžbinu tek kada je prodavac potvrdi (NotifyCouriersNewOrder)

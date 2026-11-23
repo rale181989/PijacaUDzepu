@@ -26,7 +26,7 @@
       <ion-card-header>
         <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }} · otvorena {{ age(order) }}</ion-card-subtitle>
         <div class="badges">
-          <ion-badge [color]="order.fulfillment === 'Pickup' ? 'warning' : 'tertiary'">{{ order.fulfillment === 'Pickup' ? 'Rezervacija' : 'Eko kurir' }}</ion-badge>
+          <ion-badge [color]="order.fulfillment === 'Pickup' ? 'warning' : 'tertiary'">{{ order.fulfillment === 'Pickup' ? 'Rezervacija' : 'Kurir' }}</ion-badge>
           <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
         </div>
       </ion-card-header>

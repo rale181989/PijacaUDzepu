@@ -189,7 +189,7 @@ async function build() {
   await s.icon('MdStorefront', 0.6, 1.25, 0.9, 'carrot');
   s.text('Pijaca u Džepu', 0.6, 2.35, 7.6, 1.0, { size: 54, bold: true, head: true, color: 'white' });
   s.text('Korisničko uputstvo', 0.6, 3.4, 7.6, 0.6, { size: 28, color: 'mint', head: true });
-  s.text('Za kupce, prodavce na pijaci i Eko kurire. Svaki korak je prikazan na ekranu aplikacije, a brojevi na slikama odgovaraju brojevima u tekstu.', 0.6, 4.35, 7.0, 0.9, { size: 16, color: 'mint' });
+  s.text('Za kupce, prodavce na pijaci i kurire. Svaki korak je prikazan na ekranu aplikacije, a brojevi na slikama odgovaraju brojevima u tekstu.', 0.6, 4.35, 7.0, 0.9, { size: 16, color: 'mint' });
   s.text('Novi Sad · novembar 2026.', 0.6, 6.55, 5, 0.35, { size: 12, color: 'mint' });
   s.phone('c-home', RIGHT_X, PHONE_Y, PHONE_H, 'Početni ekran aplikacije sa filterima i proizvodima');
 
@@ -197,9 +197,9 @@ async function build() {
   s = new S('Sadrzaj - bez ekrana', 'Uvod');
   s.title('Jedna aplikacija, tri uloge');
   const roles = [
-    ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko Eko kurira. Nalog nije obavezan.', 'Strane 3–12'],
+    ['MdShoppingBasket', 'carrot', 'Kupac', 'Bira proizvode sa novosadskih pijaca i poručuje ih: sam preuzima robu na tezgi ili je dobija na adresu preko kurira. Nalog nije obavezan.', 'Strane 3–12'],
     ['MdStorefront', 'green', 'Prodavac', 'Održava ponudu i cene, prima porudžbine, potvrđuje ih i javlja kupcu kada je roba spremna.', 'Strane 13–20'],
-    ['MdDeliveryDining', 'sky', 'Eko kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 21–25']
+    ['MdDeliveryDining', 'sky', 'Kurir', 'Uključuje smenu, prihvata dostave, preuzima robu od prodavca i nosi je kupcu na adresu.', 'Strane 21–25']
   ];
   for (const [i, [ic, col, h, d, pages]] of roles.entries()) {
     const x = 0.6 + i * 4.1;
@@ -254,7 +254,7 @@ async function build() {
     { h: 'Kartica proizvoda', d: 'Naziv, prodavac, pijaca i broj tezge, telefon prodavca i cena po jedinici mere.' },
     { h: 'Količina', d: 'Dugmićima − i + podesite koliko želite: po pola kilograma ili litra, a komade i veze po jedan. Bez toga „Dodaj“ dodaje jedan.' },
     { h: 'Dodaj', d: 'Proizvod ide u korpu (ikonica gore desno, broj na njoj je broj stavki), a na kartici piše koliko je već u korpi. Ako tezga trenutno ne radi, piše kada se otvara, a dugme je isključeno.' },
-    { h: 'Više tezgi u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca sa iste pijace; svaki dobija svoj deo porudžbine. Dostava Eko kurirom se plaća jednom za celu korpu, bez obzira na broj tezgi.' }
+    { h: 'Više tezgi u jednoj korpi', n: '✓', d: 'Možete kombinovati robu različitih prodavaca sa iste pijace; svaki dobija svoj deo porudžbine. Dostava kurirom se plaća jednom za celu korpu, bez obzira na broj tezgi.' }
   ]);
   s.phone('c-home-products', RIGHT_X, PHONE_Y, PHONE_H, 'Kartice proizvoda sa količinom i dugmetom Dodaj',
     [[1, 0.40, 0.312], [2, 0.04, 0.459], [3, 0.40, 0.505]]);
@@ -282,11 +282,11 @@ async function build() {
   };
   await opt(1.75, 1, 'MdStorefront', 'green', 'Rezerviši – preuzimam sam',
     'Robu preuzimate na tezgi i plaćate na licu mesta. Prodavac potvrđuje rezervaciju i javlja kada je roba spremna.');
-  await opt(3.75, 2, 'MdDeliveryDining', 'sky', 'Naruči – Eko kurir',
+  await opt(3.75, 2, 'MdDeliveryDining', 'sky', 'Naruči – kurir',
     'Kurir donosi robu na vašu adresu, a plaćate mu pri dostavi. Cena dostave piše na dugmetu i plaća se jednom po porudžbini, i kad je roba sa više tezgi.');
   await s.icon('MdInfo', 0.6, 5.85, 0.45, 'carrot');
   s.text('Porudžbina se trenutno ne može otkazati u aplikaciji. Ako se predomislite, pozovite prodavca; broj je na kartici proizvoda.', 1.2, 5.8, 7.3, 0.6, { size: 14 });
-  s.phone('c-cart-checkout', RIGHT_X, PHONE_Y, PHONE_H, 'Dugmad Rezerviši – preuzimam sam i Naruči – Eko kurir',
+  s.phone('c-cart-checkout', RIGHT_X, PHONE_Y, PHONE_H, 'Dugmad Rezerviši – preuzimam sam i Naruči – kurir',
     [[1, 0.93, 0.585], [2, 0.93, 0.71]]);
 
   // 8. Praćenje
@@ -319,7 +319,7 @@ async function build() {
     { h: 'Tok porudžbine', d: 'Korak po korak, sa vremenom: poručeno, prodavac potvrdio, dodeljen kurir, kurir preuzeo robu, dostavljeno.' },
     { h: 'Poruka prodavca', d: 'Npr. kada možete doći po robu. Kod preuzimanja na tezgi: pijaca, tezga, adresa, „Kako da stignem” i „Pozovi prodavca”.' },
     { h: 'Kurir', d: 'Kada je kurir dodeljen, vidite njegovo ime i telefon.' },
-    { h: 'Za plaćanje', n: '✓', d: 'Roba + Eko kurir. Plaća se gotovinom pri preuzimanju.' }
+    { h: 'Za plaćanje', n: '✓', d: 'Roba + kurir. Plaća se gotovinom pri preuzimanju.' }
   ]);
   s.phone('c-order-detail', RIGHT_X, PHONE_Y, PHONE_H, 'Detalji porudžbine sa tokom porudžbine, porukom prodavca i kurirom',
     [[1, 0.93, 0.63], [2, 0.93, 0.86], [3, 0.93, 0.96]]);
@@ -375,7 +375,7 @@ async function build() {
   s.title('Nova porudžbina: potvrdite ili odbijte');
   s.steps([
     { h: 'Zvono i rok', d: 'Dok imate porudžbinu na čekanju, telefon zvoni. Odgovorite u roku koji piše na kartici: posle 15 minuta porudžbina se sama otkazuje.' },
-    { h: 'Šta je poručeno', d: 'Kupac, telefon (dodirom ga pozovete), adresa, stavke, iznos i način: „Eko kurir“ ili „Rezervacija – lično preuzimanje“.' },
+    { h: 'Šta je poručeno', d: 'Kupac, telefon (dodirom ga pozovete), adresa, stavke, iznos i način: „Kurir“ ili „Rezervacija – lično preuzimanje“.' },
     { h: 'Potvrdi ili Odbij', d: 'Uz potvrdu možete napisati poruku kupcu, npr. „Spremno za 30 min, tezga 14“. Kod odbijanja izaberite gotov razlog („Nestalo je robe”, „Danas ne radim”…) ili napišite svoj: kupac ga dobija u aplikaciji i e-mailom. Zvono staje kada odgovorite na sve.' }
   ]);
   s.phone('v-orders', RIGHT_X, PHONE_Y, PHONE_H, 'Porudžbina na čekanju sa dugmadima Potvrdi i Odbij',
@@ -387,7 +387,7 @@ async function build() {
   s.steps([
     { h: 'Spremno', d: 'Kada je roba spakovana, jedan dodir na „Spremno“. Kupac, a kod dostave i kurir, dobijaju obaveštenje.' },
     { h: 'Rezervacija', d: 'Kada kupac dođe na tezgu i preuzme robu, pritisnite „Kupac preuzeo“ i potvrdite.' },
-    { h: 'Eko kurir', d: 'Vidite ime i telefon kurira koji dolazi po robu. Porudžbinu završava kurir posle isporuke. Završena prelazi u tab „Završene”; ako ju je zatvorio administrator, to piše na kartici.' }
+    { h: 'Kurir', d: 'Vidite ime i telefon kurira koji dolazi po robu. Porudžbinu završava kurir posle isporuke. Završena prelazi u tab „Završene”; ako ju je zatvorio administrator, to piše na kartici.' }
   ]);
   s.phone('v-orders-more', RIGHT_X, PHONE_Y, PHONE_H, 'Potvrđene porudžbine sa dugmetom Spremno i podacima kurira',
     [[1, 0.42, 0.46], [3, 0.93, 0.81]]);
@@ -438,7 +438,7 @@ async function build() {
     [[1, 0.93, 0.25], [2, -0.11, 0.453], [3, 0.47, 0.887]]);
 
   // 18. Odeljak: kuriri
-  await section('03', 'Za Eko kurire', 'Smena, zvono za nove dostave, prihvatanje ili odbijanje i isporuka korak po korak.', 'MdDeliveryDining', 'sky', 'Kuriri');
+  await section('03', 'Za kurire', 'Smena, zvono za nove dostave, prihvatanje ili odbijanje i isporuka korak po korak.', 'MdDeliveryDining', 'sky', 'Kuriri');
 
   // 19. Nove dostave
   s = new S('Sadrzaj - jedan ekran', 'Kuriri', 'kurir');

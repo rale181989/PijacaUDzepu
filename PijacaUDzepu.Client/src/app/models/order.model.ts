@@ -92,7 +92,7 @@ export interface OrderItemInput {
   expectedUnitPrice?: number;
 }
 
-// Pickup = rezervacija, kupac sam preuzima kod prodavca; Courier = dostava preko Eko kurira
+// Pickup = rezervacija, kupac sam preuzima kod prodavca; Courier = dostava preko kurira
 export type FulfillmentType = 'Pickup' | 'Courier';
 
 // Kupci i gosti privremeno ne mogu da otkažu porudžbinu; mora da se poklapa sa
