@@ -28,6 +28,12 @@ public class VendorDto
     public string? ClosedReason { get; set; }
     public DateTime? OpensAt { get; set; }
     public string? ClosesAt { get; set; }
+    // Tačka tezge (null ako nije postavljena ili je funkcija isključena) i centar pijace za mapu
+    public double? StallLatitude { get; set; }
+    public double? StallLongitude { get; set; }
+    public DateTime? StallLocationAt { get; set; }
+    public double? MarketLatitude { get; set; }
+    public double? MarketLongitude { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

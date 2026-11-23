@@ -26,6 +26,11 @@ public class OrderDto
     // Mesto preuzimanja robe za kurira
     public string? MarketName { get; set; }
     public string? MarketAddress { get; set; }
+    // Mapa (Features.StallLocation): tačka tezge ako ju je prodavac postavio i centar pijace
+    public double? StallLatitude { get; set; }
+    public double? StallLongitude { get; set; }
+    public double? MarketLatitude { get; set; }
+    public double? MarketLongitude { get; set; }
     public Guid? CheckoutId { get; set; }
     public string? StallLabel { get; set; }
     public List<string> VendorPhones { get; set; } = new();

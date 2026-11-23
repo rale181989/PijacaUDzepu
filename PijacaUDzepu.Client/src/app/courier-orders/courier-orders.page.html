@@ -153,6 +153,20 @@
               <p *ngFor="let phone of order.vendorPhones" class="phone">
                 <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + phone">{{ phone }}</a>
               </p>
+              <!-- Tačka tezge (prodavac je pritisnuo "Ovde sam"): mapa pijace i navigacija tačno do tezge -->
+              <ng-container *ngIf="tab === 'mine' && stallPoint(order) as point">
+                <div class="stall-map-actions">
+                  <ion-button size="small" fill="outline" (click)="toggleMap(order.id)">
+                    <ion-icon name="map-outline" slot="start"></ion-icon> {{ mapOpen[order.id] ? 'Sakrij mapu' : 'Tezga na mapi' }}
+                  </ion-button>
+                  <ion-button size="small" fill="outline" [href]="stallDirections(point)" target="_blank">
+                    <ion-icon name="navigate-outline" slot="start"></ion-icon> Do tezge
+                  </ion-button>
+                </div>
+                <app-stall-map *ngIf="mapOpen[order.id]" [market]="marketPoint(order)" [stall]="point"
+                               [stallLabel]="order.stallLabel ? 'Tezga ' + order.stallLabel : order.vendorName"
+                               [marketLabel]="order.marketName || ''" [height]="220"></app-stall-map>
+              </ng-container>
             </div>
           </div>
           <div class="stop">

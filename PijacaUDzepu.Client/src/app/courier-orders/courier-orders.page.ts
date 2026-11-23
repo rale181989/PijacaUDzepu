@@ -5,6 +5,7 @@ import { CourierService, CourierSettlement } from '../services/courier.service';
 import { NotificationService } from '../services/notification.service';
 import { TranslateService } from '../services/translate.service';
 import { Order, OrderStatus } from '../models/order.model';
+import { GeoPoint, directionsTo, marketPoint, pointText, stallPoint } from '../shared/maps';
 import { PagerComponent } from '../shared/pager/pager.component';
 import { itemsWord, srPlural } from '../shared/plural';
 import { forkJoin } from 'rxjs';
@@ -448,12 +449,29 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
     return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(this.streetOnly(address));
   }
 
-  // Ruta kroz pijacu (tezge) do kupca; bicikl je najbliži skuteru, a za mape je dovoljna ulica i broj
+  // Ruta kroz pijacu (tezge) do kupca; bicikl je najbliži skuteru, a za mape je dovoljna ulica i broj.
+  // Tezga sa tačkom na mapi ide u rutu po koordinatama (tačno do tezge), ostale po adresi pijace.
   routeUrl(orders: Order[]): string {
-    const stops = [...new Set(orders.map(o => o.marketAddress || `${o.marketName}, Novi Sad`))];
+    const stops = [...new Set(orders.map(o => {
+      const p = stallPoint(o);
+      return p ? pointText(p) : o.marketAddress || `${o.marketName}, Novi Sad`;
+    }))];
     return 'https://www.google.com/maps/dir/?api=1&travelmode=bicycling'
       + `&destination=${encodeURIComponent(this.streetOnly(orders[0].deliveryAddress))}`
       + `&waypoints=${encodeURIComponent(stops.join('|'))}`;
+  }
+
+  // Tezga na mapi (prodavac je pritisnuo "Ovde sam"): mapa se otvara na dodir, da kartice ostanu kratke
+  readonly stallPoint = stallPoint;
+  readonly marketPoint = marketPoint;
+  mapOpen: Record<number, boolean> = {};
+
+  toggleMap(orderId: number) {
+    this.mapOpen = { ...this.mapOpen, [orderId]: !this.mapOpen[orderId] };
+  }
+
+  stallDirections(p: GeoPoint): string {
+    return directionsTo(p, 'bicycling');
   }
 
   // "Dunavska 5, ulaz B, sprat 2, stan 7, interfon 12" -> "Dunavska 5" (ostalo je za kurira, ne za pretragu mape)

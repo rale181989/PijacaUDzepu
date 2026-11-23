@@ -89,3 +89,13 @@
 }
 
 .date-label { display: inline-flex; align-items: center; gap: 6px; }
+
+.location-section {
+  margin-top: 28px;
+
+  .hint { color: var(--ion-color-medium); margin: 0 0 10px; }
+  .location-note { margin: 8px 0 0; }
+  .muted { color: var(--ion-color-medium); }
+  .location-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .location-actions ion-button { min-height: 44px; }
+}

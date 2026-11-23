@@ -1,3 +1,4 @@
+import { directionsTo, marketPoint, stallPoint } from '../shared/maps';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
@@ -29,6 +30,15 @@ interface TrackedGroup {
 export class TrackOrderPage implements OnInit, OnDestroy {
   code: string | null = null;
   readonly canCancel = CUSTOMER_CANCEL_ENABLED;
+  // Rezervacija: tačka tezge na mapi (na dodir) i navigacija peške do nje
+  readonly stallPoint = stallPoint;
+  readonly marketPoint = marketPoint;
+  readonly directionsTo = directionsTo;
+  mapOpen: Record<number, boolean> = {};
+
+  toggleMap(orderId: number) {
+    this.mapOpen = { ...this.mapOpen, [orderId]: !this.mapOpen[orderId] };
+  }
   groups: TrackedGroup[] = [];
   loading = false;
   notFound = false;

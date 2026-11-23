@@ -27,6 +27,11 @@ public class Vendor
     public DateOnly? EarlyCloseDate { get; set; }
     public string? EarlyCloseTime { get; set; }
 
+    // Tačka tezge na mapi (Features.StallLocation): postavlja je prodavac na tezgi, vide je kurir i kupac sa rezervacijom
+    public double? StallLatitude { get; set; }
+    public double? StallLongitude { get; set; }
+    public DateTime? StallLocationAt { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

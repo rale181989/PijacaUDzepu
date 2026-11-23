@@ -47,12 +47,22 @@ export class AdminMarketsPage implements OnInit {
     }
   }
 
+  // "45.2522, 19.8306" (kopirano iz Google mapa) -> koordinate; prazno = bez centra; neispravno = undefined
+  private parseCenter(text?: string): { latitude: number | null; longitude: number | null } | undefined {
+    if (!text?.trim()) return { latitude: null, longitude: null };
+    const m = text.trim().match(/^(-?\d{1,2}(?:\.\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:\.\d+)?)$/);
+    if (!m) return undefined;
+    const latitude = Number(m[1]), longitude = Number(m[2]);
+    return Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180 ? { latitude, longitude } : undefined;
+  }
+
   async addMarket() {
     const alert = await this.alertController.create({
       header: 'Nova pijaca',
       inputs: [
         { name: 'name', placeholder: 'Naziv pijace', type: 'text' },
         { name: 'address', placeholder: 'Adresa', type: 'text' },
+        { name: 'center', placeholder: 'Centar na mapi: 45.2522, 19.8306', type: 'text' },
         { name: 'description', placeholder: 'Opis', type: 'textarea' },
       ],
       buttons: [
@@ -61,7 +71,9 @@ export class AdminMarketsPage implements OnInit {
           text: 'Kreiraj',
           handler: (data) => {
             if (!data.name?.trim()) return false;
-            const dto: MarketInput = { name: data.name.trim(), address: data.address?.trim(), description: data.description?.trim() };
+            const center = this.parseCenter(data.center);
+            if (center === undefined) { this.showToast('Centar na mapi upišite kao „45.2522, 19.8306” (desni klik na mesto u Google mapama).', 'warning'); return false; }
+            const dto: MarketInput = { name: data.name.trim(), address: data.address?.trim(), description: data.description?.trim(), ...center };
             this.marketService.create(dto).subscribe({
               next: () => { this.loadMarkets(); this.showToast('Pijaca kreirana', 'success'); },
               error: () => this.showToast('Greška', 'danger')
@@ -80,6 +92,7 @@ export class AdminMarketsPage implements OnInit {
       inputs: [
         { name: 'name', value: market.name, placeholder: 'Naziv', type: 'text' },
         { name: 'address', value: market.address || '', placeholder: 'Adresa', type: 'text' },
+        { name: 'center', value: market.latitude != null ? `${market.latitude}, ${market.longitude}` : '', placeholder: 'Centar na mapi: 45.2522, 19.8306', type: 'text' },
         { name: 'description', value: market.description || '', placeholder: 'Opis', type: 'textarea' },
       ],
       buttons: [
@@ -88,7 +101,9 @@ export class AdminMarketsPage implements OnInit {
           text: 'Sačuvaj',
           handler: (data) => {
             if (!data.name?.trim()) return false;
-            const dto: MarketInput = { name: data.name.trim(), address: data.address?.trim(), description: data.description?.trim() };
+            const center = this.parseCenter(data.center);
+            if (center === undefined) { this.showToast('Centar na mapi upišite kao „45.2522, 19.8306” (desni klik na mesto u Google mapama).', 'warning'); return false; }
+            const dto: MarketInput = { name: data.name.trim(), address: data.address?.trim(), description: data.description?.trim(), ...center };
             this.marketService.update(market.id, dto).subscribe({
               next: () => { this.loadMarkets(); this.showToast('Pijaca ažurirana', 'success'); },
               error: () => this.showToast('Greška', 'danger')

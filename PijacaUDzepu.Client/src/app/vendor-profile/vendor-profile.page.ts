@@ -9,6 +9,9 @@ import { TranslateService } from '../services/translate.service';
 import { vendorClosedText } from '../services/vendor-status';
 import { Market } from '../models/market.model';
 import { Stall } from '../models/stall.model';
+import { FeaturesService } from '../services/features.service';
+import { GeoPoint } from '../shared/maps';
+import { Vendor } from '../models/vendor.model';
 
 @Component({
   selector: 'app-vendor-profile',
@@ -50,6 +53,20 @@ export class VendorProfilePage implements OnInit {
   savingAvailability = false;
   readonly today = new Date().toISOString().slice(0, 10);
 
+  // Lokacija tezge na mapi (funkcija stallLocation): "Ovde sam" uzima GPS i odmah čuva; dodir na mapu pomera tačku
+  marketPoint: GeoPoint | null = null;
+  marketName = '';
+  savedPoint: GeoPoint | null = null;
+  draftPoint: GeoPoint | null = null;
+  locating = false;
+  savingLocation = false;
+  locationNote = '';
+
+  get locationDirty(): boolean {
+    const a = this.draftPoint, b = this.savedPoint;
+    return !!a && (!b || a.lat !== b.lat || a.lng !== b.lng);
+  }
+
   addPhone() {
     this.model.phones.push('');
   }
@@ -68,10 +85,12 @@ export class VendorProfilePage implements OnInit {
     private marketService: MarketService,
     private stallService: StallService,
     private toastController: ToastController,
-    private ts: TranslateService
+    private ts: TranslateService,
+    public features: FeaturesService
   ) {}
 
   ngOnInit() {
+    this.features.load();
     this.marketService.getAll().subscribe(m => this.markets = m);
     this.vendorService.getMyVendor().subscribe({
       next: v => {
@@ -92,6 +111,7 @@ export class VendorProfilePage implements OnInit {
         };
         if (v.marketId) this.loadStalls(v.marketId);
         this.applyAvailability(v);
+        this.applyLocation(v);
         this.loading = false;
       },
       error: () => this.loading = false
@@ -111,6 +131,79 @@ export class VendorProfilePage implements OnInit {
     this.statusText = v.isOpen
       ? (v.closesAt ? `Sada primate porudžbine (do ${v.closesAt})` : 'Sada primate porudžbine')
       : vendorClosedText(this.ts, v.closedReason, v.opensAt);
+  }
+
+  private applyLocation(v: Vendor) {
+    this.marketName = v.marketName;
+    this.marketPoint = v.marketLatitude != null && v.marketLongitude != null ? { lat: v.marketLatitude, lng: v.marketLongitude } : null;
+    this.savedPoint = v.stallLatitude != null && v.stallLongitude != null ? { lat: v.stallLatitude, lng: v.stallLongitude } : null;
+    this.draftPoint = this.savedPoint;
+  }
+
+  // "Ovde sam": telefon uzima GPS (traži dozvolu za lokaciju) i tačka se odmah čuva
+  useGps() {
+    if (!navigator.geolocation) {
+      this.toast('Ovaj uređaj ne daje lokaciju. Dodirnite mapu na mesto tezge.', 'warning');
+      return;
+    }
+    this.locating = true;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        this.locating = false;
+        const accuracy = Math.round(pos.coords.accuracy);
+        this.draftPoint = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        this.saveLocation(accuracy > 60
+          ? `GPS je neprecizan (± ${accuracy} m) – proverite tačku na mapi i po potrebi je pomerite dodirom.`
+          : `Tačka je sačuvana (GPS ± ${accuracy} m).`);
+      },
+      err => {
+        this.locating = false;
+        this.toast(err.code === err.PERMISSION_DENIED
+          ? 'Aplikacija nema dozvolu za lokaciju. Uključite je u podešavanjima telefona ili dodirnite mapu na mesto tezge.'
+          : 'Lokacija trenutno nije dostupna. Pokušajte ponovo napolju ili dodirnite mapu na mesto tezge.', 'warning');
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+    );
+  }
+
+  onMapPick(p: GeoPoint) {
+    this.draftPoint = p;
+    this.locationNote = 'Tačka je pomerena – sačuvajte je.';
+  }
+
+  saveLocation(note = 'Tačka je sačuvana.') {
+    const p = this.draftPoint;
+    if (!p || this.savingLocation) return;
+    this.savingLocation = true;
+    this.vendorService.setMyLocation(p.lat, p.lng).subscribe({
+      next: v => {
+        this.savingLocation = false;
+        this.applyLocation(v);
+        this.locationNote = note;
+      },
+      error: err => {
+        this.savingLocation = false;
+        this.draftPoint = this.savedPoint;
+        this.locationNote = '';
+        this.toast(err.error?.message || 'Tačka nije sačuvana.', 'danger');
+      }
+    });
+  }
+
+  clearLocation() {
+    if (this.savingLocation) return;
+    this.savingLocation = true;
+    this.vendorService.clearMyLocation().subscribe({
+      next: v => {
+        this.savingLocation = false;
+        this.applyLocation(v);
+        this.locationNote = 'Tačka je uklonjena – kurir i kupci vide samo pijacu i broj tezge.';
+      },
+      error: err => {
+        this.savingLocation = false;
+        this.toast(err.error?.message || 'Tačka nije uklonjena.', 'danger');
+      }
+    });
   }
 
   // Vreme prvog uključenog dana prepisuje se na sve uključene dane
@@ -244,5 +337,10 @@ export class VendorProfilePage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  private async toast(message: string, color: string) {
+    const toast = await this.toastController.create({ message, duration: 4000, color, position: 'top' });
+    await toast.present();
   }
 }

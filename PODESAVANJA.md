@@ -163,6 +163,23 @@ Pragovi se menjaju na Render-u (bez novog APK-a):
 
 ---
 
+## 4b. Lokacija tezge na mapi (proba)
+
+Prodavac u „Moj profil” pritisne „Ovde sam” kada je na tezgi; tačku vide kurir i kupac koji je rezervisao robu.
+Mapa je OpenStreetMap (besplatno, bez ključa i kartice).
+
+- [ ] Proveriti centre pijaca u „Pijace” → izmeni → „Centar na mapi” (desni klik na mesto u Google mapama → kopiraj
+      koordinate, npr. `45.2522, 19.8306`). Demo pijace imaju približne centre; tačka tezge mora biti do 1,5 km od centra.
+- [ ] Novi APK posle ove izmene (Android dozvola za lokaciju je u APK-u).
+- Isključivanje bez novog koda i APK-a: na Render-u `Features__StallLocation` = `false` (mapa i dugme „Ovde sam”
+  nestaju, sačuvane tačke ostaju u bazi i vraćaju se kad se ponovo uključi).
+- OpenStreetMap besplatne mape su za umeren saobraćaj. Ako aplikacija jako poraste, preći na besplatni paket
+  MapTiler-a ili Stadia Maps (menja se samo adresa mapa u `shared/stall-map`).
+- Google Play: lokacija se koristi samo dok je aplikacija otvorena (ne u pozadini), pa nije potrebna posebna
+  izjava za lokaciju u pozadini; u obrascu „Data safety” navesti „Približna/tačna lokacija – funkcionalnost aplikacije”.
+
+---
+
 ## 4. Cena Eko kurira
 
 - [ ] Upisana dogovorena cena

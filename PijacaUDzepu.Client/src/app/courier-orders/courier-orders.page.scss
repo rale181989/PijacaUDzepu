@@ -203,3 +203,12 @@ ion-button { min-height: 44px; }
   .row.handed { opacity: 0.55; }
   .row.return { background: rgba(var(--ion-color-danger-rgb), 0.06); }
 }
+
+.stall-map-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+
+  ion-button { min-height: 44px; }
+}

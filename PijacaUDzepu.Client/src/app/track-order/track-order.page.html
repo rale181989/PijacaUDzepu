@@ -74,6 +74,20 @@
           <p *ngFor="let phone of order.vendorPhones" class="muted">
             <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + phone">{{ phone }}</a>
           </p>
+          <!-- Rezervacija: tezga na mapi (prodavac je pritisnuo "Ovde sam") -->
+          <ng-container *ngIf="order.fulfillment === 'Pickup' && order.status !== 'Rejected' && order.status !== 'Cancelled' && stallPoint(order) as point">
+            <div class="map-actions">
+              <ion-button size="small" fill="outline" (click)="toggleMap(order.id)">
+                <ion-icon name="map-outline" slot="start"></ion-icon> {{ (mapOpen[order.id] ? 'map.hide' : 'map.showStall') | t }}
+              </ion-button>
+              <ion-button size="small" fill="outline" target="_blank" [href]="directionsTo(point)">
+                <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'map.toStall' | t }}
+              </ion-button>
+            </div>
+            <app-stall-map *ngIf="mapOpen[order.id]" [market]="marketPoint(order)" [stall]="point" [height]="200"
+                           [stallLabel]="order.stallLabel ? ('home.stall' | t) + ' ' + order.stallLabel : order.vendorName"
+                           [marketLabel]="order.marketName || ''"></app-stall-map>
+          </ng-container>
 
           <div *ngIf="order.status === 'Rejected'" class="vendor-message rejected">
             <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>

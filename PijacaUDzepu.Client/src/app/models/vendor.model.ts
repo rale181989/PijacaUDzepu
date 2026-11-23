@@ -24,6 +24,12 @@ export interface Vendor {
   closedReason?: 'Paused' | 'ClosedDay' | 'Hours' | 'Inactive' | null;
   opensAt?: string | null;
   closesAt?: string | null;
+  // Tačka tezge na mapi (null ako nije postavljena) i centar pijace
+  stallLatitude?: number | null;
+  stallLongitude?: number | null;
+  stallLocationAt?: string | null;
+  marketLatitude?: number | null;
+  marketLongitude?: number | null;
   createdAt: string;
 }
 

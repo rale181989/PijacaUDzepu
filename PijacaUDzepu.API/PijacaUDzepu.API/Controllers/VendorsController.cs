@@ -116,6 +116,29 @@ public class VendorsController : BaseApiController
         }
     }
 
+    // Lokacija tezge na mapi (Features.StallLocation): PUT postavlja tačku, DELETE je briše
+    [Authorize(Policy = "RequireVendorAdmin")]
+    [HttpPut("my-vendor/location")]
+    public Task<IActionResult> UpdateMyLocation(StallLocationDto dto) => SaveMyLocation(dto);
+
+    [Authorize(Policy = "RequireVendorAdmin")]
+    [HttpDelete("my-vendor/location")]
+    public Task<IActionResult> DeleteMyLocation() => SaveMyLocation(null);
+
+    private async Task<IActionResult> SaveMyLocation(StallLocationDto? dto)
+    {
+        var vendorId = await _vendorService.GetVendorIdForUser(User.GetUserId());
+        if (vendorId == null) return NotFound(new { message = L.T("Niste dodeljeni prodavcu.") });
+        try
+        {
+            return Ok(await _vendorService.UpdateStallLocation(vendorId.Value, dto));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [Authorize(Policy = "RequireVendorAdmin")]
     [HttpPut("my-vendor")]
     public async Task<IActionResult> UpdateMyVendor(VendorInputDto dto)

@@ -37,6 +37,15 @@ export class VendorService {
     return this.http.put<Vendor>(`${this.baseUrl}/my-vendor/availability`, dto);
   }
 
+  // Tačka tezge na mapi ("Ovde sam"); brisanje vraća prikaz samo sa adresom pijace
+  setMyLocation(latitude: number, longitude: number) {
+    return this.http.put<Vendor>(`${this.baseUrl}/my-vendor/location`, { latitude, longitude });
+  }
+
+  clearMyLocation() {
+    return this.http.delete<Vendor>(`${this.baseUrl}/my-vendor/location`);
+  }
+
   updateMyVendor(dto: VendorInput) {
     return this.http.put<Vendor>(`${this.baseUrl}/my-vendor`, dto);
   }

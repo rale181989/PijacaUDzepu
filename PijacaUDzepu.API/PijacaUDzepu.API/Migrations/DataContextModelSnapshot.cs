@@ -268,6 +268,12 @@ namespace PijacaUDzepu.API.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -853,6 +859,15 @@ namespace PijacaUDzepu.API.Migrations
 
                     b.Property<int?>("StallId")
                         .HasColumnType("integer");
+
+                    b.Property<double?>("StallLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("StallLocationAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("StallLongitude")
+                        .HasColumnType("double precision");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

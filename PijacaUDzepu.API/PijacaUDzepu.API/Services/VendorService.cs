@@ -148,6 +148,29 @@ public class VendorService : IVendorService
         return MapToDto(vendor);
     }
 
+    // Prodavac je na tezgi pritisnuo "Ovde sam" (ili pomerio tačku na mapi). Tačka mora biti blizu pijace,
+    // da se ne sačuva slučajno kućna adresa ili GPS koji je "odleteo"; null briše tačku.
+    public const double MaxStallDistanceMeters = 1500;
+
+    public async Task<VendorDto> UpdateStallLocation(int vendorId, StallLocationDto? dto)
+    {
+        if (!Features.StallLocation)
+            throw new InvalidOperationException(L.T("Lokacija tezge je isključena."));
+        var vendor = await _context.Vendors.Include(v => v.Market).Include(v => v.Stall).FirstOrDefaultAsync(v => v.Id == vendorId)
+            ?? throw new KeyNotFoundException(L.T("Prodavac nije pronađen."));
+
+        if (dto != null && vendor.Market.Latitude is double mLat && vendor.Market.Longitude is double mLng
+            && GeoDistance.Meters(mLat, mLng, dto.Latitude, dto.Longitude) > MaxStallDistanceMeters)
+            throw new InvalidOperationException(L.T("Tačka je predaleko od pijace {0}. Postavite je kada ste na tezgi ili je pomerite na mapi.", vendor.Market.Name));
+
+        vendor.StallLatitude = dto?.Latitude;
+        vendor.StallLongitude = dto?.Longitude;
+        vendor.StallLocationAt = dto == null ? null : DateTime.UtcNow;
+        vendor.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return MapToDto(vendor);
+    }
+
     public async Task<string> UpdateVendorImage(int vendorId, IFormFile file)
     {
         var vendor = await _context.Vendors.FindAsync(vendorId)
@@ -210,6 +233,11 @@ public class VendorService : IVendorService
         ClosedReason = status.ClosedReason,
         OpensAt = status.OpensAt,
         ClosesAt = status.ClosesAt,
+        StallLatitude = Features.StallLocation ? v.StallLatitude : null,
+        StallLongitude = Features.StallLocation ? v.StallLongitude : null,
+        StallLocationAt = Features.StallLocation ? v.StallLocationAt : null,
+        MarketLatitude = v.Market?.Latitude,
+        MarketLongitude = v.Market?.Longitude,
         CreatedAt = v.CreatedAt
         };
     }

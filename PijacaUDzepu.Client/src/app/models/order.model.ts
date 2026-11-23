@@ -40,6 +40,11 @@ export interface Order {
   // Sve porudžbine jedne korpe imaju isti checkoutId (kurir ih vozi zajedno)
   checkoutId?: string | null;
   marketAddress?: string | null;
+  // Mapa (funkcija stallLocation): tačka tezge ako ju je prodavac postavio i centar pijace
+  stallLatitude?: number | null;
+  stallLongitude?: number | null;
+  marketLatitude?: number | null;
+  marketLongitude?: number | null;
   // Ocena kupca posle preuzimanja
   rating?: OrderRating | null;
   // Kurir nije dostavio: obavezan razlog

@@ -8,6 +8,7 @@ using PijacaUDzepu.API.Hubs;
 using PijacaUDzepu.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+Features.Load(builder.Configuration);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

@@ -317,7 +317,7 @@ async function build() {
   s.title('Detalji porudžbine');
   s.steps([
     { h: 'Tok porudžbine', d: 'Korak po korak, sa vremenom: poručeno, prodavac potvrdio, dodeljen kurir, kurir preuzeo robu, dostavljeno.' },
-    { h: 'Poruka prodavca', d: 'Npr. kada možete doći po robu. Kod preuzimanja na tezgi: pijaca, tezga, adresa, „Kako da stignem” i „Pozovi prodavca”.' },
+    { h: 'Poruka prodavca', d: 'Npr. kada možete doći po robu. Kod preuzimanja na tezgi: pijaca, tezga, adresa, „Kako da stignem” i „Pozovi prodavca”; ako je prodavac označio tezgu, vidite je na mapi i „Do tezge” vodi tačno do nje.' },
     { h: 'Kurir', d: 'Kada je kurir dodeljen, vidite njegovo ime i telefon.' },
     { h: 'Za plaćanje', n: '✓', d: 'Roba + Eko kurir. Plaća se gotovinom pri preuzimanju.' }
   ]);
@@ -420,7 +420,8 @@ async function build() {
   s.steps([
     { h: 'Osnovni podaci', d: 'Naziv, pijaca i broj tezge: tako vas kupci pronalaze u filterima.' },
     { h: 'Opis i telefoni', d: 'Kratak opis ponude i jedan ili više brojeva telefona koje kupci vide.' },
-    { h: 'Promena lozinke', d: 'Unesite trenutnu i dva puta novu lozinku.' }
+    { h: 'Promena lozinke', d: 'Unesite trenutnu i dva puta novu lozinku.' },
+    { h: 'Tezga na mapi', n: '✓', d: 'Kada ste na tezgi, pritisnite „Ovde sam”: kurir i kupac koji je rezervisao vide tačno mesto. Ako tačka nije tačna, dodirnite mapu na pravo mesto i sačuvajte.' }
   ]);
   s.phone('v-profile', RIGHT_X, PHONE_Y, PHONE_H, 'Profil tezge sa promenom lozinke',
     [[1, 0.95, 0.125], [2, 0.93, 0.32], [3, 0.93, 0.62]]);
@@ -457,7 +458,7 @@ async function build() {
   s.title('Dostava korak po korak');
   s.steps([
     { h: 'Moje dostave', d: 'Dostave u toku su na kartici „Moje“, sa imenom i telefonom kupca. Isporučene prelaze na karticu „Završene“.' },
-    { h: 'Adresa', d: 'Dodir na adresu otvara rutu u Google mapama: preko pijace do kupca, za bicikl.' },
+    { h: 'Adresa', d: 'Dodir na adresu otvara rutu u Google mapama: preko pijace do kupca, za bicikl. Ako je prodavac označio tezgu, „Tezga na mapi” i „Do tezge” vode tačno do nje.' },
     { h: 'Preuzeo sam robu', d: 'Kada vam prodavac preda robu; aplikacija pita još jednom, jer kupac odmah dobija poruku.' },
     { h: 'Isporučeno', n: '4', d: 'Posle predaje robe i naplate: aplikacija vas pita da li ste naplatili tačan iznos. Ako robu niste mogli da predate, „Nije dostavljeno” uz obavezan razlog; robu vratite prodavcu.' }
   ]);

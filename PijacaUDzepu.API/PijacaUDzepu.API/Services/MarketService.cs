@@ -51,7 +51,9 @@ public class MarketService : IMarketService
         {
             Name = dto.Name,
             Description = dto.Description,
-            Address = dto.Address
+            Address = dto.Address,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude
         };
 
         _context.Markets.Add(market);
@@ -67,6 +69,8 @@ public class MarketService : IMarketService
         market.Name = dto.Name;
         market.Description = dto.Description;
         market.Address = dto.Address;
+        market.Latitude = dto.Latitude;
+        market.Longitude = dto.Longitude;
 
         await _context.SaveChangesAsync();
         return MapToDto(market);
@@ -87,6 +91,8 @@ public class MarketService : IMarketService
         Name = m.Name,
         Description = m.Description,
         Address = m.Address,
+        Latitude = m.Latitude,
+        Longitude = m.Longitude,
         ImageUrl = m.ImageUrl,
         IsActive = m.IsActive,
         VendorCount = m.Vendors?.Count(v => v.IsActive) ?? 0

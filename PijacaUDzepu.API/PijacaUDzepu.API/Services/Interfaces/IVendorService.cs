@@ -14,4 +14,5 @@ public interface IVendorService
     Task<bool> UserBelongsToVendor(int userId, int vendorId);
     Task<string> UpdateVendorImage(int vendorId, IFormFile file);
     Task<VendorDto> UpdateAvailability(int vendorId, VendorAvailabilityDto dto);
+    Task<VendorDto> UpdateStallLocation(int vendorId, StallLocationDto? dto);
 }

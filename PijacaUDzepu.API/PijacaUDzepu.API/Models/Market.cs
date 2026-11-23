@@ -7,6 +7,9 @@ public class Market
     public string? Description { get; set; }
     public string? Address { get; set; }
     public string? ImageUrl { get; set; }
+    // Centar pijace na mapi (mapa tezgi i provera da je tačka tezge na pijaci); bez njega mapa kreće od centra grada
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

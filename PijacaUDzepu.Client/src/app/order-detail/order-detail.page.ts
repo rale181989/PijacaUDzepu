@@ -1,3 +1,4 @@
+import { directionsTo, marketPoint, stallPoint } from '../shared/maps';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { OrderService } from '../services/order.service';
@@ -52,6 +53,10 @@ export class OrderDetailPage implements OnInit, OnDestroy {
   }
 
   readonly encodeURIComponent = encodeURIComponent;
+  // Rezervacija: tačka tezge (ako ju je prodavac postavio) na mapi i navigacija peške do nje
+  readonly stallPoint = stallPoint;
+  readonly marketPoint = marketPoint;
+  readonly directionsTo = directionsTo;
 
   // Kurirska porudžbina spremna kod prodavca čeka kurira (kupac ne treba da dođe po nju)
   getStatusLabel(status: string, fulfillment?: string): string {
