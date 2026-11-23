@@ -494,7 +494,7 @@ async function build() {
   s.steps([
     { h: 'Zaboravljena lozinka', d: 'Na prijavi: „Zaboravili ste lozinku?”. Link za novu lozinku stiže na e-mail naloga i važi 2 sata.' },
     { h: 'Bez e-maila na nalogu', n: '✓', d: 'Kuriri i prodavci bez e-maila traže novu lozinku od administratora.' },
-    { h: 'Moj nalog', d: 'U meniju ☰ (ili klik na svoje ime): telefon i adresa za dostavu, promena lozinke.' },
+    { h: 'Moj nalog', d: 'U meniju ☰ (ili klik na svoje ime): telefon i adresa za dostavu, promena lozinke. Na dnu menija u aplikaciji: „Zatvori aplikaciju”.' },
     { h: 'Brisanje naloga', d: 'Briše nalog i lične podatke; porudžbine ostaju prodavcu bez vašeg imena, telefona i adrese. Nije moguće dok traje porudžbina ili dostava.' }
   ], 0.6, 1.75, 5.2);
   s.phone('a-forgot', LEFT_X, PHONE_Y, PHONE_H, 'Zahtev za novu lozinku', [[1, 0.95, 0.27]]);

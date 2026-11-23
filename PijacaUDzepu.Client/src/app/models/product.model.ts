@@ -55,12 +55,13 @@ export function roundQty(value: number): number {
 }
 
 export type ProductCategory = 'Voce' | 'Povrce' | 'ZacinskoBilje' | 'Mahunarke' | 'Pecurke' | 'MlecniProizvodi' | 'Jaja'
-  | 'MesniProizvodi' | 'PcelinjiProizvodi' | 'Zimnica' | 'SuvoVoceIOrasasti' | 'Konditori' | 'KucnaHemija' | 'Ostalo';
+  | 'MesniProizvodi' | 'PcelinjiProizvodi' | 'Zimnica' | 'SuvoVoceIOrasasti' | 'Konditori' | 'KucnaHemija' | 'Ostalo'
+  | 'Cvece' | 'Riba';
 
 // Redosled kategorija u filteru, formi prodavca i izveštajima (nazivi su u prevodima: 'cat.' + kategorija)
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
-  'Voce', 'Povrce', 'ZacinskoBilje', 'Mahunarke', 'Pecurke', 'MlecniProizvodi', 'Jaja', 'MesniProizvodi',
-  'PcelinjiProizvodi', 'Zimnica', 'SuvoVoceIOrasasti', 'Konditori', 'KucnaHemija', 'Ostalo'
+  'Voce', 'Povrce', 'ZacinskoBilje', 'Mahunarke', 'Pecurke', 'MlecniProizvodi', 'Jaja', 'MesniProizvodi', 'Riba',
+  'PcelinjiProizvodi', 'Zimnica', 'SuvoVoceIOrasasti', 'Konditori', 'Cvece', 'KucnaHemija', 'Ostalo'
 ];
 
 export type ProductClass = 'Prva' | 'Druga' | 'Treca';

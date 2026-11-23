@@ -16,5 +16,7 @@ public enum ProductCategory
     PcelinjiProizvodi,
     Jaja,
     Zimnica,
-    SuvoVoceIOrasasti
+    SuvoVoceIOrasasti,
+    Cvece,
+    Riba
 }

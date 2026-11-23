@@ -135,6 +135,11 @@
           <ion-icon name="log-out-outline" slot="start"></ion-icon>
           <ion-label>{{ 'nav.logout' | t }} ({{ authService.currentUser?.userName }})</ion-label>
         </ion-item>
+        <!-- Samo u Android aplikaciji: izlaz iz aplikacije (ostaje prijavljen; obaveštenja i dalje stižu) -->
+        <ion-item *ngIf="isNative" (click)="exitApp()" button>
+          <ion-icon name="power-outline" slot="start"></ion-icon>
+          <ion-label>{{ 'nav.exit' | t }}</ion-label>
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-menu>

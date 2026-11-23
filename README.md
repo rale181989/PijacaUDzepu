@@ -29,7 +29,7 @@ Radi kao web aplikacija i kao Android aplikacija (Capacitor). Produkcija: <https
 - Jezici: srpski, engleski, ruski – i poruke o greškama sa servera stižu na izabranom jeziku; iznosi u srpskom formatu („1.200 din”), ispravna množina („2 stavke”)
 - Pristupačnost: dozvoljeno uvećavanje, vidljiv fokus tastature, natpisi na dugmadima za čitače ekrana
 - Sajt može da se instalira kao aplikacija (i na iPhone-u: Safari → Podeli → „Dodaj na početni ekran”); link poslat na WhatsApp/Viber prikazuje logo i opis
-- Zvanični logo (zeleni krug sa tezgom na telefonu) je u meniju, na prijavi i ikonica instalirane aplikacije; ekran pri pokretanju i favicon su iz istog loga; verzija aplikacije piše u „Moj nalog”; dok se spisak učitava, prikazuju se sive kartice umesto spinera
+- Zvanični logo (zeleni krug sa tezgom na telefonu) je u meniju, na prijavi i ikonica instalirane aplikacije; ekran pri pokretanju i favicon su iz istog loga; verzija aplikacije piše u „Moj nalog”; u Android aplikaciji meni ima „Zatvori aplikaciju” (ostaje se prijavljen, obaveštenja o porudžbinama stižu i dalje); dok se spisak učitava, prikazuju se sive kartice umesto spinera
 
 **Prodavac**
 - Proizvodi: cena, jedinica, grupa, klasa, slika, dostupnost; dupli dodir na „Sačuvaj” ne pravi duplikat (fotografija sa telefona se smanjuje već u aplikaciji i odmah se vidi na formi; ako slanje slike ne uspe, forma to jasno kaže)
