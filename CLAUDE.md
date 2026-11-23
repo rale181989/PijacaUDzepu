@@ -191,6 +191,7 @@ Documentation rule: every change also goes into this file, `README.md` and the u
 - **Sounds:** `SoundService` generates notification sounds with Web Audio. It unlocks the `AudioContext` on the user's first tap, because browsers block audio before any user interaction.
 - **Vendor onboarding:** a SuperAdmin creates vendors and sends email invitations (`EmailService`, SMTP via Brevo). The invited user completes registration through `AcceptInvitation`, which the client handles on the `setup-account` page.
 - **Images** are resized to JPEG with `Helpers/ImageResizer` and saved through `IImageStorage`:
+  - Gotcha: `ImageResizer` uses SkiaSharp, whose native library ships per OS. Windows/macOS come with `SkiaSharp`, Linux (Render, Docker) needs `SkiaSharp.NativeAssets.Linux.NoDependencies` at the same version; without it every upload fails on Render with a 500 while it works locally and in the tests. Upgrade both packages together; the publish output must contain `runtimes/linux-x64/native/libSkiaSharp.so`.
   - `R2ImageStorage` (Cloudflare R2 via AWSSDK.S3) is used when all `R2__*` env vars are set; the DB stores the absolute public URL. Render's disk is wiped on deploy, so production needs R2.
   - Otherwise `LocalImageStorage` writes to `wwwroot/Resources/Images` and the DB stores the relative `/Resources/...` path.
   - Order matters for consistency: save the new image, save the DB, then delete the old one (delete the new one if the DB save fails). `Delete` ignores URLs the storage didn't create, such as the seed data's Unsplash URLs.
