@@ -340,7 +340,7 @@ async function build() {
   s = new S('Sadrzaj - bez ekrana', 'Kupci', 'kupac');
   s.title('Šta znači status porudžbine');
   const statuses = [
-    ['Na čekanju', 'sun', 'Prodavac još nije odgovorio. Ima 15 minuta; posle 10 minuta dobijate poruku sa brojem prodavca da ga pozovete, a posle 15 se porudžbina te tezge sama otkazuje (ostala roba stiže bez nje).'],
+    ['Na čekanju', 'sun', 'Prodavac još nije odgovorio. Posle 10 min stiže poruka sa njegovim brojem, a posle 15 se sama otkazuje.'],
     ['Potvrđena', 'green', 'Prodavac je prihvatio porudžbinu i priprema robu. Kurir je dobija kada odgovore svi prodavci iz vaše korpe.'],
     ['Spremna', 'sky', 'Roba je spakovana: dođite po nju na tezgu ili je kurir uskoro preuzima.'],
     ['U dostavi', 'carrot', 'Kurir je preuzeo robu i nosi je na vašu adresu.'],
