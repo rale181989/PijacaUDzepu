@@ -25,6 +25,10 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         // Program čita bazu iz DATABASE_URL pre appsettings-a
         Environment.SetEnvironmentVariable("DATABASE_URL", ConnectionString);
+        // appsettings*.json nisu u git-u (CI, novi računar): bez ključa za JWT nijedna prijava ne radi.
+        // Ključ važi samo za testove (server i testovi ga dele preko promenljive); već zadat TOKEN_KEY se ne menja.
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TOKEN_KEY")))
+            Environment.SetEnvironmentVariable("TOKEN_KEY", "test-only-jwt-key-for-PijacaUDzepu-API-tests-not-used-anywhere-else-0123456789");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseEnvironment("Development");
