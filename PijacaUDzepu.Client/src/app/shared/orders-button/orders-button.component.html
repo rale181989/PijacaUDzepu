@@ -1,4 +1,8 @@
-<ion-button *ngIf="visible" [routerLink]="link" routerDirection="root" [attr.aria-label]="'nav.orders' | t">
-  <ion-icon name="receipt-outline" slot="icon-only"></ion-icon>
-  <span *ngIf="count > 0" class="orders-count" [class.bump]="bump">{{ count > 99 ? '99+' : count }}</span>
-</ion-button>
+@if (visible) {
+  <ion-button [routerLink]="link" routerDirection="root" [attr.aria-label]="'nav.orders' | t">
+    <ion-icon name="receipt-outline" slot="icon-only"></ion-icon>
+    @if (count > 0) {
+      <span class="orders-count" [class.bump]="bump">{{ count > 99 ? '99+' : count }}</span>
+    }
+  </ion-button>
+}

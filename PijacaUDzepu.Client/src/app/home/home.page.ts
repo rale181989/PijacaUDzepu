@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ProductService } from '../services/product.service';
 import { CartService } from '../services/cart.service';
 import { VendorService } from '../services/vendor.service';
@@ -24,6 +24,17 @@ import { describeConnectionError, isConnectionError } from '../services/connecti
   standalone: false,
 })
 export class HomePage implements OnInit {
+  private productService = inject(ProductService);
+  private cartService = inject(CartService);
+  private vendorService = inject(VendorService);
+  private marketService = inject(MarketService);
+  private stallService = inject(StallService);
+  private toastController = inject(ToastController);
+  ts = inject(TranslateService);
+  favorites = inject(FavoritesService);
+  private authService = inject(AuthService);
+  private orderService = inject(OrderService);
+
   products: Product[] = [];
   vendors: Vendor[] = [];
   markets: Market[] = [];
@@ -90,18 +101,7 @@ export class HomePage implements OnInit {
       .replace(/đ/g, 'd');
   }
 
-  constructor(
-    private productService: ProductService,
-    private cartService: CartService,
-    private vendorService: VendorService,
-    private marketService: MarketService,
-    private stallService: StallService,
-    private toastController: ToastController,
-    public ts: TranslateService,
-    public favorites: FavoritesService,
-    private authService: AuthService,
-    private orderService: OrderService
-  ) {
+  constructor() {
     this.ts.lang$.subscribe(() => this.rebuildCategories());
   }
 

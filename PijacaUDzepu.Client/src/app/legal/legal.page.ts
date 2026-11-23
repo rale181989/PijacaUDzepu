@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '../services/translate.service';
 import { LEGAL_CONTENT, LEGAL_DOCS, LEGAL_INFO, LegalDoc, LegalDocument } from './legal-content';
@@ -10,14 +10,12 @@ import { LEGAL_CONTENT, LEGAL_DOCS, LEGAL_INFO, LegalDoc, LegalDocument } from '
   standalone: false,
 })
 export class LegalPage implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private ts = inject(TranslateService);
+
   doc: LegalDoc = 'terms';
   updated = LEGAL_INFO.updated;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private ts: TranslateService
-  ) {}
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {

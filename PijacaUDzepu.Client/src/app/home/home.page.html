@@ -17,109 +17,118 @@
   </ion-refresher>
 
   <!-- Kako radi: preko celog ekrana pri prvom ulasku, nestaje na "Razumem" -->
-  <div *ngIf="showHowItWorks" slot="fixed" class="how-it-works-overlay" role="dialog" aria-modal="true" aria-labelledby="how-title">
-    <div class="how-it-works">
-      <h2 id="how-title">{{ 'home.howTitle' | t }}</h2>
-      <div class="how-step">
-        <ion-icon name="basket-outline"></ion-icon>
-        <p>{{ 'home.how1' | t }}</p>
+  @if (showHowItWorks) {
+    <div slot="fixed" class="how-it-works-overlay" role="dialog" aria-modal="true" aria-labelledby="how-title">
+      <div class="how-it-works">
+        <h2 id="how-title">{{ 'home.howTitle' | t }}</h2>
+        <div class="how-step">
+          <ion-icon name="basket-outline"></ion-icon>
+          <p>{{ 'home.how1' | t }}</p>
+        </div>
+        <div class="how-step">
+          <ion-icon name="bicycle-outline"></ion-icon>
+          <p>{{ howFeeText() }}</p>
+        </div>
+        <div class="how-step">
+          <ion-icon name="cash-outline"></ion-icon>
+          <p>{{ 'home.how3' | t }}</p>
+        </div>
+        <ion-button expand="block" (click)="closeHowItWorks()">{{ 'home.howClose' | t }}</ion-button>
       </div>
-      <div class="how-step">
-        <ion-icon name="bicycle-outline"></ion-icon>
-        <p>{{ howFeeText() }}</p>
-      </div>
-      <div class="how-step">
-        <ion-icon name="cash-outline"></ion-icon>
-        <p>{{ 'home.how3' | t }}</p>
-      </div>
-      <ion-button expand="block" (click)="closeHowItWorks()">{{ 'home.howClose' | t }}</ion-button>
     </div>
-  </div>
+  }
 
   <!-- Prvo pijaca: jedna porudžbina je sa jedne pijace (kurir obilazi jednu pijacu) -->
-  <div *ngIf="!selectedMarketId" class="market-picker">
-    <h2>{{ 'home.pickMarketTitle' | t }}</h2>
-    <p class="market-picker-hint">{{ 'home.pickMarketHint' | t }}</p>
-    <app-skeleton *ngIf="markets.length === 0" variant="list" [count]="3"></app-skeleton>
-    <div class="market-cards">
-    <ion-card *ngFor="let market of markets" button class="market-card" (click)="selectMarket(market.id)">
-      <img *ngIf="market.imageUrl" [src]="getImageUrl(market.imageUrl)" [alt]="market.name" />
-      <ion-card-header>
-        <ion-card-title>{{ market.name }}</ion-card-title>
-        <ion-card-subtitle *ngIf="market.address">{{ market.address }}</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>{{ vendorsLabel(market.vendorCount) }}</ion-card-content>
-    </ion-card>
+  @if (!selectedMarketId) {
+    <div class="market-picker">
+      <h2>{{ 'home.pickMarketTitle' | t }}</h2>
+      <p class="market-picker-hint">{{ 'home.pickMarketHint' | t }}</p>
+      @if (markets.length === 0) {
+        <app-skeleton variant="list" [count]="3"></app-skeleton>
+      }
+      <div class="market-cards">
+        @for (market of markets; track market) {
+          <ion-card button class="market-card" (click)="selectMarket(market.id)">
+            @if (market.imageUrl) {
+              <img [src]="getImageUrl(market.imageUrl)" [alt]="market.name" />
+            }
+            <ion-card-header>
+              <ion-card-title>{{ market.name }}</ion-card-title>
+              @if (market.address) {
+                <ion-card-subtitle>{{ market.address }}</ion-card-subtitle>
+              }
+            </ion-card-header>
+            <ion-card-content>{{ vendorsLabel(market.vendorCount) }}</ion-card-content>
+          </ion-card>
+        }
+      </div>
     </div>
-  </div>
+  }
 
-  <ng-container *ngIf="selectedMarketId">
-  <div class="filters-bar">
-    <div class="filter-row">
-      <button class="filter-btn" (click)="openFilterModal('market')">
-        <ion-icon name="storefront-outline"></ion-icon>
-        <span class="filter-btn-text">{{ getMarketName(selectedMarketId) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
-
-      <button class="filter-btn" (click)="openFilterModal('vendor')">
-        <ion-icon name="person-outline"></ion-icon>
-        <span class="filter-btn-text">{{ selectedVendorId ? getVendorName(selectedVendorId) : ('home.allVendors' | t) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
-
-      <button class="filter-btn" (click)="openFilterModal('category')">
-        <ion-icon name="pricetag-outline"></ion-icon>
-        <span class="filter-btn-text">{{ selectedCategory ? getCategoryLabel(selectedCategory) : ('home.allCategories' | t) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
-
-      <!-- Tezga se pojavljuje tek kad je izabrana pijaca, pa stoji poslednja da ne pomera ostale filtere -->
-      <button class="filter-btn" (click)="openFilterModal('stall')" *ngIf="selectedMarketId">
-        <ion-icon name="grid-outline"></ion-icon>
-        <span class="filter-btn-text">{{ selectedStallId ? ('home.stall' | t) + ' ' + getStallLabel(selectedStallId) : ('home.allStalls' | t) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
-
+  @if (selectedMarketId) {
+    <div class="filters-bar">
+      <div class="filter-row">
+        <button class="filter-btn" (click)="openFilterModal('market')">
+          <ion-icon name="storefront-outline"></ion-icon>
+          <span class="filter-btn-text">{{ getMarketName(selectedMarketId) }}</span>
+          <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+        </button>
+        <button class="filter-btn" (click)="openFilterModal('vendor')">
+          <ion-icon name="person-outline"></ion-icon>
+          <span class="filter-btn-text">{{ selectedVendorId ? getVendorName(selectedVendorId) : ('home.allVendors' | t) }}</span>
+          <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+        </button>
+        <button class="filter-btn" (click)="openFilterModal('category')">
+          <ion-icon name="pricetag-outline"></ion-icon>
+          <span class="filter-btn-text">{{ selectedCategory ? getCategoryLabel(selectedCategory) : ('home.allCategories' | t) }}</span>
+          <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+        </button>
+        <!-- Tezga se pojavljuje tek kad je izabrana pijaca, pa stoji poslednja da ne pomera ostale filtere -->
+        @if (selectedMarketId) {
+          <button class="filter-btn" (click)="openFilterModal('stall')">
+            <ion-icon name="grid-outline"></ion-icon>
+            <span class="filter-btn-text">{{ selectedStallId ? ('home.stall' | t) + ' ' + getStallLabel(selectedStallId) : ('home.allStalls' | t) }}</span>
+            <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+          </button>
+        }
+      </div>
+      <div class="search-row">
+        <ion-searchbar
+          [(ngModel)]="searchTerm"
+          (ionInput)="onSearch()"
+          [placeholder]="'home.searchProduct' | t"
+          debounce="300"
+          class="product-search">
+        </ion-searchbar>
+        <button class="filter-btn fav-filter" [class.active]="showFavorites" (click)="toggleFavoritesFilter()"
+          [attr.aria-pressed]="showFavorites" [attr.aria-label]="'fav.filter' | t" [title]="'fav.filter' | t">
+          <ion-icon [name]="showFavorites ? 'heart' : 'heart-outline'"></ion-icon>
+        </button>
+        <button class="filter-btn sort-btn" (click)="openFilterModal('sort')"
+          [attr.aria-label]="('home.sortBy' | t) + ': ' + getSortLabel(sortBy)" [title]="getSortLabel(sortBy)">
+          <ion-icon name="swap-vertical-outline"></ion-icon>
+          <span class="filter-btn-text">{{ getSortLabel(sortBy) }}</span>
+          <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+        </button>
+      </div>
+      <!-- Jedinica mere se bira uz sortiranje po ceni; ovde se vidi i uklanja -->
+      @if (selectedUnit) {
+        <div class="active-unit">
+          <ion-chip color="primary" (click)="selectUnit(null)">
+            <ion-icon name="scale-outline"></ion-icon>
+            <ion-label>{{ getUnitFilterLabel(selectedUnit) }}</ion-label>
+            <ion-icon name="close-circle"></ion-icon>
+          </ion-chip>
+        </div>
+      }
+      @if (cartFromOtherMarket) {
+        <p class="other-market-note">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span>{{ ('home.cartOtherMarket' | t).replace('{0}', cartFromOtherMarket) }}</span>
+        </p>
+      }
     </div>
-
-    <div class="search-row">
-      <ion-searchbar
-        [(ngModel)]="searchTerm"
-        (ionInput)="onSearch()"
-        [placeholder]="'home.searchProduct' | t"
-        debounce="300"
-        class="product-search">
-      </ion-searchbar>
-
-      <button class="filter-btn fav-filter" [class.active]="showFavorites" (click)="toggleFavoritesFilter()"
-              [attr.aria-pressed]="showFavorites" [attr.aria-label]="'fav.filter' | t" [title]="'fav.filter' | t">
-        <ion-icon [name]="showFavorites ? 'heart' : 'heart-outline'"></ion-icon>
-      </button>
-
-      <button class="filter-btn sort-btn" (click)="openFilterModal('sort')"
-              [attr.aria-label]="('home.sortBy' | t) + ': ' + getSortLabel(sortBy)" [title]="getSortLabel(sortBy)">
-        <ion-icon name="swap-vertical-outline"></ion-icon>
-        <span class="filter-btn-text">{{ getSortLabel(sortBy) }}</span>
-        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
-      </button>
-    </div>
-
-    <!-- Jedinica mere se bira uz sortiranje po ceni; ovde se vidi i uklanja -->
-    <div *ngIf="selectedUnit" class="active-unit">
-      <ion-chip color="primary" (click)="selectUnit(null)">
-        <ion-icon name="scale-outline"></ion-icon>
-        <ion-label>{{ getUnitFilterLabel(selectedUnit) }}</ion-label>
-        <ion-icon name="close-circle"></ion-icon>
-      </ion-chip>
-    </div>
-
-    <p *ngIf="cartFromOtherMarket" class="other-market-note">
-      <ion-icon name="information-circle-outline"></ion-icon>
-      <span>{{ ('home.cartOtherMarket' | t).replace('{0}', cartFromOtherMarket) }}</span>
-    </p>
-  </div>
-  </ng-container>
+  }
 
   <!-- Sort modal -->
   <ion-modal [isOpen]="showModal === 'sort'" (didDismiss)="showModal = null" [breakpoints]="[0, 0.6, 1]" [initialBreakpoint]="0.6">
@@ -134,28 +143,36 @@
       </ion-header>
       <ion-content>
         <ion-list>
-          <ion-item *ngFor="let opt of sortOptions" button
-                    (click)="chooseSort(opt.value)"
-                    [color]="sortBy === opt.value ? 'light' : ''">
-            <ion-label>{{ opt.label }}</ion-label>
-            <ion-icon *ngIf="sortBy === opt.value" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
+          @for (opt of sortOptions; track opt) {
+            <ion-item button
+              (click)="chooseSort(opt.value)"
+              [color]="sortBy === opt.value ? 'light' : ''">
+              <ion-label>{{ opt.label }}</ion-label>
+              @if (sortBy === opt.value) {
+                <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+              }
+            </ion-item>
+          }
         </ion-list>
 
         <!-- Cene se mogu porediti samo za istu jedinicu mere (kg i g se preračunavaju) -->
-        <div *ngIf="isPriceSort(sortBy)" class="unit-compare">
-          <p class="unit-compare-title">{{ 'home.compareUnit' | t }}</p>
-          <p class="unit-compare-hint">{{ 'home.compareUnitHint' | t }}</p>
-          <div class="unit-chips">
-            <ion-chip [outline]="!!selectedUnit" color="primary" (click)="selectUnit(null)">
-              <ion-label>{{ 'home.allUnitsShort' | t }}</ion-label>
-            </ion-chip>
-            <ion-chip *ngFor="let u of unitOptions" [outline]="selectedUnit !== u.value" color="primary"
-                      (click)="selectUnit(u.value); showModal = null">
-              <ion-label>{{ u.label }}</ion-label>
-            </ion-chip>
+        @if (isPriceSort(sortBy)) {
+          <div class="unit-compare">
+            <p class="unit-compare-title">{{ 'home.compareUnit' | t }}</p>
+            <p class="unit-compare-hint">{{ 'home.compareUnitHint' | t }}</p>
+            <div class="unit-chips">
+              <ion-chip [outline]="!!selectedUnit" color="primary" (click)="selectUnit(null)">
+                <ion-label>{{ 'home.allUnitsShort' | t }}</ion-label>
+              </ion-chip>
+              @for (u of unitOptions; track u) {
+                <ion-chip [outline]="selectedUnit !== u.value" color="primary"
+                  (click)="selectUnit(u.value); showModal = null">
+                  <ion-label>{{ u.label }}</ion-label>
+                </ion-chip>
+              }
+            </div>
           </div>
-        </div>
+        }
       </ion-content>
     </ng-template>
   </ion-modal>
@@ -176,15 +193,19 @@
       </ion-header>
       <ion-content>
         <ion-list>
-          <ion-item *ngFor="let market of searchedMarkets" button
-                    (click)="selectMarket(market.id); showModal = null"
-                    [color]="selectedMarketId === market.id ? 'light' : ''">
-            <ion-label>
-              <h2>{{ market.name }}</h2>
-              <p>{{ market.address }}</p>
-            </ion-label>
-            <ion-icon *ngIf="selectedMarketId === market.id" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
+          @for (market of searchedMarkets; track market) {
+            <ion-item button
+              (click)="selectMarket(market.id); showModal = null"
+              [color]="selectedMarketId === market.id ? 'light' : ''">
+              <ion-label>
+                <h2>{{ market.name }}</h2>
+                <p>{{ market.address }}</p>
+              </ion-label>
+              @if (selectedMarketId === market.id) {
+                <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+              }
+            </ion-item>
+          }
         </ion-list>
       </ion-content>
     </ng-template>
@@ -207,19 +228,27 @@
       <ion-content>
         <ion-list>
           <ion-item button (click)="selectVendor(null); showModal = null"
-                    [color]="!selectedVendorId ? 'light' : ''">
+            [color]="!selectedVendorId ? 'light' : ''">
             <ion-label>{{ 'home.allVendorsShort' | t }}</ion-label>
-            <ion-icon *ngIf="!selectedVendorId" name="checkmark" slot="end" color="primary"></ion-icon>
+            @if (!selectedVendorId) {
+              <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+            }
           </ion-item>
-          <ion-item *ngFor="let vendor of searchedVendors" button
-                    (click)="selectVendor(vendor.id); showModal = null"
-                    [color]="selectedVendorId === vendor.id ? 'light' : ''">
-            <ion-label>
-              <h2>{{ vendor.name }}</h2>
-              <p>{{ vendor.marketName }}<span *ngIf="vendor.stallLabel"> · {{ 'home.stall' | t }} {{ vendor.stallLabel }}</span></p>
-            </ion-label>
-            <ion-icon *ngIf="selectedVendorId === vendor.id" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
+          @for (vendor of searchedVendors; track vendor) {
+            <ion-item button
+              (click)="selectVendor(vendor.id); showModal = null"
+              [color]="selectedVendorId === vendor.id ? 'light' : ''">
+              <ion-label>
+                <h2>{{ vendor.name }}</h2>
+                <p>{{ vendor.marketName }}@if (vendor.stallLabel) {
+                  <span> · {{ 'home.stall' | t }} {{ vendor.stallLabel }}</span>
+                }</p>
+              </ion-label>
+              @if (selectedVendorId === vendor.id) {
+                <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+              }
+            </ion-item>
+          }
         </ion-list>
       </ion-content>
     </ng-template>
@@ -242,19 +271,25 @@
       <ion-content>
         <ion-list>
           <ion-item button (click)="selectStall(null); showModal = null"
-                    [color]="!selectedStallId ? 'light' : ''">
+            [color]="!selectedStallId ? 'light' : ''">
             <ion-label>{{ 'home.allStallsShort' | t }}</ion-label>
-            <ion-icon *ngIf="!selectedStallId" name="checkmark" slot="end" color="primary"></ion-icon>
+            @if (!selectedStallId) {
+              <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+            }
           </ion-item>
-          <ion-item *ngFor="let stall of searchedStalls" button
-                    (click)="selectStall(stall); showModal = null"
-                    [color]="selectedStallId === stall.id ? 'light' : ''">
-            <ion-label>
-              <h2>{{ 'home.stall' | t }} {{ stall.label }}</h2>
-              <p>{{ getVendorAtStall(stall.id) }}</p>
-            </ion-label>
-            <ion-icon *ngIf="selectedStallId === stall.id" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
+          @for (stall of searchedStalls; track stall) {
+            <ion-item button
+              (click)="selectStall(stall); showModal = null"
+              [color]="selectedStallId === stall.id ? 'light' : ''">
+              <ion-label>
+                <h2>{{ 'home.stall' | t }} {{ stall.label }}</h2>
+                <p>{{ getVendorAtStall(stall.id) }}</p>
+              </ion-label>
+              @if (selectedStallId === stall.id) {
+                <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+              }
+            </ion-item>
+          }
         </ion-list>
       </ion-content>
     </ng-template>
@@ -277,112 +312,144 @@
       <ion-content>
         <ion-list>
           <ion-item button (click)="selectCategory(null); showModal = null"
-                    [color]="!selectedCategory ? 'light' : ''">
+            [color]="!selectedCategory ? 'light' : ''">
             <ion-label>{{ 'home.allCategoriesShort' | t }}</ion-label>
-            <ion-icon *ngIf="!selectedCategory" name="checkmark" slot="end" color="primary"></ion-icon>
+            @if (!selectedCategory) {
+              <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+            }
           </ion-item>
-          <ion-item *ngFor="let cat of searchedCategories" button
-                    (click)="selectCategory(cat.value); showModal = null"
-                    [color]="selectedCategory === cat.value ? 'light' : ''">
-            <ion-label>
-              <h2>{{ cat.label }}</h2>
-            </ion-label>
-            <ion-icon *ngIf="selectedCategory === cat.value" name="checkmark" slot="end" color="primary"></ion-icon>
-          </ion-item>
+          @for (cat of searchedCategories; track cat) {
+            <ion-item button
+              (click)="selectCategory(cat.value); showModal = null"
+              [color]="selectedCategory === cat.value ? 'light' : ''">
+              <ion-label>
+                <h2>{{ cat.label }}</h2>
+              </ion-label>
+              @if (selectedCategory === cat.value) {
+                <ion-icon name="checkmark" slot="end" color="primary"></ion-icon>
+              }
+            </ion-item>
+          }
         </ion-list>
       </ion-content>
     </ng-template>
   </ion-modal>
 
-  <ng-container *ngIf="selectedMarketId">
-  <app-skeleton *ngIf="loading && products.length === 0" variant="grid" [count]="6"></app-skeleton>
+  @if (selectedMarketId) {
+    @if (loading && products.length === 0) {
+      <app-skeleton variant="grid" [count]="6"></app-skeleton>
+    }
+    @if (!loading && connectionError) {
+      <div class="empty-state connection-error">
+        <ion-icon name="cloud-offline-outline" size="large" color="danger"></ion-icon>
+        <p><strong>{{ connectionTitle }}</strong></p>
+        <p class="error-detail">{{ connectionError }}</p>
+        <ion-button fill="outline" (click)="loadProducts()">{{ 'home.retry' | t }}</ion-button>
+      </div>
+    }
+    @if (!loading && !connectionError && products.length === 0) {
+      <div class="empty-state">
+        <ion-icon [name]="showFavorites ? 'heart-outline' : 'leaf-outline'" size="large"></ion-icon>
+        <p>{{ (showFavorites ? (favorites.isEmpty ? 'fav.empty' : 'fav.emptyHere') : 'home.noProducts') | t }}</p>
+      </div>
+    }
+    @if (products.length > 0) {
+      <ion-grid>
+        <ion-row>
+          @for (product of products; track product) {
+            <ion-col size="6" size-md="4" size-lg="3">
+              <ion-card class="product-card">
+                <div class="product-img-wrap" [class.unavailable]="!product.isAvailable">
+                  <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img"
+                    loading="lazy" (error)="onImageError($event)" />
+                    <button class="fav-btn" (click)="toggleFavoriteProduct(product, $event)"
+                      [attr.aria-pressed]="favorites.isProduct(product.id)" [attr.aria-label]="'fav.product' | t">
+                      <ion-icon [name]="favorites.isProduct(product.id) ? 'heart' : 'heart-outline'"></ion-icon>
+                    </button>
+                  </div>
+                  <ion-card-content>
+                    <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
+                    @if (product.productClass) {
+                      <span class="product-class-badge">{{ 'productClass.' + product.productClass | t }}</span>
+                    }
+                    <div class="product-name-row">
+                      <h3 class="product-name">{{ product.name }}</h3>
+                    </div>
+                    <p class="product-vendor">{{ product.vendorName }}</p>
+                    @if (product.vendorRating) {
+                      <p class="product-rating">
+                        ★ {{ product.vendorRating | number:'1.1-1' }} <span>({{ product.vendorRatingCount }})</span>
+                      </p>
+                    }
+                    <p class="product-location">{{ product.marketName }}@if (product.stallLabel) {
+                      <span> · {{ 'home.stall' | t }} {{ product.stallLabel }}</span>
+                    }</p>
+                    @for (phone of vendorPhoneCache[product.id]; track phone) {
+                      <p class="product-phone">
+                        <ion-icon name="call-outline"></ion-icon>
+                        {{ phone }}
+                      </p>
+                    }
+                    @if (product.note) {
+                      <p class="product-note">{{ product.note }}</p>
+                    }
+                    <p class="product-price">{{ product.price | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel(product.unit) }}</p>
+                    @if (!product.isAvailable) {
+                      <div class="out-of-stock">
+                        <span>{{ 'fav.outOfStock' | t }}</span>
+                        <ion-button size="small" fill="outline" (click)="toggleAlert(product)">
+                          <ion-icon slot="start" [name]="favorites.hasAlert(product.id) ? 'notifications' : 'notifications-outline'"></ion-icon>
+                          {{ (favorites.hasAlert(product.id) ? 'fav.alertSet' : 'fav.alert') | t }}
+                        </ion-button>
+                      </div>
+                    }
+                    @if (product.vendorOpen === false) {
+                      <p class="vendor-closed">
+                        <ion-icon name="time-outline"></ion-icon> {{ closedText(product) }}
+                      </p>
+                    }
+                    @if (product.isAvailable && product.stockQuantity != null) {
+                      <p class="product-stock" [class.low]="product.stockQuantity <= 3">
+                        {{ 'home.inStock' | t }}: {{ product.stockQuantity | number:'1.0-2' }} {{ getUnitLabel(product.unit) }}
+                      </p>
+                    }
+                    @if (getPricePerKg(product); as perKg) {
+                      <p class="product-unit-price">≈ {{ perKg | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel('Kg') }}</p>
+                    }
+                    <div class="qty-controls">
+                      <ion-button fill="outline" size="small" (click)="decreaseQty(product)" [disabled]="getSelectedQty(product.id) === 0" [attr.aria-label]="('a11y.less' | t) + ': ' + product.name">
+                        <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
+                      </ion-button>
+                      <span class="qty-value">{{ getSelectedQty(product.id) | number:'1.0-2' }}</span>
+                      <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false || !product.isAvailable" [attr.aria-label]="('a11y.more' | t) + ': ' + product.name">
+                        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                      </ion-button>
+                    </div>
+                    @if (inCart(product.id) > 0) {
+                      <p class="in-cart">{{ 'home.inCart' | t }}: {{ inCart(product.id) | number:'1.0-2' }} {{ getUnitLabel(product.unit, inCart(product.id)) }}</p>
+                    }
+                    <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="product.vendorOpen === false || !product.isAvailable">
+                      <ion-icon name="cart-outline" slot="start"></ion-icon>
+                      {{ 'home.add' | t }}
+                    </ion-button>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+            }
+          </ion-row>
+        </ion-grid>
+      }
+      <ion-infinite-scroll [disabled]="!hasMore" (ionInfinite)="loadMore($event)">
+        <ion-infinite-scroll-content loadingSpinner="crescent" [loadingText]="'home.loading' | t">
+        </ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    }
 
-  <div *ngIf="!loading && connectionError" class="empty-state connection-error">
-    <ion-icon name="cloud-offline-outline" size="large" color="danger"></ion-icon>
-    <p><strong>{{ connectionTitle }}</strong></p>
-    <p class="error-detail">{{ connectionError }}</p>
-    <ion-button fill="outline" (click)="loadProducts()">{{ 'home.retry' | t }}</ion-button>
-  </div>
-
-  <div *ngIf="!loading && !connectionError && products.length === 0" class="empty-state">
-    <ion-icon [name]="showFavorites ? 'heart-outline' : 'leaf-outline'" size="large"></ion-icon>
-    <p>{{ (showFavorites ? (favorites.isEmpty ? 'fav.empty' : 'fav.emptyHere') : 'home.noProducts') | t }}</p>
-  </div>
-
-  <ion-grid *ngIf="products.length > 0">
-    <ion-row>
-      <ion-col size="6" size-md="4" size-lg="3" *ngFor="let product of products">
-        <ion-card class="product-card">
-          <div class="product-img-wrap" [class.unavailable]="!product.isAvailable">
-            <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name" class="product-img"
-                 loading="lazy" (error)="onImageError($event)" />
-            <button class="fav-btn" (click)="toggleFavoriteProduct(product, $event)"
-                    [attr.aria-pressed]="favorites.isProduct(product.id)" [attr.aria-label]="'fav.product' | t">
-              <ion-icon [name]="favorites.isProduct(product.id) ? 'heart' : 'heart-outline'"></ion-icon>
-            </button>
-          </div>
-          <ion-card-content>
-            <span class="product-category-badge">{{ getCategoryLabel(product.category) }}</span>
-            <span *ngIf="product.productClass" class="product-class-badge">{{ 'productClass.' + product.productClass | t }}</span>
-            <div class="product-name-row">
-              <h3 class="product-name">{{ product.name }}</h3>
-            </div>
-            <p class="product-vendor">{{ product.vendorName }}</p>
-            <p *ngIf="product.vendorRating" class="product-rating">
-              ★ {{ product.vendorRating | number:'1.1-1' }} <span>({{ product.vendorRatingCount }})</span>
-            </p>
-            <p class="product-location">{{ product.marketName }}<span *ngIf="product.stallLabel"> · {{ 'home.stall' | t }} {{ product.stallLabel }}</span></p>
-            <p *ngFor="let phone of vendorPhoneCache[product.id]" class="product-phone">
-              <ion-icon name="call-outline"></ion-icon>
-              {{ phone }}
-            </p>
-            <p *ngIf="product.note" class="product-note">{{ product.note }}</p>
-            <p class="product-price">{{ product.price | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel(product.unit) }}</p>
-            <div *ngIf="!product.isAvailable" class="out-of-stock">
-              <span>{{ 'fav.outOfStock' | t }}</span>
-              <ion-button size="small" fill="outline" (click)="toggleAlert(product)">
-                <ion-icon slot="start" [name]="favorites.hasAlert(product.id) ? 'notifications' : 'notifications-outline'"></ion-icon>
-                {{ (favorites.hasAlert(product.id) ? 'fav.alertSet' : 'fav.alert') | t }}
-              </ion-button>
-            </div>
-            <p *ngIf="product.vendorOpen === false" class="vendor-closed">
-              <ion-icon name="time-outline"></ion-icon> {{ closedText(product) }}
-            </p>
-            <p *ngIf="product.isAvailable && product.stockQuantity != null" class="product-stock" [class.low]="product.stockQuantity <= 3">
-              {{ 'home.inStock' | t }}: {{ product.stockQuantity | number:'1.0-2' }} {{ getUnitLabel(product.unit) }}
-            </p>
-            <p *ngIf="getPricePerKg(product) as perKg" class="product-unit-price">≈ {{ perKg | number:'1.0-0' }} {{ 'din' | t }}/{{ getUnitLabel('Kg') }}</p>
-            <div class="qty-controls">
-              <ion-button fill="outline" size="small" (click)="decreaseQty(product)" [disabled]="getSelectedQty(product.id) === 0" [attr.aria-label]="('a11y.less' | t) + ': ' + product.name">
-                <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
-              </ion-button>
-              <span class="qty-value">{{ getSelectedQty(product.id) | number:'1.0-2' }}</span>
-              <ion-button fill="outline" size="small" (click)="increaseQty(product)" [disabled]="product.vendorOpen === false || !product.isAvailable" [attr.aria-label]="('a11y.more' | t) + ': ' + product.name">
-                <ion-icon name="add-outline" slot="icon-only"></ion-icon>
-              </ion-button>
-            </div>
-            <p *ngIf="inCart(product.id) > 0" class="in-cart">{{ 'home.inCart' | t }}: {{ inCart(product.id) | number:'1.0-2' }} {{ getUnitLabel(product.unit, inCart(product.id)) }}</p>
-            <ion-button expand="block" size="small" (click)="addSelectedToCart(product)" [disabled]="product.vendorOpen === false || !product.isAvailable">
-              <ion-icon name="cart-outline" slot="start"></ion-icon>
-              {{ 'home.add' | t }}
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
-  <ion-infinite-scroll [disabled]="!hasMore" (ionInfinite)="loadMore($event)">
-    <ion-infinite-scroll-content loadingSpinner="crescent" [loadingText]="'home.loading' | t">
-    </ion-infinite-scroll-content>
-  </ion-infinite-scroll>
-  </ng-container>
-
-  <footer class="app-footer">
-    <img src="assets/footer-bg.jpg" [alt]="'app.title' | t" class="footer-image" />
-    <div class="footer-overlay">
-      <p>{{ 'app.title' | t }} &mdash; {{ 'home.footer' | t }}</p>
-    </div>
-  </footer>
-  <app-footer></app-footer>
-</ion-content>
+    <footer class="app-footer">
+      <img src="assets/footer-bg.jpg" [alt]="'app.title' | t" class="footer-image" />
+      <div class="footer-overlay">
+        <p>{{ 'app.title' | t }} &mdash; {{ 'home.footer' | t }}</p>
+      </div>
+    </footer>
+    <app-footer></app-footer>
+  </ion-content>

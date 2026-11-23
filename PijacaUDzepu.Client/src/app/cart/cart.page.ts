@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { CartService } from '../services/cart.service';
@@ -23,6 +23,17 @@ import { catchError } from 'rxjs/operators';
   standalone: false,
 })
 export class CartPage implements OnInit {
+  cartService = inject(CartService);
+  authService = inject(AuthService);
+  private orderService = inject(OrderService);
+  private router = inject(Router);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+  private guestOrders = inject(GuestOrdersService);
+  private notificationService = inject(NotificationService);
+  private productService = inject(ProductService);
+
   items: CartItem[] = [];
   note = '';
   submitting = false;
@@ -33,19 +44,6 @@ export class CartPage implements OnInit {
   phone = '';
   address = '';
   courierFee = 0;
-
-  constructor(
-    public cartService: CartService,
-    public authService: AuthService,
-    private orderService: OrderService,
-    private router: Router,
-    private alertController: AlertController,
-    private toastController: ToastController,
-    private ts: TranslateService,
-    private guestOrders: GuestOrdersService,
-    private notificationService: NotificationService,
-    private productService: ProductService
-  ) {}
 
   ngOnInit() {
     this.cartService.cart$.subscribe(items => this.items = items);

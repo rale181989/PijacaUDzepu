@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -17,11 +17,14 @@ const STORAGE_KEY = 'favorites';
 // pri prijavi se omiljeni sa uređaja prenose na nalog. "Obavesti me kad bude dostupno" radi samo uz nalog.
 @Injectable({ providedIn: 'root' })
 export class FavoritesService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
   private baseUrl = environment.apiUrl + '/favorites';
   private state = new BehaviorSubject<FavoritesState>(this.readLocal());
   changes$ = this.state.asObservable();
 
-  constructor(private http: HttpClient, private authService: AuthService) {
+  constructor() {
     this.authService.currentUser$.subscribe(user => {
       if (user) this.loadFromServer();
       else this.state.next(this.readLocal());

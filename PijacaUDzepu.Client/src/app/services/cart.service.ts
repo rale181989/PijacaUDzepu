@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AlertController } from '@ionic/angular/lazy';
 import { BehaviorSubject } from 'rxjs';
 import { CartItem } from '../models/cart.model';
@@ -7,11 +7,14 @@ import { TranslateService } from './translate.service';
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
+  private alertController = inject(AlertController);
+  private ts = inject(TranslateService);
+
   private items: CartItem[] = [];
   private cartSource = new BehaviorSubject<CartItem[]>([]);
   cart$ = this.cartSource.asObservable();
 
-  constructor(private alertController: AlertController, private ts: TranslateService) {
+  constructor() {
     this.loadFromStorage();
   }
 

@@ -1,13 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Market, MarketInput } from '../models/market.model';
 
 @Injectable({ providedIn: 'root' })
 export class MarketService {
-  private baseUrl = environment.apiUrl + '/markets';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/markets';
 
   getAll() {
     return this.http.get<Market[]>(this.baseUrl);

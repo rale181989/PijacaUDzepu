@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { MarketService } from '../services/market.service';
 import { StallService } from '../services/stall.service';
@@ -12,17 +12,15 @@ import { Stall } from '../models/stall.model';
   standalone: false,
 })
 export class AdminMarketsPage implements OnInit {
+  private marketService = inject(MarketService);
+  private stallService = inject(StallService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+
   markets: Market[] = [];
   stalls: Record<number, Stall[]> = {};
   expandedMarketId: number | null = null;
   loading = true;
-
-  constructor(
-    private marketService: MarketService,
-    private stallService: StallService,
-    private alertController: AlertController,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() {
     this.loadMarkets();

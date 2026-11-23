@@ -1,5 +1,5 @@
 import { directionsTo, marketPoint, showPickupWay, stallPoint } from '../shared/maps';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { OrderService } from '../services/order.service';
 import { Order } from '../models/order.model';
@@ -15,17 +15,15 @@ import { Subscription } from 'rxjs';
   standalone: false,
 })
 export class OrderDetailPage implements OnInit, OnDestroy {
+  private route = inject(ActivatedRoute);
+  private orderService = inject(OrderService);
+  private ts = inject(TranslateService);
+  private notificationService = inject(NotificationService);
+  orderActions = inject(OrderActionsService);
+
   order: Order | null = null;
   loading = false;
   private sub?: Subscription;
-
-  constructor(
-    private route: ActivatedRoute,
-    private orderService: OrderService,
-    private ts: TranslateService,
-    private notificationService: NotificationService,
-    public orderActions: OrderActionsService
-  ) {}
 
   async rate() {
     if (!this.order) return;

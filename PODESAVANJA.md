@@ -196,6 +196,26 @@ Aplikacija čita cenu sa servera, pa za ovo ne treba novi APK.
 
 ---
 
+## 4c. Potpis APK-a za Google Play (jednom, pre objave)
+
+Verzija se menja samo u `PijacaUDzepu.Client/package.json` („version”); Android i „Moj nalog” je čitaju odatle.
+
+- [ ] Napraviti ključ (jednom, **čuvati zauvek** – bez njega nova verzija ne može da se objavi preko stare):
+      `keytool -genkeypair -v -keystore pijaca-release.jks -alias pijaca -keyalg RSA -keysize 2048 -validity 10000`
+      (keytool je u JDK-u: `C:\Users\<ime>\AppData\Local\Java\jdk-21…\bin`). Fajl `pijaca-release.jks` staviti u
+      `PijacaUDzepu.Client/android/` i napraviti rezervnu kopiju van računara (npr. šifrovani USB).
+- [ ] U `PijacaUDzepu.Client/android/keystore.properties` upisati (ovaj fajl i `.jks` nikad ne idu u git – već su u `.gitignore`):
+      ```
+      storeFile=pijaca-release.jks
+      storePassword=…
+      keyAlias=pijaca
+      keyPassword=…
+      ```
+- Potpisan APK: `npm run apk:release` u `PijacaUDzepu.Client` → `android/app/build/outputs/apk/release/app-release.apk`.
+  Za Google Play se obično pravi AAB: `cd android && gradlew bundleRelease`.
+
+---
+
 ## 5. Podaci o firmi u pravnim tekstovima
 
 - [ ] Popunjeni podaci

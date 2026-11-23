@@ -97,7 +97,13 @@ Android: `npm run build:android`, pa `npm run open:android` (Android Studio).
 ```
 cd PijacaUDzepu.API
 dotnet test PijacaUDzepu.API.Tests     # pokreće ceo API nad posebnom bazom PijacaUDzepu_Test (lokalni Postgres)
+
+cd PijacaUDzepu.Client
+npx ng test --watch=false              # testovi klijenta (Vitest): količine, množina, prevodi, mapa, obaveštenja
+npm run lint                           # mora biti bez ijedne greške
 ```
+GitHub Actions (`.github/workflows/ci.yml`) pri svakom push-u na Linuxu pokreće API testove nad Postgres-om, lint,
+testove i build klijenta i pravi Docker sliku kakvu objavljuje Render.
 Pokrivaju: podelu korpe po prodavcima i iznose, „prvi kurir dobija porudžbinu”, stanje (bez prodaje preko stanja),
 zatvorenu tezgu, obavezan razlog odbijanja, izveštaje, lozinke, zaključavanje, zaboravljenu lozinku, obavezne telefon i adresu pri registraciji, sliku proizvoda bez ekstenzije u imenu, razdvajanje aktivnih i završenih porudžbina, zabranu kupovine prodavcima i kuririma, nalaze iz testiranja agentima (`docs/testiranje/`), zatvaranje zaostale porudžbine od strane administratora, tok dostave (kurir tek posle potvrde prodavca, a kod više tezgi tek kada odgovore sve), automatsko odbijanje porudžbine bez odgovora, odbijanje korpe sa dve pijace, „nije dostavljeno” sa razlogom i brisanje naloga.
 

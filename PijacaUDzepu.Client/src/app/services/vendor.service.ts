@@ -1,13 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Vendor, VendorAvailabilityInput, VendorInput } from '../models/vendor.model';
 
 @Injectable({ providedIn: 'root' })
 export class VendorService {
-  private baseUrl = environment.apiUrl + '/vendors';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/vendors';
 
   getAll() {
     return this.http.get<Vendor[]>(this.baseUrl);

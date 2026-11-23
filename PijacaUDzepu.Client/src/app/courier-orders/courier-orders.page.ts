@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { Observable, Subscription } from 'rxjs';
 import { CourierService, CourierSettlement } from '../services/courier.service';
@@ -17,6 +17,12 @@ import { forkJoin } from 'rxjs';
   standalone: false,
 })
 export class CourierOrdersPage implements OnInit, OnDestroy {
+  private courierService = inject(CourierService);
+  private notificationService = inject(NotificationService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+
   tab: 'available' | 'mine' | 'finished' | 'settlement' = 'available';
   readonly itemsWord = itemsWord;
   settlement: CourierSettlement | null = null;
@@ -37,14 +43,6 @@ export class CourierOrdersPage implements OnInit, OnDestroy {
   isOnShift = false;
   shiftLoaded = false;
   private sub?: Subscription;
-
-  constructor(
-    private courierService: CourierService,
-    private notificationService: NotificationService,
-    private alertController: AlertController,
-    private toastController: ToastController,
-    private ts: TranslateService
-  ) {}
 
   ngOnInit() {
     this.sub = this.notificationService.courierEvents$.subscribe(event => {

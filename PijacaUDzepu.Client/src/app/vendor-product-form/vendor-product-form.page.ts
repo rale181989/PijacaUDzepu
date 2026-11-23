@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NavController, ToastController } from '@ionic/angular/lazy';
 import { ProductService } from '../services/product.service';
@@ -14,6 +14,12 @@ import { shrinkImage } from '../shared/image-file';
   standalone: false,
 })
 export class VendorProductFormPage implements OnDestroy {
+  private route = inject(ActivatedRoute);
+  private navController = inject(NavController);
+  private productService = inject(ProductService);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+
   productId: number | null = null;
   model: ProductInput = VendorProductFormPage.emptyModel();
   imageUrl: string | null = null;
@@ -25,14 +31,6 @@ export class VendorProductFormPage implements OnDestroy {
   categories = PRODUCT_CATEGORIES.map(value => ({ value, label: this.ts.t('cat.' + value) }));
 
   get isEdit(): boolean { return this.productId !== null; }
-
-  constructor(
-    private route: ActivatedRoute,
-    private navController: NavController,
-    private productService: ProductService,
-    private toastController: ToastController,
-    private ts: TranslateService
-  ) {}
 
   private static emptyModel(): ProductInput {
     // Cena prazna (ne 0): inače se kucanjem dobija "0180"

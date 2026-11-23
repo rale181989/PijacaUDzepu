@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AlertController, MenuController } from '@ionic/angular/lazy';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -17,21 +17,21 @@ import { Router } from '@angular/router';
   standalone: false,
 })
 export class AppComponent {
+  authService = inject(AuthService);
+  private cartService = inject(CartService);
+  notificationService = inject(NotificationService);
+  private pushService = inject(PushService);
+  guestOrders = inject(GuestOrdersService);
+  ts = inject(TranslateService);
+  private menuController = inject(MenuController);
+  private router = inject(Router);
+  private alertController = inject(AlertController);
+
   cartCount = 0;
   // Dugme "Zatvori aplikaciju" ima smisla samo u APK-u (pregledač se zatvara sam)
   readonly isNative = Capacitor.isNativePlatform();
 
-  constructor(
-    public authService: AuthService,
-    private cartService: CartService,
-    public notificationService: NotificationService,
-    private pushService: PushService,
-    public guestOrders: GuestOrdersService,
-    public ts: TranslateService,
-    private menuController: MenuController,
-    private router: Router,
-    private alertController: AlertController
-  ) {
+  constructor() {
     this.cartService.cart$.subscribe(items => {
       this.cartCount = items.length; // broj stavki, ne zbir količina
     });

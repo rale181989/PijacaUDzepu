@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
@@ -10,6 +10,11 @@ import { AuthService } from '../services/auth.service';
   standalone: false,
 })
 export class SetupAccountPage implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private toastController = inject(ToastController);
+
   token = '';
   userName = '';
   password = '';
@@ -28,13 +33,6 @@ export class SetupAccountPage implements OnInit {
       && this.firstName && this.lastName && this.passwordsMatch
       && this.password.length >= 4 && this.userName.length >= 3);
   }
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private authService: AuthService,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() {
     this.token = this.route.snapshot.queryParamMap.get('token') || '';

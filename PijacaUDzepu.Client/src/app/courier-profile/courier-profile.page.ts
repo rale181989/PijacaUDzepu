@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ToastController } from '@ionic/angular/lazy';
 import { CourierService } from '../services/courier.service';
 import { AuthService } from '../services/auth.service';
@@ -11,6 +11,10 @@ import { CourierProfileInput, CourierVehicle } from '../models/courier.model';
   standalone: false,
 })
 export class CourierProfilePage implements OnInit {
+  private courierService = inject(CourierService);
+  private authService = inject(AuthService);
+  private toastController = inject(ToastController);
+
   model: CourierProfileInput = { firstName: '', lastName: '', phoneNumber: '', vehicle: null, licensePlate: '' };
   userName = '';
   loading = true;
@@ -35,12 +39,6 @@ export class CourierProfilePage implements OnInit {
   get canSave(): boolean {
     return !!(this.model.firstName.trim() && this.model.lastName.trim() && this.model.phoneNumber.trim());
   }
-
-  constructor(
-    private courierService: CourierService,
-    private authService: AuthService,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() {
     this.courierService.getProfile().subscribe({

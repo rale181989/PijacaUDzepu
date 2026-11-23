@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { PagedResult } from '../models/paged-result.model';
@@ -32,9 +32,9 @@ export interface SupportRequest {
 
 @Injectable({ providedIn: 'root' })
 export class SupportService {
-  private baseUrl = environment.apiUrl + '/support';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/support';
 
   send(dto: SupportRequestInput) {
     return this.http.post<void>(this.baseUrl, dto);

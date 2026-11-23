@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Order, OrderInput, GuestOrderInput, OrderStatus } from '../models/order.model';
@@ -19,9 +19,9 @@ export interface VendorToday {
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
-  private baseUrl = environment.apiUrl + '/orders';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/orders';
 
   createOrder(dto: OrderInput) {
     return this.http.post<Order[]>(this.baseUrl, dto);

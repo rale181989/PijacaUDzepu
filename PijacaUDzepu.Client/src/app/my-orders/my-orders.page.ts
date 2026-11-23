@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { Order, CUSTOMER_CANCEL_ENABLED } from '../models/order.model';
 import { ToastController } from '@ionic/angular/lazy';
@@ -14,6 +14,12 @@ import { OrderActionsService } from '../services/order-actions.service';
   standalone: false,
 })
 export class MyOrdersPage implements OnInit, OnDestroy {
+  private orderService = inject(OrderService);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+  private notificationService = inject(NotificationService);
+  orderActions = inject(OrderActionsService);
+
   orders: Order[] = [];
   readonly canCancel = CUSTOMER_CANCEL_ENABLED;
   private sub?: Subscription;
@@ -21,14 +27,6 @@ export class MyOrdersPage implements OnInit, OnDestroy {
   loading = false;
   hasMore = true;
   private pageSize = 20;
-
-  constructor(
-    private orderService: OrderService,
-    private toastController: ToastController,
-    private ts: TranslateService,
-    private notificationService: NotificationService,
-    public orderActions: OrderActionsService
-  ) {}
 
   async rate(order: Order, event: Event) {
     event.stopPropagation();

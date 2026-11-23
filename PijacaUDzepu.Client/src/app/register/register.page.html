@@ -16,48 +16,50 @@
     <form (ngSubmit)="register()">
       <ion-item>
         <ion-input [label]="'register.firstName' | t" labelPlacement="floating"
-                   [(ngModel)]="model.firstName" name="firstName" required></ion-input>
+        [(ngModel)]="model.firstName" name="firstName" required></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.lastName' | t" labelPlacement="floating"
-                   [(ngModel)]="model.lastName" name="lastName" required></ion-input>
+        [(ngModel)]="model.lastName" name="lastName" required></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.username' | t" labelPlacement="floating"
-                   [(ngModel)]="model.userName" name="userName" required></ion-input>
+        [(ngModel)]="model.userName" name="userName" required></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.password' | t" labelPlacement="floating" type="password"
-                   [(ngModel)]="model.password" name="password" required minlength="8"
-                   [helperText]="'register.passwordRule' | t"></ion-input>
+          [(ngModel)]="model.password" name="password" required minlength="8"
+        [helperText]="'register.passwordRule' | t"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.email' | t" labelPlacement="floating" type="email"
-                   [(ngModel)]="model.email" name="email" maxlength="200"></ion-input>
+        [(ngModel)]="model.email" name="email" maxlength="200"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.phone' | t" labelPlacement="floating" type="tel"
-                   [(ngModel)]="model.phoneNumber" name="phoneNumber" required></ion-input>
+        [(ngModel)]="model.phoneNumber" name="phoneNumber" required></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'register.address' | t" labelPlacement="floating"
-                   [placeholder]="'cart.addressPlaceholder' | t"
-                   [(ngModel)]="model.address" name="address" required></ion-input>
+          [placeholder]="'cart.addressPlaceholder' | t"
+        [(ngModel)]="model.address" name="address" required></ion-input>
       </ion-item>
       <div class="row">
         <ion-item>
           <ion-input [label]="'register.floor' | t" labelPlacement="floating"
-                     [(ngModel)]="model.floor" name="floor" maxlength="20"></ion-input>
+          [(ngModel)]="model.floor" name="floor" maxlength="20"></ion-input>
         </ion-item>
         <ion-item>
           <ion-input [label]="'register.apartment' | t" labelPlacement="floating"
-                     [(ngModel)]="model.apartment" name="apartment" maxlength="20"></ion-input>
+          [(ngModel)]="model.apartment" name="apartment" maxlength="20"></ion-input>
         </ion-item>
       </div>
       <p class="hint">{{ 'register.addressHint' | t }}</p>
 
       <ion-button expand="block" type="submit" [disabled]="!canSubmit" class="ion-margin-top">
-        <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+        @if (loading) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
         {{ 'register.submit' | t }}
       </ion-button>
     </form>

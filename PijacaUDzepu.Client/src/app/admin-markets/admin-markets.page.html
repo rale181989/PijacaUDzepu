@@ -13,55 +13,69 @@
 </ion-header>
 
 <ion-content>
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  @if (loading) {
+    <ion-spinner name="crescent" class="center-spinner"></ion-spinner>
+  }
 
-  <ion-list *ngIf="!loading">
-    <div *ngFor="let market of markets" class="market-block">
-      <!-- Market header -->
-      <ion-item [class.inactive]="!market.isActive" (click)="toggleExpand(market)" button detail="false">
-        <ion-icon [name]="expandedMarketId === market.id ? 'chevron-down-outline' : 'chevron-forward-outline'" slot="start"></ion-icon>
-        <ion-label>
-          <h2>{{ market.name }}</h2>
-          <p *ngIf="market.address">{{ market.address }}</p>
-          <p class="center" [class.missing]="!hasCenter(market)">{{ centerText(market) }}</p>
-          <p *ngIf="market.description" class="desc">{{ market.description }}</p>
-        </ion-label>
-        <ion-badge slot="end" color="medium">{{ market.vendorCount }} prodav.</ion-badge>
-      </ion-item>
-
-      <!-- Action buttons -->
-      <div class="market-actions" *ngIf="expandedMarketId === market.id">
-        <ion-button size="small" fill="outline" (click)="editMarket(market); $event.stopPropagation()">
-          <ion-icon name="create-outline" slot="start"></ion-icon>
-          Izmeni
-        </ion-button>
-        <ion-button size="small" fill="outline" [color]="market.isActive ? 'warning' : 'success'"
-                    (click)="toggleMarketActive(market); $event.stopPropagation()">
-          <ion-icon [name]="market.isActive ? 'eye-off-outline' : 'eye-outline'" slot="start"></ion-icon>
-          {{ market.isActive ? 'Deaktiviraj' : 'Aktiviraj' }}
-        </ion-button>
-      </div>
-
-      <!-- Stalls list -->
-      <div class="stalls-section" *ngIf="expandedMarketId === market.id">
-        <div class="stalls-header">
-          <span class="stalls-title">Tezge</span>
-          <ion-button size="small" fill="clear" (click)="addStall(market.id)">
-            <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-            Dodaj tezgu
-          </ion-button>
+  @if (!loading) {
+    <ion-list>
+      @for (market of markets; track market) {
+        <div class="market-block">
+          <!-- Market header -->
+          <ion-item [class.inactive]="!market.isActive" (click)="toggleExpand(market)" button detail="false">
+            <ion-icon [name]="expandedMarketId === market.id ? 'chevron-down-outline' : 'chevron-forward-outline'" slot="start"></ion-icon>
+            <ion-label>
+              <h2>{{ market.name }}</h2>
+              @if (market.address) {
+                <p>{{ market.address }}</p>
+              }
+              <p class="center" [class.missing]="!hasCenter(market)">{{ centerText(market) }}</p>
+              @if (market.description) {
+                <p class="desc">{{ market.description }}</p>
+              }
+            </ion-label>
+            <ion-badge slot="end" color="medium">{{ market.vendorCount }} prodav.</ion-badge>
+          </ion-item>
+          <!-- Action buttons -->
+          @if (expandedMarketId === market.id) {
+            <div class="market-actions">
+              <ion-button size="small" fill="outline" (click)="editMarket(market); $event.stopPropagation()">
+                <ion-icon name="create-outline" slot="start"></ion-icon>
+                Izmeni
+              </ion-button>
+              <ion-button size="small" fill="outline" [color]="market.isActive ? 'warning' : 'success'"
+                (click)="toggleMarketActive(market); $event.stopPropagation()">
+                <ion-icon [name]="market.isActive ? 'eye-off-outline' : 'eye-outline'" slot="start"></ion-icon>
+                {{ market.isActive ? 'Deaktiviraj' : 'Aktiviraj' }}
+              </ion-button>
+            </div>
+          }
+          <!-- Stalls list -->
+          @if (expandedMarketId === market.id) {
+            <div class="stalls-section">
+              <div class="stalls-header">
+                <span class="stalls-title">Tezge</span>
+                <ion-button size="small" fill="clear" (click)="addStall(market.id)">
+                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+                  Dodaj tezgu
+                </ion-button>
+              </div>
+              @if (!stalls[market.id] || stalls[market.id].length === 0) {
+                <div class="no-stalls">
+                  Nema tezgi za ovu pijacu
+                </div>
+              }
+              @for (stall of stalls[market.id]; track stall) {
+                <ion-chip [outline]="true">
+                  <ion-label>Tezga {{ stall.label }}</ion-label>
+                  <ion-icon name="create-outline" (click)="editStall(stall)" class="chip-action"></ion-icon>
+                  <ion-icon name="close-circle" (click)="deleteStall(stall)" class="chip-action delete"></ion-icon>
+                </ion-chip>
+              }
+            </div>
+          }
         </div>
-
-        <div *ngIf="!stalls[market.id] || stalls[market.id].length === 0" class="no-stalls">
-          Nema tezgi za ovu pijacu
-        </div>
-
-        <ion-chip *ngFor="let stall of stalls[market.id]" [outline]="true">
-          <ion-label>Tezga {{ stall.label }}</ion-label>
-          <ion-icon name="create-outline" (click)="editStall(stall)" class="chip-action"></ion-icon>
-          <ion-icon name="close-circle" (click)="deleteStall(stall)" class="chip-action delete"></ion-icon>
-        </ion-chip>
-      </div>
-    </div>
-  </ion-list>
+      }
+    </ion-list>
+  }
 </ion-content>

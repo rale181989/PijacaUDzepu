@@ -11,6 +11,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "build:android": "ng build --configuration mobile && npx cap sync android",
+    "apk:debug": "npm run build:android && cd android && gradlew assembleDebug",
+    "apk:release": "npm run build:android && cd android && gradlew assembleRelease",
     "open:android": "npx cap open android"
   },
   "private": true,

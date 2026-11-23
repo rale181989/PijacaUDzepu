@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { NotificationService } from '../services/notification.service';
 import { Order, OrderStatus } from '../models/order.model';
@@ -14,6 +14,12 @@ import { ordersWord, srPlural } from '../shared/plural';
   standalone: false,
 })
 export class VendorOrdersPage implements OnInit, OnDestroy {
+  private orderService = inject(OrderService);
+  notificationService = inject(NotificationService);
+  private alertController = inject(AlertController);
+  private actionSheetController = inject(ActionSheetController);
+  private toastController = inject(ToastController);
+
   @ViewChild(IonContent) content?: IonContent;
 
   orders: Order[] = [];
@@ -33,14 +39,6 @@ export class VendorOrdersPage implements OnInit, OnDestroy {
   get pageCount(): number {
     return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
   }
-
-  constructor(
-    private orderService: OrderService,
-    public notificationService: NotificationService,
-    private alertController: AlertController,
-    private actionSheetController: ActionSheetController,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() {
     this.loadOrders();

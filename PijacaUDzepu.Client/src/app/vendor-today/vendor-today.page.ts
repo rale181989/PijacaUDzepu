@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { OrderService, VendorToday } from '../services/order.service';
 import { TranslateService } from '../services/translate.service';
 import { ordersWord } from '../shared/plural';
@@ -11,11 +11,12 @@ import { ordersWord } from '../shared/plural';
   standalone: false,
 })
 export class VendorTodayPage {
+  private orderService = inject(OrderService);
+  private ts = inject(TranslateService);
+
   data: VendorToday | null = null;
   loading = false;
   readonly ordersWord = ordersWord;
-
-  constructor(private orderService: OrderService, private ts: TranslateService) {}
 
   ionViewWillEnter() {
     this.load();

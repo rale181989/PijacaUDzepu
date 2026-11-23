@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { User, CreateCourierDto } from '../models/user.model';
@@ -6,9 +6,9 @@ import { PagedResult } from '../models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private baseUrl = environment.apiUrl + '/users';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/users';
 
   // Strana korisnika jedne uloge, uz pretragu po imenu, korisničkom imenu, e-mailu i telefonu
   getPage(role: string, search: string, skip = 0, take = 20) {

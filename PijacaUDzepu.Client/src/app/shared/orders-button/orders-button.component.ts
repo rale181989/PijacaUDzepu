@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -15,16 +15,18 @@ import { GuestOrdersService } from '../../services/guest-orders.service';
   standalone: false,
 })
 export class OrdersButtonComponent implements OnDestroy {
+  authService = inject(AuthService);
+  guestOrders = inject(GuestOrdersService);
+
   count = 0;
   bump = false;
   private sub = new Subscription();
   private bumpTimer?: ReturnType<typeof setTimeout>;
 
-  constructor(
-    public authService: AuthService,
-    public guestOrders: GuestOrdersService,
-    notificationService: NotificationService
-  ) {
+  constructor() {
+    const authService = this.authService;
+    const notificationService = inject(NotificationService);
+
     const vendor = authService.hasRole('VendorAdmin');
     const count$ = vendor ? notificationService.pendingCount$ : notificationService.customerActive$;
     this.sub.add(count$.subscribe(count => {

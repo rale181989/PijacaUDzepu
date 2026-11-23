@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ToastController } from '@ionic/angular/lazy';
 import { Subscription } from 'rxjs';
 import { SupportRequest, SupportService } from '../services/support.service';
@@ -12,6 +12,10 @@ import { PagerComponent } from '../shared/pager/pager.component';
   standalone: false,
 })
 export class AdminSupportPage implements OnInit, OnDestroy {
+  private supportService = inject(SupportService);
+  notificationService = inject(NotificationService);
+  private toastController = inject(ToastController);
+
   tab: 'open' | 'resolved' = 'open';
   requests: SupportRequest[] = [];
   loading = false;
@@ -25,12 +29,6 @@ export class AdminSupportPage implements OnInit, OnDestroy {
   categoryLabels: Record<string, string> = {
     'Problem': 'Problem sa aplikacijom', 'Question': 'Pitanje', 'Account': 'Nalog i prijava', 'Other': 'Ostalo'
   };
-
-  constructor(
-    private supportService: SupportService,
-    public notificationService: NotificationService,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() {
     this.sub = this.notificationService.supportRequest$.subscribe(() => {

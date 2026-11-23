@@ -16,10 +16,14 @@
     <h1>{{ content.title }}</h1>
     <p class="legal-updated">{{ 'legal.updated' | t }}: {{ updated }}</p>
 
-    <section *ngFor="let section of content.sections">
-      <h2>{{ section.heading }}</h2>
-      <p *ngFor="let paragraph of section.paragraphs">{{ paragraph }}</p>
-    </section>
+    @for (section of content.sections; track section) {
+      <section>
+        <h2>{{ section.heading }}</h2>
+        @for (paragraph of section.paragraphs; track paragraph) {
+          <p>{{ paragraph }}</p>
+        }
+      </section>
+    }
   </article>
 
   <app-footer></app-footer>

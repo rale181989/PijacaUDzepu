@@ -27,6 +27,9 @@ module.exports = tseslint.config(
   {
     files: ["**/*.html"],
     extends: [...angular.configs.templateRecommended],
-    rules: {},
+    rules: {
+      // "x != null" namerno pokriva i null i undefined (podaci sa servera)
+      "@angular-eslint/template/eqeqeq": ["error", { allowNullOrUndefined: true }],
+    },
   }
 );

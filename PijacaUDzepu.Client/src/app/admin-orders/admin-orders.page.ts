@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { Subscription } from 'rxjs';
 import { OrderService } from '../services/order.service';
@@ -15,6 +15,10 @@ import { itemsWord } from '../shared/plural';
   standalone: false,
 })
 export class AdminOrdersPage implements OnDestroy {
+  private orderService = inject(OrderService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+
   orders: Order[] = [];
   readonly itemsWord = itemsWord;
   loading = false;
@@ -24,12 +28,6 @@ export class AdminOrdersPage implements OnDestroy {
   readonly pageSizeKey = 'adminOrdersPageSize';
   pageSize = PagerComponent.savedSize(this.pageSizeKey);
   private loadSub?: Subscription;
-
-  constructor(
-    private orderService: OrderService,
-    private alertController: AlertController,
-    private toastController: ToastController
-  ) {}
 
   ionViewWillEnter() {
     this.load();

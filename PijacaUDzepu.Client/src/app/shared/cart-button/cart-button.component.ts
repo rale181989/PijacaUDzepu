@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
@@ -12,10 +12,14 @@ import { AuthService } from '../../services/auth.service';
   standalone: false,
 })
 export class CartButtonComponent implements OnDestroy {
+  authService = inject(AuthService);
+
   count = 0;
   private sub: Subscription;
 
-  constructor(cartService: CartService, public authService: AuthService) {
+  constructor() {
+    const cartService = inject(CartService);
+
     this.sub = cartService.cart$.subscribe(items => {
       this.count = items.length; // broj stavki (1,5 kg + 2 veze = 2), ne zbir količina
     });

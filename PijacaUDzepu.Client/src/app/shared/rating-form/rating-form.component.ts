@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { ModalController } from '@ionic/angular/lazy';
 
 export interface RatingResult {
@@ -16,6 +16,8 @@ export interface RatingResult {
   standalone: false,
 })
 export class RatingFormComponent {
+  private modalController = inject(ModalController);
+
   @Input() vendorName = '';
   @Input() withCourier = false;
 
@@ -23,8 +25,6 @@ export class RatingFormComponent {
   vendorScore = 0;
   courierScore = 0;
   comment = '';
-
-  constructor(private modalController: ModalController) {}
 
   get canSubmit(): boolean {
     return this.vendorScore > 0 && (!this.withCourier || this.courierScore > 0);

@@ -1,4 +1,8 @@
-<ion-button *ngIf="!authService.isStaff" routerLink="/cart" routerDirection="root" [attr.aria-label]="'nav.cart' | t">
-  <ion-icon name="cart-outline" slot="icon-only"></ion-icon>
-  <span *ngIf="count > 0" class="cart-count">{{ count > 99 ? '99+' : count }}</span>
-</ion-button>
+@if (!authService.isStaff) {
+  <ion-button routerLink="/cart" routerDirection="root" [attr.aria-label]="'nav.cart' | t">
+    <ion-icon name="cart-outline" slot="icon-only"></ion-icon>
+    @if (count > 0) {
+      <span class="cart-count">{{ count > 99 ? '99+' : count }}</span>
+    }
+  </ion-button>
+}

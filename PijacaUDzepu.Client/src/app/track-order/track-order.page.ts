@@ -1,5 +1,5 @@
 import { directionsTo, marketPoint, showPickupWay, stallPoint } from '../shared/maps';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { forkJoin, of } from 'rxjs';
@@ -28,6 +28,16 @@ interface TrackedGroup {
   standalone: false,
 })
 export class TrackOrderPage implements OnInit, OnDestroy {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private orderService = inject(OrderService);
+  private guestOrders = inject(GuestOrdersService);
+  private sound = inject(SoundService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+  orderActions = inject(OrderActionsService);
+
   code: string | null = null;
   readonly canCancel = CUSTOMER_CANCEL_ENABLED;
   // Rezervacija: tačka tezge na mapi (na dodir) i navigacija peške do nje
@@ -47,18 +57,6 @@ export class TrackOrderPage implements OnInit, OnDestroy {
   // Stigao je direktno iz korpe: prikazuje se "Hvala! Porudžbina je primljena."
   justOrdered = false;
   private hub: signalR.HubConnection | null = null;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private orderService: OrderService,
-    private guestOrders: GuestOrdersService,
-    private sound: SoundService,
-    private alertController: AlertController,
-    private toastController: ToastController,
-    private ts: TranslateService,
-    public orderActions: OrderActionsService
-  ) {}
 
   async rate(code: string, order: Order) {
     const rating = await this.orderActions.rate(order, code);

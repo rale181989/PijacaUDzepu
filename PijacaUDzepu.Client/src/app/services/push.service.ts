@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
@@ -12,6 +12,12 @@ import { environment } from '../../environments/environment';
 // Radi samo u Android/iOS aplikaciji; u browseru obaveštenja idu preko SignalR-a.
 @Injectable({ providedIn: 'root' })
 export class PushService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private ngZone = inject(NgZone);
+  private notificationService = inject(NotificationService);
+
   // Mora da se poklapa sa PushService.AndroidChannelId na serveru
   private static readonly ChannelId = 'orders';
 
@@ -19,13 +25,7 @@ export class PushService {
   private token: string | null = null;
   private listenersAdded = false;
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private router: Router,
-    private ngZone: NgZone,
-    private notificationService: NotificationService
-  ) {
+  constructor() {
     if (!Capacitor.isNativePlatform() || !environment.pushEnabled) return;
     this.authService.currentUser$.subscribe(user => {
       if (user) this.register();

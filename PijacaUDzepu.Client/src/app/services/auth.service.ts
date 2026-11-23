@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, map, tap } from 'rxjs';
 import { GuestOrdersService } from './guest-orders.service';
@@ -7,11 +7,14 @@ import { AcceptInvitationDto, AuthResponse, CreateVendorAdminDto, InviteVendorDt
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private http = inject(HttpClient);
+  private guestOrders = inject(GuestOrdersService);
+
   private baseUrl = environment.apiUrl + '/auth';
   private currentUserSource = new BehaviorSubject<User | null>(null);
   currentUser$ = this.currentUserSource.asObservable();
 
-  constructor(private http: HttpClient, private guestOrders: GuestOrdersService) {
+  constructor() {
     this.loadStoredUser();
   }
 

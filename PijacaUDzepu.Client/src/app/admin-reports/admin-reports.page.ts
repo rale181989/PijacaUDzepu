@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { CourierReport, CustomerReport, OrdersReport, ProductsReport, ReportService, VendorReport, WaitingOrder } from '../services/report.service';
 import { downloadCsv } from '../shared/csv';
@@ -16,6 +16,9 @@ type Preset = 'today' | '7' | '30' | 'month' | 'lastMonth' | 'year' | 'all';
   standalone: false,
 })
 export class AdminReportsPage {
+  private reportService = inject(ReportService);
+  private ts = inject(TranslateService);
+
   tab: Tab = 'orders';
 
   readonly presets: { value: Preset; label: string }[] = [
@@ -57,8 +60,6 @@ export class AdminReportsPage {
   customersPage = 0;
   daysPage = 0;
   deliveriesPage = 0;
-
-  constructor(private reportService: ReportService, private ts: TranslateService) {}
 
   ionViewWillEnter() {
     // Podaci se menjaju, pa se pri svakom ulasku na stranicu ponovo učitavaju

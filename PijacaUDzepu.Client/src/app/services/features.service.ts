@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -19,10 +19,10 @@ const DEFAULTS: Features = {
 
 @Injectable({ providedIn: 'root' })
 export class FeaturesService {
+  private http = inject(HttpClient);
+
   private current: Features = { ...DEFAULTS };
   private loading?: Promise<Features>;
-
-  constructor(private http: HttpClient) {}
 
   get stallLocation(): boolean {
     return this.current.stallLocation;

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
@@ -12,19 +12,20 @@ import { TranslateService } from '../services/translate.service';
   standalone: false,
 })
 export class ResetPasswordPage {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+
   token = '';
   password = '';
   confirm = '';
   loading = false;
   error = '';
 
-  constructor(
-    route: ActivatedRoute,
-    private authService: AuthService,
-    private router: Router,
-    private toastController: ToastController,
-    private ts: TranslateService
-  ) {
+  constructor() {
+    const route = inject(ActivatedRoute);
+
     this.token = route.snapshot.queryParamMap.get('token') ?? '';
   }
 

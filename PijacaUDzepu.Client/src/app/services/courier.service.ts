@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Order } from '../models/order.model';
@@ -20,9 +20,9 @@ export interface CourierSettlement {
 
 @Injectable({ providedIn: 'root' })
 export class CourierService {
-  private baseUrl = environment.apiUrl + '/couriers';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/couriers';
 
   getProfile() {
     return this.http.get<CourierProfile>(`${this.baseUrl}/me`);

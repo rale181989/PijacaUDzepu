@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { TranslateService } from '../services/translate.service';
 
@@ -10,12 +10,13 @@ import { TranslateService } from '../services/translate.service';
   standalone: false,
 })
 export class ForgotPasswordPage {
+  private authService = inject(AuthService);
+  private ts = inject(TranslateService);
+
   login = '';
   loading = false;
   sent = false;
   error = '';
-
-  constructor(private authService: AuthService, private ts: TranslateService) {}
 
   submit() {
     if (!this.login.trim()) return;

@@ -23,7 +23,7 @@
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar [(ngModel)]="search" (ionInput)="onSearch()" debounce="400"
-                   placeholder="Ime, korisničko ime, e-mail ili telefon"></ion-searchbar>
+    placeholder="Ime, korisničko ime, e-mail ili telefon"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
@@ -32,48 +32,68 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  @if (loading) {
+    <ion-spinner name="crescent" class="center-spinner"></ion-spinner>
+  }
 
-  <div *ngIf="!loading && selectedTab === 'Courier'" class="ion-padding-horizontal ion-padding-top">
-    <ion-button expand="block" (click)="createCourier()">
-      <ion-icon name="person-add-outline" slot="start"></ion-icon>
-      Dodaj kurira
-    </ion-button>
-  </div>
-
-  <div *ngIf="!loading && users.length === 0" class="empty-state">
-    <ion-icon name="people-outline" size="large"></ion-icon>
-    <p>{{ search.trim() ? 'Nema korisnika za ovu pretragu' : 'Nema korisnika u ovoj kategoriji' }}</p>
-  </div>
-
-  <ion-list *ngIf="!loading && users.length > 0">
-    <ion-item *ngFor="let user of users">
-      <ion-label>
-        <h2>{{ user.firstName }} {{ user.lastName }}</h2>
-        <p>{{ user.userName }}</p>
-        <p *ngIf="user.email" class="user-detail">
-          <ion-icon name="mail-outline"></ion-icon> {{ user.email }}
-        </p>
-        <p *ngIf="user.phoneNumber" class="user-detail">
-          <ion-icon name="call-outline"></ion-icon> {{ user.phoneNumber }}
-        </p>
-        <p *ngIf="user.vendors.length > 0" class="vendor-info">
-          <ion-icon name="storefront-outline"></ion-icon>
-          <span *ngFor="let v of user.vendors; let last = last">
-            {{ v.name }}<span *ngIf="!last">, </span>
-          </span>
-        </p>
-      </ion-label>
-      <ion-button slot="end" fill="clear" size="small" (click)="resetPassword(user)" title="Resetuj lozinku">
-        <ion-icon name="key-outline" slot="icon-only"></ion-icon>
+  @if (!loading && selectedTab === 'Courier') {
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-button expand="block" (click)="createCourier()">
+        <ion-icon name="person-add-outline" slot="start"></ion-icon>
+        Dodaj kurira
       </ion-button>
-      <ion-toggle slot="end" [checked]="user.isActive"
-                  (ionChange)="toggleActive(user)">
-      </ion-toggle>
-    </ion-item>
-  </ion-list>
+    </div>
+  }
 
-  <app-pager [page]="page" [pageSize]="pageSize" [totalCount]="totalCount" [disabled]="loading"
-             [storageKey]="pageSizeKey" (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)">
-  </app-pager>
+  @if (!loading && users.length === 0) {
+    <div class="empty-state">
+      <ion-icon name="people-outline" size="large"></ion-icon>
+      <p>{{ search.trim() ? 'Nema korisnika za ovu pretragu' : 'Nema korisnika u ovoj kategoriji' }}</p>
+    </div>
+  }
+
+  @if (!loading && users.length > 0) {
+    <ion-list>
+      @for (user of users; track user) {
+        <ion-item>
+          <ion-label>
+            <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+            <p>{{ user.userName }}</p>
+            @if (user.email) {
+              <p class="user-detail">
+                <ion-icon name="mail-outline"></ion-icon> {{ user.email }}
+              </p>
+            }
+            @if (user.phoneNumber) {
+              <p class="user-detail">
+                <ion-icon name="call-outline"></ion-icon> {{ user.phoneNumber }}
+              </p>
+            }
+            @if (user.vendors.length > 0) {
+              <p class="vendor-info">
+                <ion-icon name="storefront-outline"></ion-icon>
+                @for (v of user.vendors; track v; let last = $last) {
+                  <span>
+                    {{ v.name }}@if (!last) {
+                    <span>, </span>
+                  }
+                </span>
+              }
+            </p>
+          }
+        </ion-label>
+        <ion-button slot="end" fill="clear" size="small" (click)="resetPassword(user)" title="Resetuj lozinku">
+          <ion-icon name="key-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-toggle slot="end" [checked]="user.isActive"
+          (ionChange)="toggleActive(user)">
+        </ion-toggle>
+      </ion-item>
+    }
+  </ion-list>
+}
+
+<app-pager [page]="page" [pageSize]="pageSize" [totalCount]="totalCount" [disabled]="loading"
+  [storageKey]="pageSizeKey" (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)">
+</app-pager>
 </ion-content>

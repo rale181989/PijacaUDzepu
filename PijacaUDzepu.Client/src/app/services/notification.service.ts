@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { ToastController } from '@ionic/angular/lazy';
@@ -40,6 +40,13 @@ export type CourierEvent =
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
+  private ngZone = inject(NgZone);
+  private toastController = inject(ToastController);
+  private sound = inject(SoundService);
+  private ts = inject(TranslateService);
+
   private hubConnection: signalR.HubConnection | null = null;
   private hubUrl = environment.apiUrl.replace('/api', '/hubs/orders');
   private apiUrl = environment.apiUrl + '/orders';
@@ -99,14 +106,7 @@ export class NotificationService {
   private stallMovedSubject = new Subject<number>();
   stallMoved$ = this.stallMovedSubject.asObservable();
 
-  constructor(
-    private authService: AuthService,
-    private http: HttpClient,
-    private ngZone: NgZone,
-    private toastController: ToastController,
-    private sound: SoundService,
-    private ts: TranslateService
-  ) {
+  constructor() {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.startConnection();

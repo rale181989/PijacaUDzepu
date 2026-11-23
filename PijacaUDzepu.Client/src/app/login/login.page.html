@@ -19,16 +19,18 @@
     <form (ngSubmit)="login()">
       <ion-item>
         <ion-input [label]="'login.username' | t" labelPlacement="floating"
-                   [(ngModel)]="model.userName" name="userName" required></ion-input>
+        [(ngModel)]="model.userName" name="userName" required></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-input [label]="'login.password' | t" labelPlacement="floating" type="password"
-                   [(ngModel)]="model.password" name="password" required></ion-input>
+        [(ngModel)]="model.password" name="password" required></ion-input>
       </ion-item>
 
       <ion-button expand="block" type="submit" [disabled]="loading" class="ion-margin-top">
-        <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+        @if (loading) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
         {{ 'login.submit' | t }}
       </ion-button>
     </form>
@@ -40,12 +42,16 @@
       {{ 'login.noAccount' | t }} <a routerLink="/register">{{ 'login.register' | t }}</a>
     </p>
 
-    <p *ngIf="serverSelectable" class="server-setting">
-      <ion-icon name="server-outline"></ion-icon>
-      Server: {{ isDefaultServer ? 'Render' : apiServer }}
-      <a (click)="chooseServer()">Promeni</a>
-      <span *ngIf="appVersion">· v{{ appVersion }}</span>
-    </p>
+    @if (serverSelectable) {
+      <p class="server-setting">
+        <ion-icon name="server-outline"></ion-icon>
+        Server: {{ isDefaultServer ? 'Render' : apiServer }}
+        <a (click)="chooseServer()">Promeni</a>
+        @if (appVersion) {
+          <span>· v{{ appVersion }}</span>
+        }
+      </p>
+    }
   </div>
 
   <app-footer></app-footer>

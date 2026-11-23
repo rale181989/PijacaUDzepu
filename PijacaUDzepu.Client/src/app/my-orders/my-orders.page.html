@@ -16,67 +16,104 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <app-skeleton *ngIf="loading" [count]="4"></app-skeleton>
+  @if (loading) {
+    <app-skeleton [count]="4"></app-skeleton>
+  }
 
-  <div *ngIf="!loading && orders.length === 0" class="empty-state">
-    <ion-icon name="receipt-outline" size="large"></ion-icon>
-    <p>{{ 'orders.empty' | t }}</p>
-  </div>
+  @if (!loading && orders.length === 0) {
+    <div class="empty-state">
+      <ion-icon name="receipt-outline" size="large"></ion-icon>
+      <p>{{ 'orders.empty' | t }}</p>
+    </div>
+  }
 
-  <ion-list *ngIf="!loading">
-    <ion-card *ngFor="let order of orders" [routerLink]="['/order-detail', order.id]" [class.failed]="order.status === 'Rejected' || order.status === 'NotDelivered'">
-      <ion-card-header>
-        <ion-card-subtitle>
-          {{ 'orders.order' | t }} #{{ order.id }} — {{ order.vendorName }}
-        </ion-card-subtitle>
-        <ion-badge [color]="getStatusColor(order.status)">
-          {{ getStatusLabel(order.status, order.fulfillment) }}
-        </ion-badge>
-      </ion-card-header>
-      <ion-card-content>
-        <!-- Odbijena ili nedostavljena porudžbina: crvena kartica, stavke i iznos precrtani, ispod razlog -->
-        <ng-container *ngIf="order.status === 'Rejected' || order.status === 'NotDelivered'; else regular">
-          <p *ngFor="let item of order.items" class="struck">{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p>
-          <p class="total struck">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</p>
-          <div class="reject-reason">
-            <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.status !== 'Rejected' ? 'order.notDeliveredTitle' : order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>
-            <p *ngIf="order.autoRejected">{{ 'order.autoRejectedText' | t }}</p>
-            <p *ngIf="order.status === 'Rejected' && order.vendorMessage && !order.autoRejected">{{ order.vendorMessage }}</p>
-            <p *ngIf="order.status === 'NotDelivered' && order.notDeliveredReason">{{ order.notDeliveredReason }}</p>
+  @if (!loading) {
+    <ion-list>
+      @for (order of orders; track order) {
+        <ion-card [routerLink]="['/order-detail', order.id]" [class.failed]="order.status === 'Rejected' || order.status === 'NotDelivered'">
+          <ion-card-header>
+            <ion-card-subtitle>
+              {{ 'orders.order' | t }} #{{ order.id }} — {{ order.vendorName }}
+            </ion-card-subtitle>
+            <ion-badge [color]="getStatusColor(order.status)">
+              {{ getStatusLabel(order.status, order.fulfillment) }}
+            </ion-badge>
+          </ion-card-header>
+          <ion-card-content>
+            <!-- Odbijena ili nedostavljena porudžbina: crvena kartica, stavke i iznos precrtani, ispod razlog -->
+            @if (order.status === 'Rejected' || order.status === 'NotDelivered') {
+              @for (item of order.items; track item) {
+                <p class="struck">{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p>
+              }
+              <p class="total struck">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</p>
+              <div class="reject-reason">
+                <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.status !== 'Rejected' ? 'order.notDeliveredTitle' : order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>
+                @if (order.autoRejected) {
+                  <p>{{ 'order.autoRejectedText' | t }}</p>
+                }
+                @if (order.status === 'Rejected' && order.vendorMessage && !order.autoRejected) {
+                  <p>{{ order.vendorMessage }}</p>
+                }
+                @if (order.status === 'NotDelivered' && order.notDeliveredReason) {
+                  <p>{{ order.notDeliveredReason }}</p>
+                }
+              </div>
+            } @else {
+              <p>{{ order.items.length }} {{ itemsLabel(order.items.length) }}</p>
+              <p class="total">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}@if (order.deliveryFee > 0) {
+                <span>&nbsp;({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span>
+              }</p>
+              @if (order.vendorMessage) {
+                <p class="date"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ order.vendorMessage }}</p>
+              }
+              @if (order.closedByAdminAt) {
+                <p class="date"><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }} · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
+              }
+            }
+            @if (order.fulfillment === 'Pickup') {
+              <p class="date"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}: {{ order.marketName }}@if (order.stallLabel) {
+              <span>, {{ 'home.stall' | t }} {{ order.stallLabel }}</span>
+            }</p>
+          }
+          <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+          @if (order.courierName) {
+            <p class="date">
+              <ion-icon name="bicycle-outline"></ion-icon> {{ 'order.courier' | t }}: {{ order.courierName }}
+            </p>
+          }
+          @if (order.rating) {
+            <p class="my-rating">{{ order.rating.vendorScore | stars }} @if (order.rating.comment) {
+              <span>„{{ order.rating.comment }}”</span>
+            }</p>
+          }
+          <div class="order-actions">
+            @if (orderActions.canRate(order)) {
+              <ion-button size="small" (click)="rate(order, $event)">
+                <ion-icon name="star-outline" slot="start"></ion-icon> {{ 'rating.rate' | t }}
+              </ion-button>
+            }
+            @if (order.status === 'Completed' || order.status === 'Rejected') {
+              <ion-button size="small" fill="outline" (click)="reorder(order, $event)">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon> {{ 'reorder.button' | t }}
+              </ion-button>
+            }
           </div>
-        </ng-container>
-        <ng-template #regular>
-          <p>{{ order.items.length }} {{ itemsLabel(order.items.length) }}</p>
-          <p class="total">{{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}<span *ngIf="order.deliveryFee > 0">&nbsp;({{ 'order.deliveryFee' | t }} {{ order.deliveryFee | number:'1.0-0' }})</span></p>
-          <p *ngIf="order.vendorMessage" class="date"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ order.vendorMessage }}</p>
-          <p *ngIf="order.closedByAdminAt" class="date"><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }} · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
-        </ng-template>
-        <p *ngIf="order.fulfillment === 'Pickup'" class="date"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}: {{ order.marketName }}<span *ngIf="order.stallLabel">, {{ 'home.stall' | t }} {{ order.stallLabel }}</span></p>
-        <p class="date">{{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
-        <p *ngIf="order.courierName" class="date">
-          <ion-icon name="bicycle-outline"></ion-icon> {{ 'order.courier' | t }}: {{ order.courierName }}
-        </p>
-        <p *ngIf="order.rating" class="my-rating">{{ order.rating.vendorScore | stars }} <span *ngIf="order.rating.comment">„{{ order.rating.comment }}”</span></p>
-        <div class="order-actions">
-          <ion-button *ngIf="orderActions.canRate(order)" size="small" (click)="rate(order, $event)">
-            <ion-icon name="star-outline" slot="start"></ion-icon> {{ 'rating.rate' | t }}
-          </ion-button>
-          <ion-button *ngIf="order.status === 'Completed' || order.status === 'Rejected'" size="small" fill="outline" (click)="reorder(order, $event)">
-            <ion-icon name="refresh-outline" slot="start"></ion-icon> {{ 'reorder.button' | t }}
-          </ion-button>
-        </div>
-        <ion-button *ngIf="canCancel && order.status === 'Pending'" fill="outline" color="danger" size="small"
-                    (click)="cancelOrder(order); $event.stopPropagation()">
-          {{ 'orders.cancel' | t }}
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+          @if (canCancel && order.status === 'Pending') {
+            <ion-button fill="outline" color="danger" size="small"
+              (click)="cancelOrder(order); $event.stopPropagation()">
+              {{ 'orders.cancel' | t }}
+            </ion-button>
+          }
+        </ion-card-content>
+      </ion-card>
+    }
   </ion-list>
+}
 
-  <ion-infinite-scroll [disabled]="!hasMore" (ionInfinite)="loadMore($event)">
-    <ion-infinite-scroll-content loadingSpinner="crescent" [loadingText]="'orders.loading' | t">
-    </ion-infinite-scroll-content>
-  </ion-infinite-scroll>
+<ion-infinite-scroll [disabled]="!hasMore" (ionInfinite)="loadMore($event)">
+  <ion-infinite-scroll-content loadingSpinner="crescent" [loadingText]="'orders.loading' | t">
+  </ion-infinite-scroll-content>
+</ion-infinite-scroll>
 
-  <app-footer></app-footer>
+<app-footer></app-footer>
 </ion-content>

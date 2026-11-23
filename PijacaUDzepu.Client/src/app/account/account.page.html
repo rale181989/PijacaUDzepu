@@ -12,77 +12,87 @@
     <div class="message">
       <ion-icon name="person-circle-outline"></ion-icon>
       <p><strong>{{ authService.currentUser?.firstName }} {{ authService.currentUser?.lastName }}</strong><br>
-        {{ authService.currentUser?.userName }}<span *ngIf="authService.currentUser?.email"> · {{ authService.currentUser?.email }}</span></p>
-    </div>
-
-    <section class="section">
-      <h3>{{ (authService.hasRole('Customer') ? 'account.delivery' : 'account.phoneOnly') | t }}</h3>
-      <p *ngIf="authService.hasRole('Customer')" class="intro">{{ 'account.deliveryInfo' | t }}</p>
-      <form (ngSubmit)="saveProfile()">
-        <ion-item>
-          <ion-input [label]="'register.phone' | t" labelPlacement="floating" type="tel"
-                     [(ngModel)]="profile.phoneNumber" name="phoneNumber" required></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-input [label]="'account.email' | t" labelPlacement="floating" type="email"
-                     [(ngModel)]="profile.email" name="email" maxlength="200"></ion-input>
-        </ion-item>
-        <ng-container *ngIf="authService.hasRole('Customer')">
-          <ion-item>
-            <ion-input [label]="'register.address' | t" labelPlacement="floating"
-                       [placeholder]="'cart.addressPlaceholder' | t"
-                       [(ngModel)]="profile.address" name="address"></ion-input>
-          </ion-item>
-          <div class="row">
-            <ion-item>
-              <ion-input [label]="'register.floor' | t" labelPlacement="floating"
-                         [(ngModel)]="profile.floor" name="floor" maxlength="20"></ion-input>
-            </ion-item>
-            <ion-item>
-              <ion-input [label]="'register.apartment' | t" labelPlacement="floating"
-                         [(ngModel)]="profile.apartment" name="apartment" maxlength="20"></ion-input>
-            </ion-item>
-          </div>
-        </ng-container>
-        <ion-button expand="block" type="submit" [disabled]="!canSaveProfile" class="ion-margin-top">
-          <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
-          {{ 'account.save' | t }}
-        </ion-button>
-      </form>
-    </section>
-
-    <section class="section">
-      <h3>{{ 'account.changePassword' | t }}</h3>
-      <form (ngSubmit)="changePassword()">
-        <ion-item>
-          <ion-input [label]="'account.current' | t" labelPlacement="floating" type="password"
-                     [(ngModel)]="currentPassword" name="currentPassword"></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-input [label]="'reset.password' | t" labelPlacement="floating" type="password"
-                     [(ngModel)]="newPassword" name="newPassword" minlength="8"></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-input [label]="'reset.confirm' | t" labelPlacement="floating" type="password"
-                     [(ngModel)]="confirmPassword" name="confirmPassword"></ion-input>
-        </ion-item>
-        <p *ngIf="confirmPassword && !passwordsMatch" class="error-text">{{ 'reset.mismatch' | t }}</p>
-        <ion-button expand="block" type="submit" [disabled]="!canChange" class="ion-margin-top">
-          <ion-spinner *ngIf="changing" name="crescent" slot="start"></ion-spinner>
-          {{ 'account.changePassword' | t }}
-        </ion-button>
-      </form>
-    </section>
-
-    <section class="section danger-zone">
-      <h3>{{ 'account.delete' | t }}</h3>
-      <p class="intro">{{ 'account.deleteInfo' | t }}</p>
-      <ion-button expand="block" color="danger" fill="outline" (click)="deleteAccount()">
-        <ion-icon name="trash-outline" slot="start"></ion-icon>
-        {{ 'account.deleteButton' | t }}
-      </ion-button>
-    </section>
-    <p class="app-version">Pijaca u Džepu · {{ 'account.version' | t }} {{ appVersion }}</p>
+      {{ authService.currentUser?.userName }}@if (authService.currentUser?.email) {
+      <span> · {{ authService.currentUser?.email }}</span>
+    }</p>
   </div>
-  <app-footer></app-footer>
+
+  <section class="section">
+    <h3>{{ (authService.hasRole('Customer') ? 'account.delivery' : 'account.phoneOnly') | t }}</h3>
+    @if (authService.hasRole('Customer')) {
+      <p class="intro">{{ 'account.deliveryInfo' | t }}</p>
+    }
+    <form (ngSubmit)="saveProfile()">
+      <ion-item>
+        <ion-input [label]="'register.phone' | t" labelPlacement="floating" type="tel"
+        [(ngModel)]="profile.phoneNumber" name="phoneNumber" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input [label]="'account.email' | t" labelPlacement="floating" type="email"
+        [(ngModel)]="profile.email" name="email" maxlength="200"></ion-input>
+      </ion-item>
+      @if (authService.hasRole('Customer')) {
+        <ion-item>
+          <ion-input [label]="'register.address' | t" labelPlacement="floating"
+            [placeholder]="'cart.addressPlaceholder' | t"
+          [(ngModel)]="profile.address" name="address"></ion-input>
+        </ion-item>
+        <div class="row">
+          <ion-item>
+            <ion-input [label]="'register.floor' | t" labelPlacement="floating"
+            [(ngModel)]="profile.floor" name="floor" maxlength="20"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input [label]="'register.apartment' | t" labelPlacement="floating"
+            [(ngModel)]="profile.apartment" name="apartment" maxlength="20"></ion-input>
+          </ion-item>
+        </div>
+      }
+      <ion-button expand="block" type="submit" [disabled]="!canSaveProfile" class="ion-margin-top">
+        @if (saving) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        {{ 'account.save' | t }}
+      </ion-button>
+    </form>
+  </section>
+
+  <section class="section">
+    <h3>{{ 'account.changePassword' | t }}</h3>
+    <form (ngSubmit)="changePassword()">
+      <ion-item>
+        <ion-input [label]="'account.current' | t" labelPlacement="floating" type="password"
+        [(ngModel)]="currentPassword" name="currentPassword"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input [label]="'reset.password' | t" labelPlacement="floating" type="password"
+        [(ngModel)]="newPassword" name="newPassword" minlength="8"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input [label]="'reset.confirm' | t" labelPlacement="floating" type="password"
+        [(ngModel)]="confirmPassword" name="confirmPassword"></ion-input>
+      </ion-item>
+      @if (confirmPassword && !passwordsMatch) {
+        <p class="error-text">{{ 'reset.mismatch' | t }}</p>
+      }
+      <ion-button expand="block" type="submit" [disabled]="!canChange" class="ion-margin-top">
+        @if (changing) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        {{ 'account.changePassword' | t }}
+      </ion-button>
+    </form>
+  </section>
+
+  <section class="section danger-zone">
+    <h3>{{ 'account.delete' | t }}</h3>
+    <p class="intro">{{ 'account.deleteInfo' | t }}</p>
+    <ion-button expand="block" color="danger" fill="outline" (click)="deleteAccount()">
+      <ion-icon name="trash-outline" slot="start"></ion-icon>
+      {{ 'account.deleteButton' | t }}
+    </ion-button>
+  </section>
+  <p class="app-version">Pijaca u Džepu · {{ 'account.version' | t }} {{ appVersion }}</p>
+</div>
+<app-footer></app-footer>
 </ion-content>

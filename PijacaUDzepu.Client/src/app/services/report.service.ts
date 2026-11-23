@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { FulfillmentType, OrderStatus } from '../models/order.model';
@@ -99,9 +99,9 @@ export interface WaitingOrder {
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
-  private baseUrl = environment.apiUrl + '/reports';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/reports';
 
   getOrders(from: string, to: string) {
     return this.http.get<OrdersReport>(`${this.baseUrl}/orders`, { params: this.range(from, to) });

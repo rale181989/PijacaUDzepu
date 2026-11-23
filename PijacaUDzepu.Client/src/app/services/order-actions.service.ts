@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ModalController, ToastController } from '@ionic/angular/lazy';
 import { firstValueFrom } from 'rxjs';
@@ -12,15 +12,14 @@ import { RatingFormComponent, RatingResult } from '../shared/rating-form/rating-
 // Zajedničke radnje nad porudžbinom kupca (Moje porudžbine, detalji, praćenje gosta)
 @Injectable({ providedIn: 'root' })
 export class OrderActionsService {
-  constructor(
-    private orderService: OrderService,
-    private productService: ProductService,
-    private cartService: CartService,
-    private modalController: ModalController,
-    private toastController: ToastController,
-    private router: Router,
-    private ts: TranslateService
-  ) {}
+  private orderService = inject(OrderService);
+  private productService = inject(ProductService);
+  private cartService = inject(CartService);
+  private modalController = inject(ModalController);
+  private toastController = inject(ToastController);
+  private router = inject(Router);
+  private ts = inject(TranslateService);
+
 
   canRate(order: Order): boolean {
     return order.status === 'Completed' && !order.rating;

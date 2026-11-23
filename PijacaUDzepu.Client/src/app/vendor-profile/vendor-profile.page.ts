@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { Capacitor } from '@capacitor/core';
 import { VendorService } from '../services/vendor.service';
@@ -21,6 +21,15 @@ import { Vendor } from '../models/vendor.model';
   standalone: false,
 })
 export class VendorProfilePage implements OnInit {
+  private vendorService = inject(VendorService);
+  private authService = inject(AuthService);
+  private marketService = inject(MarketService);
+  private stallService = inject(StallService);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+  features = inject(FeaturesService);
+  private alertController = inject(AlertController);
+
   model: VendorInput = { marketId: 0, name: '', description: '', phones: [''] };
   markets: Market[] = [];
   stalls: Stall[] = [];
@@ -82,17 +91,6 @@ export class VendorProfilePage implements OnInit {
   trackByIndex(index: number): number {
     return index;
   }
-
-  constructor(
-    private vendorService: VendorService,
-    private authService: AuthService,
-    private marketService: MarketService,
-    private stallService: StallService,
-    private toastController: ToastController,
-    private ts: TranslateService,
-    public features: FeaturesService,
-    private alertController: AlertController
-  ) {}
 
   ngOnInit() {
     this.features.load();

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { VendorService } from '../services/vendor.service';
 import { Vendor } from '../models/vendor.model';
 import { ToastController } from '@ionic/angular/lazy';
@@ -10,13 +10,11 @@ import { ToastController } from '@ionic/angular/lazy';
   standalone: false,
 })
 export class AdminVendorsPage implements OnInit {
+  private vendorService = inject(VendorService);
+  private toastController = inject(ToastController);
+
   vendors: Vendor[] = [];
   loading = false;
-
-  constructor(
-    private vendorService: VendorService,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() { this.loadVendors(); }
   ionViewWillEnter() { this.loadVendors(); }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Product, ProductCategory, ProductInput, QuickProductUpdate, ProductSort, ProductUnit } from '../models/product.model';
@@ -6,9 +6,9 @@ import { PagedResult } from '../models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-  private baseUrl = environment.apiUrl + '/products';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/products';
 
   getAll(search?: string, vendorId?: number, marketId?: number, category?: ProductCategory, unit?: ProductUnit, sort?: ProductSort, skip = 0, take = 20,
          favorites?: { productIds: number[]; vendorIds: number[] }) {

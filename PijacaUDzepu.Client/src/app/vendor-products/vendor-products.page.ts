@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ProductService } from '../services/product.service';
 import { Product } from '../models/product.model';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
@@ -11,15 +11,13 @@ import { environment } from '../../environments/environment';
   standalone: false,
 })
 export class VendorProductsPage implements OnInit {
+  private productService = inject(ProductService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+
   products: Product[] = [];
   loading = false;
   apiUrl = environment.apiUrl.replace('/api', '');
-
-  constructor(
-    private productService: ProductService,
-    private alertController: AlertController,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() { this.loadProducts(); }
   ionViewWillEnter() { this.loadProducts(); }

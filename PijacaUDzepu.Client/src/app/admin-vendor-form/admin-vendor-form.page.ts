@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { VendorService } from '../services/vendor.service';
@@ -16,6 +16,15 @@ import { Stall } from '../models/stall.model';
   standalone: false,
 })
 export class AdminVendorFormPage implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private vendorService = inject(VendorService);
+  private marketService = inject(MarketService);
+  private stallService = inject(StallService);
+  private authService = inject(AuthService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+
   vendorId: number | null = null;
   model: VendorInput = { marketId: 0, name: '', description: '', address: '', phones: [''] };
   markets: Market[] = [];
@@ -45,17 +54,6 @@ export class AdminVendorFormPage implements OnInit {
   trackByIndex(index: number): number {
     return index;
   }
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private vendorService: VendorService,
-    private marketService: MarketService,
-    private stallService: StallService,
-    private authService: AuthService,
-    private alertController: AlertController,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() {
     this.marketService.getAll().subscribe(m => this.markets = m);

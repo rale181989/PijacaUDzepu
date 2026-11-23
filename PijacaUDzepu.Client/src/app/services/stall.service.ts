@@ -1,13 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Stall, StallInput } from '../models/stall.model';
 
 @Injectable({ providedIn: 'root' })
 export class StallService {
-  private baseUrl = environment.apiUrl + '/stalls';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = environment.apiUrl + '/stalls';
 
   getByMarket(marketId: number) {
     return this.http.get<Stall[]>(`${this.baseUrl}/by-market/${marketId}`);

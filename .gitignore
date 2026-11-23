@@ -38,3 +38,8 @@ appsettings.Development.json
 
 # Firebase konfiguracija Android aplikacije: lokalno, ne u javni repozitorijum
 PijacaUDzepu.Client/android/app/google-services.json
+
+# Ključ za potpis APK-a (release) – samo lokalno, nikad u git-u
+PijacaUDzepu.Client/android/keystore.properties
+*.jks
+*.keystore

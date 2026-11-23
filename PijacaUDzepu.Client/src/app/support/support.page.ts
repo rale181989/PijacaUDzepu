@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ToastController } from '@ionic/angular/lazy';
 import { Capacitor } from '@capacitor/core';
 import { SupportCategory, SupportService } from '../services/support.service';
@@ -14,6 +14,11 @@ import { LEGAL_INFO } from '../legal/legal-content';
   standalone: false,
 })
 export class SupportPage implements OnInit {
+  private supportService = inject(SupportService);
+  private authService = inject(AuthService);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+
   name = '';
   email = '';
   category: SupportCategory = 'Problem';
@@ -24,13 +29,6 @@ export class SupportPage implements OnInit {
   sent = false;
   supportEmail = LEGAL_INFO.supportEmail;
   categories: SupportCategory[] = ['Problem', 'Question', 'Account', 'Other'];
-
-  constructor(
-    private supportService: SupportService,
-    private authService: AuthService,
-    private toastController: ToastController,
-    private ts: TranslateService
-  ) {}
 
   ngOnInit() {
     const user = this.authService.currentUser;

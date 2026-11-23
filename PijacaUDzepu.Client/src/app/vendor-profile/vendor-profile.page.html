@@ -11,182 +11,225 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  @if (loading) {
+    <ion-spinner name="crescent" class="center-spinner"></ion-spinner>
+  }
 
-  <form *ngIf="!loading" (ngSubmit)="save()">
-    <ion-item>
-      <ion-input label="Naziv" labelPlacement="floating"
-                 [(ngModel)]="model.name" name="name" required></ion-input>
-    </ion-item>
-
-    <ion-item>
-      <ion-select label="Pijaca" labelPlacement="floating"
-                  [(ngModel)]="model.marketId" name="marketId" required
-                  (ionChange)="onMarketChange()" interface="popover">
-        <ion-select-option *ngFor="let market of markets" [value]="market.id">
-          {{ market.name }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
-
-    <ion-item>
-      <ion-select label="Tezga" labelPlacement="floating"
-                  [(ngModel)]="model.stallId" name="stallId"
-                  interface="popover"
-                  [disabled]="stalls.length === 0">
-        <ion-select-option [value]="null">-- Bez tezge --</ion-select-option>
-        <ion-select-option *ngFor="let stall of stalls" [value]="stall.id">
-          Tezga {{ stall.label }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
-
-    <ion-item>
-      <ion-textarea label="Opis" labelPlacement="floating"
-                    [(ngModel)]="model.description" name="description" rows="3"></ion-textarea>
-    </ion-item>
-
-    <div class="phones-section">
-      <ion-item *ngFor="let phone of model.phones; let i = index; let last = last; trackBy: trackByIndex">
-        <ion-input [label]="i === 0 ? 'Telefon' : 'Telefon ' + (i + 1)" labelPlacement="floating" type="tel"
-                   [(ngModel)]="model.phones[i]" [name]="'phone' + i"></ion-input>
-        <ion-button *ngIf="model.phones.length > 1" slot="end" fill="clear" color="danger"
-                    (click)="removePhone(i)" aria-label="Ukloni telefon">
-          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-        <ion-button *ngIf="last && model.phones.length < maxPhones" slot="end" fill="clear"
-                    (click)="addPhone()" aria-label="Dodaj još jedan telefon">
-          <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
-        </ion-button>
+  @if (!loading) {
+    <form (ngSubmit)="save()">
+      <ion-item>
+        <ion-input label="Naziv" labelPlacement="floating"
+        [(ngModel)]="model.name" name="name" required></ion-input>
       </ion-item>
-    </div>
-
-    <ion-button expand="block" type="submit" [disabled]="saving" class="ion-margin-top">
-      <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
-      Sačuvaj
-    </ion-button>
-  </form>
-
-  <div *ngIf="!loading" class="availability-section">
-    <h3>Radno vreme i dostupnost</h3>
-    <p class="status" [class.closed]="!isOpen"><ion-icon [name]="isOpen ? 'checkmark-circle' : 'time-outline'"></ion-icon> {{ statusText }}</p>
-
-    <!-- Pauza se čuva odmah, čim se pomeri prekidač -->
-    <ion-item lines="none" class="pause-item" [class.paused]="ordersPaused">
-      <ion-toggle [checked]="ordersPaused" [disabled]="savingAvailability" (ionChange)="setPaused($any($event).detail.checked)" justify="space-between">
-        <strong>Privremeno ne primam porudžbine</strong>
-        <span class="hint">Važi odmah. Kupci vide da tezga trenutno ne prima porudžbine.</span>
-      </ion-toggle>
-    </ion-item>
-
-    <!-- Izuzetak samo za danas: nedeljni raspored ostaje kakav jeste -->
-    <div class="today-box">
-      <h4>Samo danas</h4>
-      <p *ngIf="earlyCloseToday" class="early">
-        Danas zatvarate u <strong>{{ earlyCloseToday }}</strong>
-        <ion-button size="small" fill="clear" (click)="setEarlyClose(null)">Poništi</ion-button>
-      </p>
-      <div class="today-actions">
-        <ion-button size="small" fill="outline" color="danger" [disabled]="savingAvailability || closedDates.includes(today)" (click)="closeToday()">
-          Danas ne radim
-        </ion-button>
-        <span class="early-input">
-          Danas zatvaram u
-          <input type="time" [(ngModel)]="earlyCloseInput" aria-label="Danas zatvaram u" />
-          <ion-button size="small" fill="outline" [disabled]="savingAvailability || !earlyCloseInput" (click)="setEarlyClose(earlyCloseInput)">Sačuvaj</ion-button>
-        </span>
+      <ion-item>
+        <ion-select label="Pijaca" labelPlacement="floating"
+          [(ngModel)]="model.marketId" name="marketId" required
+          (ionChange)="onMarketChange()" interface="popover">
+          @for (market of markets; track market) {
+            <ion-select-option [value]="market.id">
+              {{ market.name }}
+            </ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-select label="Tezga" labelPlacement="floating"
+          [(ngModel)]="model.stallId" name="stallId"
+          interface="popover"
+          [disabled]="stalls.length === 0">
+          <ion-select-option [value]="null">-- Bez tezge --</ion-select-option>
+          @for (stall of stalls; track stall) {
+            <ion-select-option [value]="stall.id">
+              Tezga {{ stall.label }}
+            </ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-textarea label="Opis" labelPlacement="floating"
+        [(ngModel)]="model.description" name="description" rows="3"></ion-textarea>
+      </ion-item>
+      <div class="phones-section">
+        @for (phone of model.phones; track $index; let i = $index; let last = $last) {
+          <ion-item>
+            <ion-input [label]="i === 0 ? 'Telefon' : 'Telefon ' + (i + 1)" labelPlacement="floating" type="tel"
+            [(ngModel)]="model.phones[i]" [name]="'phone' + i"></ion-input>
+            @if (model.phones.length > 1) {
+              <ion-button slot="end" fill="clear" color="danger"
+                (click)="removePhone(i)" aria-label="Ukloni telefon">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            }
+            @if (last && model.phones.length < maxPhones) {
+              <ion-button slot="end" fill="clear"
+                (click)="addPhone()" aria-label="Dodaj još jedan telefon">
+                <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            }
+          </ion-item>
+        }
       </div>
-    </div>
-
-    <h4>Nedeljni raspored</h4>
-    <p class="hint">Označite <strong>sve</strong> dane kada radite – neoznačeni dani su neradni. Ako nijedan dan nije označen, porudžbine stižu u svako doba. Za izuzetak danas koristite „Samo danas” iznad.</p>
-    <div *ngFor="let d of days" class="day-row" [class.off]="!d.open">
-      <ion-checkbox [(ngModel)]="d.open" labelPlacement="end" justify="start" [attr.aria-label]="d.label">{{ d.short }}</ion-checkbox>
-      <span class="times">
-        <input type="time" [(ngModel)]="d.from" [disabled]="!d.open" [attr.aria-label]="d.label + ' od'" />
-        –
-        <input type="time" [(ngModel)]="d.to" [disabled]="!d.open" [attr.aria-label]="d.label + ' do'" />
-      </span>
-    </div>
-    <ion-button fill="clear" size="small" (click)="copyFirstDay()">Isto vreme za sve označene dane</ion-button>
-
-    <h4>Neradni dani (odmor, praznik)</h4>
-    <div class="closed-dates">
-      <ion-chip *ngFor="let date of closedDates" outline color="danger">
-        <ion-label>{{ date | date:'dd.MM.yyyy' }}</ion-label>
-        <ion-icon name="close-circle" (click)="removeClosedDate(date)"></ion-icon>
-      </ion-chip>
-      <span *ngIf="closedDates.length === 0" class="hint">Nema neradnih dana.</span>
-    </div>
-    <div class="add-date">
-      <label class="date-label">Datum <input type="date" [(ngModel)]="newClosedDate" [min]="today" aria-label="Neradni dan" /></label>
-      <ion-button size="small" fill="outline" [disabled]="!newClosedDate" (click)="addClosedDate()">Dodaj</ion-button>
-    </div>
-
-    <ion-button expand="block" (click)="saveAvailability()" [disabled]="savingAvailability" class="ion-margin-top">
-      <ion-spinner *ngIf="savingAvailability" name="crescent" slot="start"></ion-spinner>
-      Sačuvaj nedeljni raspored i neradne dane
-    </ion-button>
-  </div>
-
-  <!-- Lokacija tezge na mapi (server: Features__StallLocation); vide je kurir i kupac koji je rezervisao -->
-  <div *ngIf="!loading && features.stallLocation" class="location-section">
-    <h3>Lokacija tezge na mapi</h3>
-    <p class="hint">Kada ste na tezgi, pritisnite „Ovde sam”. Tačku vide kurir koji dolazi po robu i kupac koji je rezervisao.
-      Isprekidani krug je pijaca. Ako tačka nije tačna, dodirnite mapu na pravo mesto i sačuvajte.</p>
-    <app-stall-map [market]="marketPoint" [stall]="draftPoint" [accuracy]="gpsAccuracy" [editable]="true" stallLabel="Moja tezga"
-                   [marketLabel]="marketName" [height]="240" (pointChange)="onMapPick($event)"></app-stall-map>
-
-    <div *ngIf="locationDirty" class="unsaved">
-      <strong>Nova tačka nije sačuvana.</strong>
-      <div class="location-actions">
-        <ion-button (click)="saveLocation()" [disabled]="savingLocation">
-          <ion-spinner *ngIf="savingLocation" name="crescent" slot="start"></ion-spinner>
-          <ion-icon *ngIf="!savingLocation" name="checkmark-outline" slot="start"></ion-icon>
-          Sačuvaj tačku
-        </ion-button>
-        <ion-button fill="outline" color="medium" (click)="discardLocation()" [disabled]="savingLocation">Otkaži</ion-button>
-      </div>
-    </div>
-    <p *ngIf="locationNote" class="location-note" [class.warn]="locationWarn">{{ locationNote }}</p>
-    <p *ngIf="!locationNote && !locationDirty && savedPoint && savedAt" class="location-note muted">Sačuvana tačka: {{ savedAt | date:'dd.MM.yyyy. HH:mm' }}</p>
-    <p *ngIf="!locationNote && !locationDirty && !savedPoint" class="location-note muted">Tačka još nije postavljena – kurir vidi samo pijacu i broj tezge.</p>
-    <div class="location-actions">
-      <ion-button [fill]="locationDirty ? 'outline' : 'solid'" (click)="useGps()" [disabled]="locating || savingLocation">
-        <ion-spinner *ngIf="locating" name="crescent" slot="start"></ion-spinner>
-        <ion-icon *ngIf="!locating" name="locate-outline" slot="start"></ion-icon>
-        Ovde sam
-      </ion-button>
-      <ion-button *ngIf="savedPoint && !locationDirty" fill="outline" color="danger" class="remove" (click)="clearLocation()" [disabled]="savingLocation">
-        Ukloni tačku
-      </ion-button>
-    </div>
-  </div>
-
-  <div *ngIf="!loading" class="password-section">
-    <h3>Promena lozinke</h3>
-    <form (ngSubmit)="changePassword()">
-      <ion-item>
-        <ion-input label="Trenutna lozinka" labelPlacement="floating" type="password"
-                   [(ngModel)]="currentPassword" name="currentPassword" required></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Nova lozinka" labelPlacement="floating" type="password"
-                   [(ngModel)]="newPassword" name="newPassword" required minlength="8"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input label="Potvrdite novu lozinku" labelPlacement="floating" type="password"
-                   [(ngModel)]="confirmPassword" name="confirmPassword" required></ion-input>
-      </ion-item>
-      <p *ngIf="confirmPassword && !passwordsMatch" class="error-text">
-        Lozinke se ne poklapaju
-      </p>
-      <ion-button expand="block" type="submit"
-                  [disabled]="changingPassword || !currentPassword || !newPassword || !confirmPassword || !passwordsMatch || newPassword.length < 8"
-                  class="ion-margin-top">
-        <ion-spinner *ngIf="changingPassword" name="crescent" slot="start"></ion-spinner>
-        Promeni lozinku
+      <ion-button expand="block" type="submit" [disabled]="saving" class="ion-margin-top">
+        @if (saving) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        Sačuvaj
       </ion-button>
     </form>
-  </div>
+  }
+
+  @if (!loading) {
+    <div class="availability-section">
+      <h3>Radno vreme i dostupnost</h3>
+      <p class="status" [class.closed]="!isOpen"><ion-icon [name]="isOpen ? 'checkmark-circle' : 'time-outline'"></ion-icon> {{ statusText }}</p>
+      <!-- Pauza se čuva odmah, čim se pomeri prekidač -->
+      <ion-item lines="none" class="pause-item" [class.paused]="ordersPaused">
+        <ion-toggle [checked]="ordersPaused" [disabled]="savingAvailability" (ionChange)="setPaused($any($event).detail.checked)" justify="space-between">
+          <strong>Privremeno ne primam porudžbine</strong>
+          <span class="hint">Važi odmah. Kupci vide da tezga trenutno ne prima porudžbine.</span>
+        </ion-toggle>
+      </ion-item>
+      <!-- Izuzetak samo za danas: nedeljni raspored ostaje kakav jeste -->
+      <div class="today-box">
+        <h4>Samo danas</h4>
+        @if (earlyCloseToday) {
+          <p class="early">
+            Danas zatvarate u <strong>{{ earlyCloseToday }}</strong>
+            <ion-button size="small" fill="clear" (click)="setEarlyClose(null)">Poništi</ion-button>
+          </p>
+        }
+        <div class="today-actions">
+          <ion-button size="small" fill="outline" color="danger" [disabled]="savingAvailability || closedDates.includes(today)" (click)="closeToday()">
+            Danas ne radim
+          </ion-button>
+          <span class="early-input">
+            Danas zatvaram u
+            <input type="time" [(ngModel)]="earlyCloseInput" aria-label="Danas zatvaram u" />
+            <ion-button size="small" fill="outline" [disabled]="savingAvailability || !earlyCloseInput" (click)="setEarlyClose(earlyCloseInput)">Sačuvaj</ion-button>
+          </span>
+        </div>
+      </div>
+      <h4>Nedeljni raspored</h4>
+      <p class="hint">Označite <strong>sve</strong> dane kada radite – neoznačeni dani su neradni. Ako nijedan dan nije označen, porudžbine stižu u svako doba. Za izuzetak danas koristite „Samo danas” iznad.</p>
+      @for (d of days; track d) {
+        <div class="day-row" [class.off]="!d.open">
+          <ion-checkbox [(ngModel)]="d.open" labelPlacement="end" justify="start" [attr.aria-label]="d.label">{{ d.short }}</ion-checkbox>
+          <span class="times">
+            <input type="time" [(ngModel)]="d.from" [disabled]="!d.open" [attr.aria-label]="d.label + ' od'" />
+            –
+            <input type="time" [(ngModel)]="d.to" [disabled]="!d.open" [attr.aria-label]="d.label + ' do'" />
+          </span>
+        </div>
+      }
+      <ion-button fill="clear" size="small" (click)="copyFirstDay()">Isto vreme za sve označene dane</ion-button>
+      <h4>Neradni dani (odmor, praznik)</h4>
+      <div class="closed-dates">
+        @for (date of closedDates; track date) {
+          <ion-chip outline color="danger">
+            <ion-label>{{ date | date:'dd.MM.yyyy' }}</ion-label>
+            <ion-icon name="close-circle" (click)="removeClosedDate(date)"></ion-icon>
+          </ion-chip>
+        }
+        @if (closedDates.length === 0) {
+          <span class="hint">Nema neradnih dana.</span>
+        }
+      </div>
+      <div class="add-date">
+        <label class="date-label">Datum <input type="date" [(ngModel)]="newClosedDate" [min]="today" aria-label="Neradni dan" /></label>
+        <ion-button size="small" fill="outline" [disabled]="!newClosedDate" (click)="addClosedDate()">Dodaj</ion-button>
+      </div>
+      <ion-button expand="block" (click)="saveAvailability()" [disabled]="savingAvailability" class="ion-margin-top">
+        @if (savingAvailability) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        Sačuvaj nedeljni raspored i neradne dane
+      </ion-button>
+    </div>
+  }
+
+  <!-- Lokacija tezge na mapi (server: Features__StallLocation); vide je kurir i kupac koji je rezervisao -->
+  @if (!loading && features.stallLocation) {
+    <div class="location-section">
+      <h3>Lokacija tezge na mapi</h3>
+      <p class="hint">Kada ste na tezgi, pritisnite „Ovde sam”. Tačku vide kurir koji dolazi po robu i kupac koji je rezervisao.
+      Isprekidani krug je pijaca. Ako tačka nije tačna, dodirnite mapu na pravo mesto i sačuvajte.</p>
+      <app-stall-map [market]="marketPoint" [stall]="draftPoint" [accuracy]="gpsAccuracy" [editable]="true" stallLabel="Moja tezga"
+      [marketLabel]="marketName" [height]="240" (pointChange)="onMapPick($event)"></app-stall-map>
+      @if (locationDirty) {
+        <div class="unsaved">
+          <strong>Nova tačka nije sačuvana.</strong>
+          <div class="location-actions">
+            <ion-button (click)="saveLocation()" [disabled]="savingLocation">
+              @if (savingLocation) {
+                <ion-spinner name="crescent" slot="start"></ion-spinner>
+              }
+              @if (!savingLocation) {
+                <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+              }
+              Sačuvaj tačku
+            </ion-button>
+            <ion-button fill="outline" color="medium" (click)="discardLocation()" [disabled]="savingLocation">Otkaži</ion-button>
+          </div>
+        </div>
+      }
+      @if (locationNote) {
+        <p class="location-note" [class.warn]="locationWarn">{{ locationNote }}</p>
+      }
+      @if (!locationNote && !locationDirty && savedPoint && savedAt) {
+        <p class="location-note muted">Sačuvana tačka: {{ savedAt | date:'dd.MM.yyyy. HH:mm' }}</p>
+      }
+      @if (!locationNote && !locationDirty && !savedPoint) {
+        <p class="location-note muted">Tačka još nije postavljena – kurir vidi samo pijacu i broj tezge.</p>
+      }
+      <div class="location-actions">
+        <ion-button [fill]="locationDirty ? 'outline' : 'solid'" (click)="useGps()" [disabled]="locating || savingLocation">
+          @if (locating) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+          }
+          @if (!locating) {
+            <ion-icon name="locate-outline" slot="start"></ion-icon>
+          }
+          Ovde sam
+        </ion-button>
+        @if (savedPoint && !locationDirty) {
+          <ion-button fill="outline" color="danger" class="remove" (click)="clearLocation()" [disabled]="savingLocation">
+            Ukloni tačku
+          </ion-button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="password-section">
+      <h3>Promena lozinke</h3>
+      <form (ngSubmit)="changePassword()">
+        <ion-item>
+          <ion-input label="Trenutna lozinka" labelPlacement="floating" type="password"
+          [(ngModel)]="currentPassword" name="currentPassword" required></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input label="Nova lozinka" labelPlacement="floating" type="password"
+          [(ngModel)]="newPassword" name="newPassword" required minlength="8"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input label="Potvrdite novu lozinku" labelPlacement="floating" type="password"
+          [(ngModel)]="confirmPassword" name="confirmPassword" required></ion-input>
+        </ion-item>
+        @if (confirmPassword && !passwordsMatch) {
+          <p class="error-text">
+            Lozinke se ne poklapaju
+          </p>
+        }
+        <ion-button expand="block" type="submit"
+          [disabled]="changingPassword || !currentPassword || !newPassword || !confirmPassword || !passwordsMatch || newPassword.length < 8"
+          class="ion-margin-top">
+          @if (changingPassword) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+          }
+          Promeni lozinku
+        </ion-button>
+      </form>
+    </div>
+  }
 </ion-content>

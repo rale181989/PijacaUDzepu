@@ -12,9 +12,11 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-spinner *ngIf="loading" name="crescent" class="center-spinner"></ion-spinner>
+  @if (loading) {
+    <ion-spinner name="crescent" class="center-spinner"></ion-spinner>
+  }
 
-  <ng-container *ngIf="order">
+  @if (order) {
     <ion-card>
       <ion-card-header>
         <ion-card-title>{{ order.vendorName }}</ion-card-title>
@@ -24,103 +26,143 @@
       </ion-card-header>
       <ion-card-content>
         <p>{{ 'order.date' | t }}: {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
-        <p *ngIf="order.note">{{ 'order.note' | t }}: {{ order.note }}</p>
-        <p *ngIf="order.fulfillment === 'Courier' && order.deliveryAddress">{{ 'order.deliveryAddress' | t }}: {{ order.deliveryAddress }}</p>
-        <p *ngIf="order.fulfillment === 'Pickup'"><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}</p>
+        @if (order.note) {
+          <p>{{ 'order.note' | t }}: {{ order.note }}</p>
+        }
+        @if (order.fulfillment === 'Courier' && order.deliveryAddress) {
+          <p>{{ 'order.deliveryAddress' | t }}: {{ order.deliveryAddress }}</p>
+        }
+        @if (order.fulfillment === 'Pickup') {
+          <p><ion-icon name="bag-check-outline"></ion-icon> {{ 'order.pickup' | t }}</p>
+        }
       </ion-card-content>
     </ion-card>
-
     <!-- Gde se roba preuzima i kako se dobija prodavac (poziv jednim dodirom) -->
     <ion-card class="pickup-card">
       <ion-card-content>
         <strong><ion-icon [name]="order.fulfillment === 'Pickup' ? 'storefront-outline' : 'person-outline'"></ion-icon>
-          {{ (order.fulfillment === 'Pickup' ? 'order.where' : 'order.vendorContact') | t }}</strong>
-        <p class="vendor-line">{{ order.vendorName }} · {{ order.marketName }}<span *ngIf="order.stallLabel">, {{ 'home.stall' | t }} {{ order.stallLabel }}</span></p>
-        <p *ngIf="order.marketAddress" class="muted">{{ order.marketAddress }}</p>
-        <div class="contact-actions">
-          <ion-button *ngIf="order.vendorPhones?.length" [href]="'tel:' + order.vendorPhones[0]">
+      {{ (order.fulfillment === 'Pickup' ? 'order.where' : 'order.vendorContact') | t }}</strong>
+      <p class="vendor-line">{{ order.vendorName }} · {{ order.marketName }}@if (order.stallLabel) {
+        <span>, {{ 'home.stall' | t }} {{ order.stallLabel }}</span>
+      }</p>
+      @if (order.marketAddress) {
+        <p class="muted">{{ order.marketAddress }}</p>
+      }
+      <div class="contact-actions">
+        @if (order.vendorPhones.length) {
+          <ion-button [href]="'tel:' + order.vendorPhones[0]">
             <ion-icon name="call-outline" slot="start"></ion-icon> {{ 'order.callVendor' | t }}
           </ion-button>
-          <ion-button *ngIf="showPickupWay(order) && stallPoint(order) as point" fill="outline" target="_blank"
-                      [href]="directionsTo(point)">
+        }
+        @if (showPickupWay(order) && stallPoint(order); as point) {
+          <ion-button fill="outline" target="_blank"
+            [href]="directionsTo(point)">
             <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'map.toStall' | t }}
           </ion-button>
-          <ion-button *ngIf="showPickupWay(order) && !stallPoint(order) && order.marketAddress" fill="outline" target="_blank"
+        }
+        @if (showPickupWay(order) && !stallPoint(order) && order.marketAddress) {
+          <ion-button fill="outline" target="_blank"
                       [href]="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(order.marketAddress)">
             <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ 'order.directions' | t }}
           </ion-button>
+}
         </div>
         <!-- Prodavac je na tezgi pritisnuo "Ovde sam": kupac koji dolazi po robu vidi tačno mesto na pijaci -->
-        <ng-container *ngIf="showPickupWay(order) && stallPoint(order) as point">
+        @if (showPickupWay(order) && stallPoint(order); as point) {
+
           <p class="muted small map-hint">{{ 'map.stallHint' | t }}</p>
           <app-stall-map [market]="marketPoint(order)" [stall]="point" [height]="200"
                          [recenterLabel]="'map.recenter' | t" [gestureHint]="'map.gestures' | t"
-                         [stallLabel]="order.stallLabel ? ('home.stall' | t) + ' ' + order.stallLabel : order.vendorName"
-                         [marketLabel]="order.marketName || ''"></app-stall-map>
-        </ng-container>
-        <p *ngIf="order.status === 'Pending' && order.respondBy" class="respond-by">{{ ('order.respondBy' | t).replace('{0}', (order.respondBy | date:'HH:mm') ?? '') }}</p>
-        <p *ngIf="order.status === 'Pending' || order.status === 'Confirmed' || order.status === 'ReadyForPickup'" class="muted small">{{ (order.vendorPhones.length ? 'order.cancelByPhone' : 'order.cancelAtStall') | t }}</p>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card *ngIf="order.status === 'Rejected'" class="vendor-message-card rejected">
+          [stallLabel]="order.stallLabel ? ('home.stall' | t) + ' ' + order.stallLabel : order.vendorName"
+        [marketLabel]="order.marketName || ''"></app-stall-map>
+      }
+      @if (order.status === 'Pending' && order.respondBy) {
+        <p class="respond-by">{{ ('order.respondBy' | t).replace('{0}', (order.respondBy | date:'HH:mm') ?? '') }}</p>
+      }
+      @if (order.status === 'Pending' || order.status === 'Confirmed' || order.status === 'ReadyForPickup') {
+        <p class="muted small">{{ (order.vendorPhones.length ? 'order.cancelByPhone' : 'order.cancelAtStall') | t }}</p>
+      }
+    </ion-card-content>
+  </ion-card>
+  @if (order.status === 'Rejected') {
+    <ion-card class="vendor-message-card rejected">
       <ion-card-content>
         <strong><ion-icon name="close-circle-outline"></ion-icon> {{ (order.autoRejected ? 'order.autoRejectedTitle' : 'order.rejectedTitle') | t }}</strong>
-        <p *ngIf="order.autoRejected">{{ 'order.autoRejectedText' | t }}</p>
-        <p *ngIf="order.vendorMessage && !order.autoRejected">{{ order.vendorMessage }}</p>
+        @if (order.autoRejected) {
+          <p>{{ 'order.autoRejectedText' | t }}</p>
+        }
+        @if (order.vendorMessage && !order.autoRejected) {
+          <p>{{ order.vendorMessage }}</p>
+        }
       </ion-card-content>
     </ion-card>
-
-    <ion-card *ngIf="order.status === 'NotDelivered'" class="vendor-message-card rejected">
+  }
+  @if (order.status === 'NotDelivered') {
+    <ion-card class="vendor-message-card rejected">
       <ion-card-content>
         <strong><ion-icon name="close-circle-outline"></ion-icon> {{ 'order.notDeliveredTitle' | t }}</strong>
         <p>{{ order.notDeliveredReason }}</p>
       </ion-card-content>
     </ion-card>
-
-    <ion-card *ngIf="order.status !== 'Rejected' && order.status !== 'Cancelled' && order.status !== 'NotDelivered'">
+  }
+  @if (order.status !== 'Rejected' && order.status !== 'Cancelled' && order.status !== 'NotDelivered') {
+    <ion-card>
       <ion-card-content>
         <strong class="progress-title">{{ 'order.progress' | t }}</strong>
         <app-order-progress [order]="order"></app-order-progress>
       </ion-card-content>
     </ion-card>
-
-    <ion-card *ngIf="order.vendorMessage && order.status !== 'Rejected'" class="vendor-message-card">
+  }
+  @if (order.vendorMessage && order.status !== 'Rejected') {
+    <ion-card class="vendor-message-card">
       <ion-card-content>
         <strong><ion-icon name="chatbubble-ellipses-outline"></ion-icon> {{ 'order.vendorMessage' | t }}</strong>
         <p>{{ order.vendorMessage }}</p>
       </ion-card-content>
     </ion-card>
-
-    <ion-card *ngIf="order.closedByAdminAt" class="vendor-message-card">
+  }
+  @if (order.closedByAdminAt) {
+    <ion-card class="vendor-message-card">
       <ion-card-content>
         <strong><ion-icon name="shield-checkmark-outline"></ion-icon> {{ 'order.closedByAdmin' | t }}</strong>
         <p>{{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</p>
       </ion-card-content>
     </ion-card>
-
-    <ion-card *ngIf="order.fulfillment === 'Courier' && (order.courierName || order.status === 'Confirmed' || order.status === 'ReadyForPickup')" class="courier-card">
+  }
+  @if (order.fulfillment === 'Courier' && (order.courierName || order.status === 'Confirmed' || order.status === 'ReadyForPickup')) {
+    <ion-card class="courier-card">
       <ion-card-content>
         <div class="courier-row">
           <ion-icon name="bicycle-outline" color="primary"></ion-icon>
-          <div *ngIf="order.courierName">
-            <strong>{{ 'order.courier' | t }}: {{ order.courierName }}</strong>
-            <p *ngIf="order.courierPhone"><a [href]="'tel:' + order.courierPhone">{{ order.courierPhone }}</a></p>
-            <p *ngIf="order.status === 'InDelivery'">{{ 'order.onTheWay' | t }}</p>
-            <p *ngIf="order.deliveredAt">{{ 'order.deliveredAt' | t }}: {{ order.deliveredAt | date:'dd.MM.yyyy HH:mm' }}</p>
-          </div>
-          <div *ngIf="!order.courierName">
-            <strong>{{ (order.courierOfferedAt ? 'order.courierPending' : 'order.waitingOtherVendors') | t }}</strong>
-          </div>
+          @if (order.courierName) {
+            <div>
+              <strong>{{ 'order.courier' | t }}: {{ order.courierName }}</strong>
+              @if (order.courierPhone) {
+                <p><a [href]="'tel:' + order.courierPhone">{{ order.courierPhone }}</a></p>
+              }
+              @if (order.status === 'InDelivery') {
+                <p>{{ 'order.onTheWay' | t }}</p>
+              }
+              @if (order.deliveredAt) {
+                <p>{{ 'order.deliveredAt' | t }}: {{ order.deliveredAt | date:'dd.MM.yyyy HH:mm' }}</p>
+              }
+            </div>
+          }
+          @if (!order.courierName) {
+            <div>
+              <strong>{{ (order.courierOfferedAt ? 'order.courierPending' : 'order.waitingOtherVendors') | t }}</strong>
+            </div>
+          }
         </div>
       </ion-card-content>
     </ion-card>
-
-    <ion-list [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
-      <ion-list-header>
-        <ion-label>{{ 'order.items' | t }}</ion-label>
-      </ion-list-header>
-      <ion-item *ngFor="let item of order.items">
+  }
+  <ion-list [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
+    <ion-list-header>
+      <ion-label>{{ 'order.items' | t }}</ion-label>
+    </ion-list-header>
+    @for (item of order.items; track item) {
+      <ion-item>
         <ion-label>
           <h3>{{ item.productName }}</h3>
           <p>{{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }} × {{ item.unitPrice | number:'1.0-0' }} {{ 'din' | t }}</p>
@@ -129,34 +171,42 @@
           {{ item.totalPrice | number:'1.0-0' }} {{ 'din' | t }}
         </ion-note>
       </ion-item>
-    </ion-list>
-
-    <ion-card *ngIf="order.rating" class="rating-card">
+    }
+  </ion-list>
+  @if (order.rating) {
+    <ion-card class="rating-card">
       <ion-card-content>
         <strong>{{ 'rating.yours' | t }}</strong>
         <p>{{ 'rating.vendor' | t }}: <span class="stars">{{ order.rating.vendorScore | stars }}</span></p>
-        <p *ngIf="order.rating.courierScore">{{ 'rating.courier' | t }}: <span class="stars">{{ order.rating.courierScore | stars }}</span></p>
-        <p *ngIf="order.rating.comment">„{{ order.rating.comment }}”</p>
+        @if (order.rating.courierScore) {
+          <p>{{ 'rating.courier' | t }}: <span class="stars">{{ order.rating.courierScore | stars }}</span></p>
+        }
+        @if (order.rating.comment) {
+          <p>„{{ order.rating.comment }}”</p>
+        }
       </ion-card-content>
     </ion-card>
-
-    <div class="detail-actions">
-      <ion-button *ngIf="orderActions.canRate(order)" expand="block" (click)="rate()">
+  }
+  <div class="detail-actions">
+    @if (orderActions.canRate(order)) {
+      <ion-button expand="block" (click)="rate()">
         <ion-icon name="star-outline" slot="start"></ion-icon> {{ 'rating.rate' | t }}
       </ion-button>
-      <ion-button *ngIf="order.status === 'Completed' || order.status === 'Rejected'" expand="block" fill="outline" (click)="orderActions.reorder(order)">
+    }
+    @if (order.status === 'Completed' || order.status === 'Rejected') {
+      <ion-button expand="block" fill="outline" (click)="orderActions.reorder(order)">
         <ion-icon name="refresh-outline" slot="start"></ion-icon> {{ 'reorder.button' | t }}
       </ion-button>
-    </div>
+    }
+  </div>
+  <div class="total-row" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
+    <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
+    @if (order.deliveryFee > 0) {
+      <p>{{ 'order.deliveryFee' | t }}: {{ order.deliveryFee | number:'1.0-0' }} {{ 'din' | t }}</p>
+      <strong>{{ 'order.amountToPay' | t }}: {{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</strong>
+    }
+  </div>
+}
 
-    <div class="total-row" [class.struck]="order.status === 'Rejected' || order.status === 'NotDelivered'">
-      <strong>{{ 'cart.total' | t }} {{ order.totalAmount | number:'1.0-0' }} {{ 'din' | t }}</strong>
-      <ng-container *ngIf="order.deliveryFee > 0">
-        <p>{{ 'order.deliveryFee' | t }}: {{ order.deliveryFee | number:'1.0-0' }} {{ 'din' | t }}</p>
-        <strong>{{ 'order.amountToPay' | t }}: {{ order.amountToPay | number:'1.0-0' }} {{ 'din' | t }}</strong>
-      </ng-container>
-    </div>
-  </ng-container>
-
-  <app-footer></app-footer>
+<app-footer></app-footer>
 </ion-content>

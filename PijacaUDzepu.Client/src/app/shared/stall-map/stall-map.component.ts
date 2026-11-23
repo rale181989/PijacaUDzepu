@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, OnChanges, OnDestroy, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, OnChanges, OnDestroy, Output, ViewChild, inject } from '@angular/core';
 import type * as Leaflet from 'leaflet';
 import { GeoPoint } from '../maps';
 import { FeaturesService } from '../../services/features.service';
@@ -20,7 +20,9 @@ const DEFAULT_ZOOM = 17;
       <button type="button" class="recenter" (click)="recenter()" [attr.aria-label]="recenterLabel">
         <ion-icon name="locate-outline" aria-hidden="true"></ion-icon><span>{{ recenterLabel }}</span>
       </button>
-      <span *ngIf="touch" class="gesture-hint">{{ gestureHint }}</span>
+      @if (touch) {
+        <span class="gesture-hint">{{ gestureHint }}</span>
+      }
     </div>`,
   styles: [`
     :host { display: block; }
@@ -46,6 +48,9 @@ const DEFAULT_ZOOM = 17;
   standalone: false,
 })
 export class StallMapComponent implements AfterViewInit, OnChanges, OnDestroy {
+  private zone = inject(NgZone);
+  private features = inject(FeaturesService);
+
   @Input() market: GeoPoint | null = null;
   @Input() stall: GeoPoint | null = null;
   @Input() stallLabel = 'Tezga';
@@ -71,8 +76,6 @@ export class StallMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private centeredOn = '';
   private drawnKey = '';
   private pickedKey = '';
-
-  constructor(private zone: NgZone, private features: FeaturesService) {}
 
   async ngAfterViewInit() {
     const [mod, f]: [any, { mapTileUrl: string; mapAttribution: string }] = await Promise.all([import('leaflet'), this.features.load()]);

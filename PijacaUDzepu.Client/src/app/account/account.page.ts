@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../services/auth.service';
@@ -14,6 +14,12 @@ import { APP_VERSION } from '../version';
   standalone: false,
 })
 export class AccountPage implements OnInit {
+  authService = inject(AuthService);
+  private router = inject(Router);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+  private ts = inject(TranslateService);
+
   readonly appVersion = APP_VERSION;
   profile: UpdateProfileDto = { phoneNumber: '', address: '', floor: '', apartment: '', email: '' };
   saving = false;
@@ -22,14 +28,6 @@ export class AccountPage implements OnInit {
   newPassword = '';
   confirmPassword = '';
   changing = false;
-
-  constructor(
-    public authService: AuthService,
-    private router: Router,
-    private alertController: AlertController,
-    private toastController: ToastController,
-    private ts: TranslateService
-  ) {}
 
   ngOnInit() {
     this.fillProfile();

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
 import { AlertController, ToastController } from '@ionic/angular/lazy';
@@ -12,6 +12,10 @@ import { PagerComponent } from '../shared/pager/pager.component';
   standalone: false,
 })
 export class AdminUsersPage implements OnInit {
+  private userService = inject(UserService);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+
   users: User[] = [];
   loading = false;
   selectedTab: 'Customer' | 'VendorAdmin' | 'Courier' | 'SuperAdmin' = 'Customer';
@@ -23,12 +27,6 @@ export class AdminUsersPage implements OnInit {
   readonly pageSizeKey = 'adminUsersPageSize';
   pageSize = PagerComponent.savedSize(this.pageSizeKey);
   private loadSub?: Subscription;
-
-  constructor(
-    private userService: UserService,
-    private alertController: AlertController,
-    private toastController: ToastController
-  ) {}
 
   ngOnInit() { this.loadUsers(); }
   ionViewWillEnter() { this.loadUsers(); }

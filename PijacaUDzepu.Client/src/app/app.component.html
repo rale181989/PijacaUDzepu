@@ -23,34 +23,42 @@
         <button [class.active]="ts.lang === 'ru'" (click)="setLang('ru')">RU</button>
       </div>
       <ion-list>
-        <ion-item *ngIf="!authService.isStaff" routerLink="/home" routerDirection="root" (click)="closeMenu()">
-          <ion-icon name="storefront-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.home' | t }}</ion-label>
-        </ion-item>
+        @if (!authService.isStaff) {
+          <ion-item routerLink="/home" routerDirection="root" (click)="closeMenu()">
+            <ion-icon name="storefront-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.home' | t }}</ion-label>
+          </ion-item>
+        }
 
-        <ion-item *ngIf="!authService.isLoggedIn && guestOrders.codes.length > 0"
-                  routerLink="/prati" routerDirection="root" (click)="closeMenu()">
-          <ion-icon name="receipt-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.myOrders' | t }}</ion-label>
-        </ion-item>
-
-        <ng-container *ngIf="authService.isLoggedIn">
-          <ion-item routerLink="/my-orders" routerDirection="root" (click)="closeMenu()"
-                    *ngIf="authService.hasRole('Customer')">
+        @if (!authService.isLoggedIn && guestOrders.codes.length > 0) {
+          <ion-item
+            routerLink="/prati" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="receipt-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.myOrders' | t }}</ion-label>
           </ion-item>
-        </ng-container>
+        }
+
+        @if (authService.isLoggedIn) {
+          @if (authService.hasRole('Customer')) {
+            <ion-item routerLink="/my-orders" routerDirection="root" (click)="closeMenu()"
+              >
+              <ion-icon name="receipt-outline" slot="start"></ion-icon>
+              <ion-label>{{ 'nav.myOrders' | t }}</ion-label>
+            </ion-item>
+          }
+        }
 
         <!-- Prodavac: najvažnije prvo (porudžbine), pa dan, proizvodi i profil tezge -->
-        <ng-container *ngIf="authService.hasRole('VendorAdmin')">
+        @if (authService.hasRole('VendorAdmin')) {
           <ion-item-divider>
             <ion-label>{{ 'nav.myStall' | t }}</ion-label>
           </ion-item-divider>
           <ion-item routerLink="/vendor-orders" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="list-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.orders' | t }}</ion-label>
-            <ion-badge *ngIf="notificationService.pendingCount > 0" color="danger" slot="end">{{ notificationService.pendingCount }}</ion-badge>
+            @if (notificationService.pendingCount > 0) {
+              <ion-badge color="danger" slot="end">{{ notificationService.pendingCount }}</ion-badge>
+            }
           </ion-item>
           <ion-item routerLink="/vendor-today" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="today-outline" slot="start"></ion-icon>
@@ -68,24 +76,26 @@
             <ion-icon name="settings-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.profile' | t }}</ion-label>
           </ion-item>
-        </ng-container>
+        }
 
-        <ng-container *ngIf="authService.hasRole('Courier')">
+        @if (authService.hasRole('Courier')) {
           <ion-item-divider>
             <ion-label>{{ 'nav.courier' | t }}</ion-label>
           </ion-item-divider>
           <ion-item routerLink="/courier-orders" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="bicycle-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.deliveries' | t }}</ion-label>
-            <ion-badge *ngIf="notificationService.courierAvailableCount > 0" color="danger" slot="end">{{ notificationService.courierAvailableCount }}</ion-badge>
+            @if (notificationService.courierAvailableCount > 0) {
+              <ion-badge color="danger" slot="end">{{ notificationService.courierAvailableCount }}</ion-badge>
+            }
           </ion-item>
           <ion-item routerLink="/courier-profile" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="id-card-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.myData' | t }}</ion-label>
           </ion-item>
-        </ng-container>
+        }
 
-        <ng-container *ngIf="authService.hasRole('SuperAdmin')">
+        @if (authService.hasRole('SuperAdmin')) {
           <ion-item-divider>
             <ion-label>{{ 'nav.superAdmin' | t }}</ion-label>
           </ion-item-divider>
@@ -112,34 +122,46 @@
           <ion-item routerLink="/admin-support" routerDirection="root" (click)="closeMenu()">
             <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
             <ion-label>{{ 'nav.support' | t }}</ion-label>
-            <ion-badge *ngIf="notificationService.supportOpenCount > 0" color="danger" slot="end">{{ notificationService.supportOpenCount }}</ion-badge>
+            @if (notificationService.supportOpenCount > 0) {
+              <ion-badge color="danger" slot="end">{{ notificationService.supportOpenCount }}</ion-badge>
+            }
           </ion-item>
-        </ng-container>
+        }
       </ion-list>
 
       <ion-list>
         <ion-item-divider></ion-item-divider>
-        <ion-item *ngIf="!authService.isLoggedIn" routerLink="/login" routerDirection="root" (click)="closeMenu()">
-          <ion-icon name="log-in-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.login' | t }}</ion-label>
-        </ion-item>
-        <ion-item *ngIf="!authService.isLoggedIn" routerLink="/register" routerDirection="root" (click)="closeMenu()">
-          <ion-icon name="person-add-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.register' | t }}</ion-label>
-        </ion-item>
-        <ion-item *ngIf="authService.isLoggedIn" routerLink="/account" routerDirection="root" (click)="closeMenu()">
-          <ion-icon name="person-circle-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.account' | t }}</ion-label>
-        </ion-item>
-        <ion-item *ngIf="authService.isLoggedIn" (click)="logout()" button>
-          <ion-icon name="log-out-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.logout' | t }} ({{ authService.currentUser?.userName }})</ion-label>
-        </ion-item>
+        @if (!authService.isLoggedIn) {
+          <ion-item routerLink="/login" routerDirection="root" (click)="closeMenu()">
+            <ion-icon name="log-in-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.login' | t }}</ion-label>
+          </ion-item>
+        }
+        @if (!authService.isLoggedIn) {
+          <ion-item routerLink="/register" routerDirection="root" (click)="closeMenu()">
+            <ion-icon name="person-add-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.register' | t }}</ion-label>
+          </ion-item>
+        }
+        @if (authService.isLoggedIn) {
+          <ion-item routerLink="/account" routerDirection="root" (click)="closeMenu()">
+            <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.account' | t }}</ion-label>
+          </ion-item>
+        }
+        @if (authService.isLoggedIn) {
+          <ion-item (click)="logout()" button>
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.logout' | t }} ({{ authService.currentUser?.userName }})</ion-label>
+          </ion-item>
+        }
         <!-- Samo u Android aplikaciji: izlaz iz aplikacije (ostaje prijavljen; obaveštenja i dalje stižu) -->
-        <ion-item *ngIf="isNative" (click)="exitApp()" button>
-          <ion-icon name="power-outline" slot="start"></ion-icon>
-          <ion-label>{{ 'nav.exit' | t }}</ion-label>
-        </ion-item>
+        @if (isNative) {
+          <ion-item (click)="exitApp()" button>
+            <ion-icon name="power-outline" slot="start"></ion-icon>
+            <ion-label>{{ 'nav.exit' | t }}</ion-label>
+          </ion-item>
+        }
       </ion-list>
     </ion-content>
   </ion-menu>
@@ -153,29 +175,41 @@
       </a>
 
       <nav class="nav-links">
-        <a *ngIf="!authService.isStaff" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          <ion-icon name="storefront-outline"></ion-icon>
-          <span>{{ 'nav.home' | t }}</span>
-        </a>
+        @if (!authService.isStaff) {
+          <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+            <ion-icon name="storefront-outline"></ion-icon>
+            <span>{{ 'nav.home' | t }}</span>
+          </a>
+        }
 
-        <a *ngIf="!authService.isStaff" routerLink="/cart" routerLinkActive="active" class="cart-link">
-          <ion-icon name="cart-outline"></ion-icon>
-          <span>{{ 'nav.cart' | t }}</span>
-          <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
-        </a>
+        @if (!authService.isStaff) {
+          <a routerLink="/cart" routerLinkActive="active" class="cart-link">
+            <ion-icon name="cart-outline"></ion-icon>
+            <span>{{ 'nav.cart' | t }}</span>
+            @if (cartCount > 0) {
+              <span class="cart-badge">{{ cartCount }}</span>
+            }
+          </a>
+        }
 
-        <a *ngIf="!authService.isLoggedIn && guestOrders.codes.length > 0" routerLink="/prati" routerLinkActive="active">
-          <ion-icon name="receipt-outline"></ion-icon>
-          <span>{{ 'nav.orders' | t }}</span>
-        </a>
+        @if (!authService.isLoggedIn && guestOrders.codes.length > 0) {
+          <a routerLink="/prati" routerLinkActive="active">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>{{ 'nav.orders' | t }}</span>
+          </a>
+        }
 
-        <a *ngIf="authService.hasRole('Customer')" routerLink="/my-orders" routerLinkActive="active" class="notif-link">
-          <ion-icon name="receipt-outline"></ion-icon>
-          <span>{{ 'nav.orders' | t }}</span>
-          <span *ngIf="notificationService.customerActiveCount > 0" class="notif-badge">{{ notificationService.customerActiveCount }}</span>
-        </a>
+        @if (authService.hasRole('Customer')) {
+          <a routerLink="/my-orders" routerLinkActive="active" class="notif-link">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>{{ 'nav.orders' | t }}</span>
+            @if (notificationService.customerActiveCount > 0) {
+              <span class="notif-badge">{{ notificationService.customerActiveCount }}</span>
+            }
+          </a>
+        }
 
-        <ng-container *ngIf="authService.hasRole('VendorAdmin')">
+        @if (authService.hasRole('VendorAdmin')) {
           <span class="nav-divider"></span>
           <a routerLink="/vendor-profile" routerLinkActive="active">
             <ion-icon name="settings-outline"></ion-icon>
@@ -192,24 +226,28 @@
           <a routerLink="/vendor-orders" routerLinkActive="active" class="notif-link">
             <ion-icon name="list-outline"></ion-icon>
             <span>{{ 'nav.orders' | t }}</span>
-            <span *ngIf="notificationService.pendingCount > 0" class="notif-badge">{{ notificationService.pendingCount }}</span>
+            @if (notificationService.pendingCount > 0) {
+              <span class="notif-badge">{{ notificationService.pendingCount }}</span>
+            }
           </a>
-        </ng-container>
+        }
 
-        <ng-container *ngIf="authService.hasRole('Courier')">
+        @if (authService.hasRole('Courier')) {
           <span class="nav-divider"></span>
           <a routerLink="/courier-orders" routerLinkActive="active" class="notif-link">
             <ion-icon name="bicycle-outline"></ion-icon>
             <span>{{ 'nav.deliveries' | t }}</span>
-            <span *ngIf="notificationService.courierAvailableCount > 0" class="notif-badge">{{ notificationService.courierAvailableCount }}</span>
+            @if (notificationService.courierAvailableCount > 0) {
+              <span class="notif-badge">{{ notificationService.courierAvailableCount }}</span>
+            }
           </a>
           <a routerLink="/courier-profile" routerLinkActive="active">
             <ion-icon name="id-card-outline"></ion-icon>
             <span>{{ 'nav.myData' | t }}</span>
           </a>
-        </ng-container>
+        }
 
-        <ng-container *ngIf="authService.hasRole('SuperAdmin')">
+        @if (authService.hasRole('SuperAdmin')) {
           <span class="nav-divider"></span>
           <a routerLink="/admin-markets" routerLinkActive="active">
             <ion-icon name="storefront-outline"></ion-icon>
@@ -234,9 +272,11 @@
           <a routerLink="/admin-support" routerLinkActive="active" class="notif-link">
             <ion-icon name="chatbubbles-outline"></ion-icon>
             <span>{{ 'nav.support' | t }}</span>
-            <span *ngIf="notificationService.supportOpenCount > 0" class="notif-badge">{{ notificationService.supportOpenCount }}</span>
+            @if (notificationService.supportOpenCount > 0) {
+              <span class="notif-badge">{{ notificationService.supportOpenCount }}</span>
+            }
           </a>
-        </ng-container>
+        }
       </nav>
 
       <div class="nav-auth">
@@ -245,7 +285,7 @@
           <button [class.active]="ts.lang === 'en'" (click)="setLang('en')">EN</button>
           <button [class.active]="ts.lang === 'ru'" (click)="setLang('ru')">RU</button>
         </div>
-        <ng-container *ngIf="!authService.isLoggedIn">
+        @if (!authService.isLoggedIn) {
           <a routerLink="/login" routerLinkActive="active">
             <ion-icon name="log-in-outline"></ion-icon>
             <span>{{ 'nav.login' | t }}</span>
@@ -253,8 +293,8 @@
           <a routerLink="/register" routerLinkActive="active" class="nav-register">
             {{ 'nav.register' | t }}
           </a>
-        </ng-container>
-        <ng-container *ngIf="authService.isLoggedIn">
+        }
+        @if (authService.isLoggedIn) {
           <a class="nav-user" routerLink="/account" routerLinkActive="active" [title]="'nav.account' | t">
             <ion-icon name="person-circle-outline"></ion-icon>
             {{ authService.currentUser?.userName }}
@@ -263,7 +303,7 @@
             <ion-icon name="log-out-outline"></ion-icon>
             <span>{{ 'nav.logout' | t }}</span>
           </a>
-        </ng-container>
+        }
       </div>
     </div>
   </div>

@@ -1,0 +1,70 @@
+# Automatska provera pri svakom push-u i pull request-u (Linux, kao Render):
+# API testovi nad pravim Postgres-om, build i testovi klijenta, i Docker slika koja se objavljuje na Render.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API testovi
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: Postgres!
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: Host=localhost;Port=5432;Database=PijacaUDzepu_Test;Username=postgres;Password=Postgres!
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Testovi
+        working-directory: PijacaUDzepu.API
+        run: dotnet test PijacaUDzepu.API.Tests --logger "console;verbosity=normal"
+
+  client:
+    name: Klijent (lint, testovi, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: PijacaUDzepu.Client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: PijacaUDzepu.Client/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - name: Lint
+        run: npm run lint
+      - name: Testovi
+        run: npx ng test --watch=false
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Docker slika (kao na Render-u)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t pijacaudzepu:ci .
+      # Slike proizvoda se obrađuju SkiaSharp-om: bez Linux biblioteke svaki upload na Render-u pada (bilo je)
+      - name: SkiaSharp za Linux je u slici
+        run: docker run --rm --entrypoint sh pijacaudzepu:ci -c "find / -name libSkiaSharp.so 2>/dev/null | grep -q linux-x64"

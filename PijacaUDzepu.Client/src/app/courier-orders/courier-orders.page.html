@@ -28,250 +28,337 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div *ngIf="shiftLoaded" class="shift-bar" [class.on]="isOnShift">
-    <ion-toggle [checked]="isOnShift" (ionChange)="toggleShift($any($event).detail.checked)" justify="space-between">
-      <strong>{{ isOnShift ? 'Na smeni' : 'Van smene' }}</strong>
-      <span class="shift-hint">{{ isOnShift ? 'Dobijate obaveštenja o novim porudžbinama' : 'Uključite smenu da biste dobijali i prihvatali porudžbine' }}</span>
-    </ion-toggle>
-  </div>
+  @if (shiftLoaded) {
+    <div class="shift-bar" [class.on]="isOnShift">
+      <ion-toggle [checked]="isOnShift" (ionChange)="toggleShift($any($event).detail.checked)" justify="space-between">
+        <strong>{{ isOnShift ? 'Na smeni' : 'Van smene' }}</strong>
+        <span class="shift-hint">{{ isOnShift ? 'Dobijate obaveštenja o novim porudžbinama' : 'Uključite smenu da biste dobijali i prihvatali porudžbine' }}</span>
+      </ion-toggle>
+    </div>
+  }
 
-  <app-skeleton *ngIf="loading" [count]="4"></app-skeleton>
+  @if (loading) {
+    <app-skeleton [count]="4"></app-skeleton>
+  }
 
   <!-- Nove porudžbine: svi kuriri ih vide, prvi koji prihvati je preuzima -->
-  <ng-container *ngIf="!loading && tab === 'available'">
-    <div *ngIf="available.length === 0" class="empty-state">
-      <ion-icon name="bicycle-outline" size="large"></ion-icon>
-      <p>Trenutno nema novih porudžbina. Bićete obavešteni čim stigne nova.</p>
-    </div>
-
-    <ng-container *ngFor="let group of availableGroups; trackBy: trackByKey">
-    <div *ngIf="group.orders.length > 1" class="group-banner">
-      <ion-icon name="git-merge-outline"></ion-icon>
-      <div>
-        <strong>Ista dostava · {{ group.orders.length }} tezge</strong>
-        <p>{{ group.orders[0].deliveryAddress || 'Adresa nije uneta' }} · usluga {{ feeOf(group.orders) | number:'1.0-0' }} din za celu turu</p>
+  @if (!loading && tab === 'available') {
+    @if (available.length === 0) {
+      <div class="empty-state">
+        <ion-icon name="bicycle-outline" size="large"></ion-icon>
+        <p>Trenutno nema novih porudžbina. Bićete obavešteni čim stigne nova.</p>
       </div>
-    </div>
-    <div *ngIf="group.orders.length > 1" class="decision group-decision">
-      <ion-button fill="outline" color="danger" [disabled]="acceptingGroup !== null" (click)="declineGroup(group)">
-        <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-        Odbij turu
-      </ion-button>
-      <ion-button color="success" [disabled]="acceptingGroup !== null || !isOnShift" (click)="acceptGroup(group)">
-        <ion-spinner *ngIf="acceptingGroup === group.key" name="crescent" slot="start"></ion-spinner>
-        Prihvati sve ({{ group.orders.length }})
-      </ion-button>
-    </div>
-    <ion-card *ngFor="let order of group.orders" class="order-card" [class.grouped]="group.orders.length > 1">
-      <ion-card-header>
-        <div class="card-top">
-          <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM. HH:mm' }}</ion-card-subtitle>
-          <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
-        </div>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="route">
-          <div class="stop">
-            <ion-icon name="storefront-outline" color="primary"></ion-icon>
-            <div>
-              <strong>Preuzimanje</strong>
-              <p>{{ order.vendorName }}</p>
-              <p class="muted">{{ order.marketName }}<span *ngIf="order.stallLabel"> · Tezga {{ order.stallLabel }}</span></p>
-            </div>
-          </div>
-          <div class="stop">
-            <ion-icon name="location-outline" color="danger"></ion-icon>
-            <div>
-              <strong>Dostava</strong>
-              <p>{{ order.deliveryAddress || 'Adresa nije uneta' }}</p>
-            </div>
+    }
+    @for (group of availableGroups; track trackByKey($index, group)) {
+      @if (group.orders.length > 1) {
+        <div class="group-banner">
+          <ion-icon name="git-merge-outline"></ion-icon>
+          <div>
+            <strong>Ista dostava · {{ group.orders.length }} tezge</strong>
+            <p>{{ group.orders[0].deliveryAddress || 'Adresa nije uneta' }} · usluga {{ feeOf(group.orders) | number:'1.0-0' }} din za celu turu</p>
           </div>
         </div>
-        <p class="summary">{{ order.items.length }} {{ itemsWord(order.items.length) }} · roba {{ order.totalAmount | number:'1.0-0' }} din<strong *ngIf="order.deliveryFee > 0"> · usluga {{ order.deliveryFee | number:'1.0-0' }} din</strong></p>
-        <!-- Tura sa više tezgi se prihvata ili odbija samo cela (dugmad iznad kartica) -->
-        <div *ngIf="group.orders.length === 1" class="decision">
-          <ion-button fill="outline" color="danger" [disabled]="acceptingId !== null || decliningId !== null" (click)="decline(order)">
-            <ion-spinner *ngIf="decliningId === order.id" name="crescent" slot="start"></ion-spinner>
-            <ion-icon *ngIf="decliningId !== order.id" name="close-circle-outline" slot="start"></ion-icon>
-            Odbij
+      }
+      @if (group.orders.length > 1) {
+        <div class="decision group-decision">
+          <ion-button fill="outline" color="danger" [disabled]="acceptingGroup !== null" (click)="declineGroup(group)">
+            <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+            Odbij turu
           </ion-button>
-          <ion-button color="success" [disabled]="acceptingId !== null || decliningId !== null || !isOnShift" (click)="accept(order)">
-            <ion-spinner *ngIf="acceptingId === order.id" name="crescent" slot="start"></ion-spinner>
-            <ion-icon *ngIf="acceptingId !== order.id" name="checkmark-circle-outline" slot="start"></ion-icon>
-            Prihvati
+          <ion-button color="success" [disabled]="acceptingGroup !== null || !isOnShift" (click)="acceptGroup(group)">
+            @if (acceptingGroup === group.key) {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+            }
+            Prihvati sve ({{ group.orders.length }})
           </ion-button>
         </div>
-      </ion-card-content>
-    </ion-card>
-    </ng-container>
-  </ng-container>
+      }
+      @for (order of group.orders; track order) {
+        <ion-card class="order-card" [class.grouped]="group.orders.length > 1">
+          <ion-card-header>
+            <div class="card-top">
+              <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM. HH:mm' }}</ion-card-subtitle>
+              <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
+            </div>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="route">
+              <div class="stop">
+                <ion-icon name="storefront-outline" color="primary"></ion-icon>
+                <div>
+                  <strong>Preuzimanje</strong>
+                  <p>{{ order.vendorName }}</p>
+                  <p class="muted">{{ order.marketName }}@if (order.stallLabel) {
+                    <span> · Tezga {{ order.stallLabel }}</span>
+                  }</p>
+                </div>
+              </div>
+              <div class="stop">
+                <ion-icon name="location-outline" color="danger"></ion-icon>
+                <div>
+                  <strong>Dostava</strong>
+                  <p>{{ order.deliveryAddress || 'Adresa nije uneta' }}</p>
+                </div>
+              </div>
+            </div>
+            <p class="summary">{{ order.items.length }} {{ itemsWord(order.items.length) }} · roba {{ order.totalAmount | number:'1.0-0' }} din@if (order.deliveryFee > 0) {
+              <strong> · usluga {{ order.deliveryFee | number:'1.0-0' }} din</strong>
+            }</p>
+            <!-- Tura sa više tezgi se prihvata ili odbija samo cela (dugmad iznad kartica) -->
+            @if (group.orders.length === 1) {
+              <div class="decision">
+                <ion-button fill="outline" color="danger" [disabled]="acceptingId !== null || decliningId !== null" (click)="decline(order)">
+                  @if (decliningId === order.id) {
+                    <ion-spinner name="crescent" slot="start"></ion-spinner>
+                  }
+                  @if (decliningId !== order.id) {
+                    <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+                  }
+                  Odbij
+                </ion-button>
+                <ion-button color="success" [disabled]="acceptingId !== null || decliningId !== null || !isOnShift" (click)="accept(order)">
+                  @if (acceptingId === order.id) {
+                    <ion-spinner name="crescent" slot="start"></ion-spinner>
+                  }
+                  @if (acceptingId !== order.id) {
+                    <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                  }
+                  Prihvati
+                </ion-button>
+              </div>
+            }
+          </ion-card-content>
+        </ion-card>
+      }
+    }
+  }
 
   <!-- Moje: dostave u toku; Završene: isporučene, odbijene i otkazane (po stranama) -->
-  <ng-container *ngIf="!loading && (tab === 'mine' || tab === 'finished')">
-    <div *ngIf="tab === 'mine' && activeMine.length === 0" class="empty-state">
-      <ion-icon name="bicycle-outline" size="large"></ion-icon>
-      <p>Nemate dostava u toku. Nove porudžbine su u tabu „Nove”.</p>
-    </div>
-    <div *ngIf="tab === 'finished' && finishedMine.length === 0" class="empty-state">
-      <ion-icon name="receipt-outline" size="large"></ion-icon>
-      <p>Još nemate završenih dostava.</p>
-    </div>
-
+  @if (!loading && (tab === 'mine' || tab === 'finished')) {
+    @if (tab === 'mine' && activeMine.length === 0) {
+      <div class="empty-state">
+        <ion-icon name="bicycle-outline" size="large"></ion-icon>
+        <p>Nemate dostava u toku. Nove porudžbine su u tabu „Nove”.</p>
+      </div>
+    }
+    @if (tab === 'finished' && finishedMine.length === 0) {
+      <div class="empty-state">
+        <ion-icon name="receipt-outline" size="large"></ion-icon>
+        <p>Još nemate završenih dostava.</p>
+      </div>
+    }
     <!-- Ruta kada je jedna korpa raspoređena na više tezgi -->
-    <ng-container *ngIf="tab === 'mine'">
-    <div *ngFor="let route of routes; trackBy: trackByKey" class="route-card">
-      <strong><ion-icon name="navigate-outline"></ion-icon> Ruta: {{ route.orders.length }} tezge → kupac</strong>
-      <ol>
-        <li *ngFor="let o of route.orders">#{{ o.id }} {{ o.vendorName }} <span class="muted">– {{ o.marketName }}<span *ngIf="o.stallLabel">, tezga {{ o.stallLabel }}</span></span></li>
-        <li><strong>Kupac:</strong> {{ route.address || 'Adresa nije uneta' }}</li>
-      </ol>
-      <p class="route-total">Naplatiti od kupca ukupno: <strong>{{ routeTotal(route) | number:'1.0-0' }} din</strong></p>
-      <ion-button fill="outline" [href]="route.mapsUrl" target="_blank">
-        <ion-icon name="map-outline" slot="start"></ion-icon> Otvori rutu u mapama
-      </ion-button>
-      <ion-button *ngIf="routeAllInDelivery(route)" expand="block" color="success" (click)="markRouteDelivered(route)">
-        <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Isporučeno – cela tura
-      </ion-button>
-    </div>
-    </ng-container>
-
-    <ion-card *ngFor="let order of (tab === 'mine' ? activeMine : finishedMine)" class="order-card" [class.finished]="tab === 'finished'">
-      <ion-card-header>
-        <div class="card-top">
-          <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM. HH:mm' }}</ion-card-subtitle>
-          <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
+    @if (tab === 'mine') {
+      @for (route of routes; track trackByKey($index, route)) {
+        <div class="route-card">
+          <strong><ion-icon name="navigate-outline"></ion-icon> Ruta: {{ route.orders.length }} tezge → kupac</strong>
+          <ol>
+            @for (o of route.orders; track o) {
+              <li>#{{ o.id }} {{ o.vendorName }} <span class="muted">– {{ o.marketName }}@if (o.stallLabel) {
+                <span>, tezga {{ o.stallLabel }}</span>
+              }</span></li>
+            }
+            <li><strong>Kupac:</strong> {{ route.address || 'Adresa nije uneta' }}</li>
+          </ol>
+          <p class="route-total">Naplatiti od kupca ukupno: <strong>{{ routeTotal(route) | number:'1.0-0' }} din</strong></p>
+          <ion-button fill="outline" [href]="route.mapsUrl" target="_blank">
+            <ion-icon name="map-outline" slot="start"></ion-icon> Otvori rutu u mapama
+          </ion-button>
+          @if (routeAllInDelivery(route)) {
+            <ion-button expand="block" color="success" (click)="markRouteDelivered(route)">
+              <ion-icon name="checkmark-done-outline" slot="start"></ion-icon> Isporučeno – cela tura
+            </ion-button>
+          }
         </div>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="route">
-          <div class="stop">
-            <ion-icon name="storefront-outline" color="primary"></ion-icon>
-            <div>
-              <strong>Preuzimanje</strong>
-              <p>{{ order.vendorName }}</p>
-              <p class="muted">{{ order.marketName }}<span *ngIf="order.stallLabel"> · Tezga {{ order.stallLabel }}</span></p>
-              <p *ngFor="let phone of order.vendorPhones" class="phone">
-                <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + phone">{{ phone }}</a>
-              </p>
-              <!-- Do preuzimanja: tezga na mapi (prodavac je pritisnuo "Ovde sam") ili bar pijaca; posle preuzimanja nestaje -->
-              <ng-container *ngIf="tab === 'mine' && order.status !== 'InDelivery' && pickupPoint(order) as point">
-                <div class="stall-map-actions">
-                  <ion-button fill="outline" (click)="toggleMap(order.id)">
-                    <ion-icon name="map-outline" slot="start"></ion-icon>
-                    {{ mapOpen[order.id] ? 'Sakrij mapu' : (stallPoint(order) ? 'Tezga na mapi' : 'Pijaca na mapi') }}
-                  </ion-button>
-                  <ion-button fill="outline" [href]="stallDirections(point)" target="_blank">
-                    <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ stallPoint(order) ? 'Do tezge' : 'Do pijace' }}
-                  </ion-button>
-                </div>
-                <app-stall-map *ngIf="mapOpen[order.id]" [market]="marketPoint(order)" [stall]="stallPoint(order)"
-                               [stallLabel]="order.stallLabel ? 'Tezga ' + order.stallLabel : order.vendorName"
-                               [recenterLabel]="stallPoint(order) ? 'Na tezgu' : 'Na pijacu'"
-                               [marketLabel]="order.marketName || ''" [height]="220"></app-stall-map>
-              </ng-container>
+      }
+    }
+    @for (order of (tab === 'mine' ? activeMine : finishedMine); track order) {
+      <ion-card class="order-card" [class.finished]="tab === 'finished'">
+        <ion-card-header>
+          <div class="card-top">
+            <ion-card-subtitle>#{{ order.id }} · {{ order.createdAt | date:'dd.MM. HH:mm' }}</ion-card-subtitle>
+            <ion-badge [color]="getStatusColor(order.status)">{{ getStatusLabel(order.status) }}</ion-badge>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="route">
+            <div class="stop">
+              <ion-icon name="storefront-outline" color="primary"></ion-icon>
+              <div>
+                <strong>Preuzimanje</strong>
+                <p>{{ order.vendorName }}</p>
+                <p class="muted">{{ order.marketName }}@if (order.stallLabel) {
+                  <span> · Tezga {{ order.stallLabel }}</span>
+                }</p>
+                @for (phone of order.vendorPhones; track phone) {
+                  <p class="phone">
+                    <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + phone">{{ phone }}</a>
+                  </p>
+                }
+                <!-- Do preuzimanja: tezga na mapi (prodavac je pritisnuo "Ovde sam") ili bar pijaca; posle preuzimanja nestaje -->
+                @if (tab === 'mine' && order.status !== 'InDelivery' && pickupPoint(order); as point) {
+                  <div class="stall-map-actions">
+                    <ion-button fill="outline" (click)="toggleMap(order.id)">
+                      <ion-icon name="map-outline" slot="start"></ion-icon>
+                      {{ mapOpen[order.id] ? 'Sakrij mapu' : (stallPoint(order) ? 'Tezga na mapi' : 'Pijaca na mapi') }}
+                    </ion-button>
+                    <ion-button fill="outline" [href]="stallDirections(point)" target="_blank">
+                      <ion-icon name="navigate-outline" slot="start"></ion-icon> {{ stallPoint(order) ? 'Do tezge' : 'Do pijace' }}
+                    </ion-button>
+                  </div>
+                  @if (mapOpen[order.id]) {
+                    <app-stall-map [market]="marketPoint(order)" [stall]="stallPoint(order)"
+                      [stallLabel]="order.stallLabel ? 'Tezga ' + order.stallLabel : order.vendorName"
+                      [recenterLabel]="stallPoint(order) ? 'Na tezgu' : 'Na pijacu'"
+                    [marketLabel]="order.marketName || ''" [height]="220"></app-stall-map>
+                  }
+                }
+              </div>
+            </div>
+            <div class="stop">
+              <ion-icon name="location-outline" color="danger"></ion-icon>
+              <div>
+                <strong>Dostava</strong>
+                <p>{{ order.customerName }}</p>
+                <p>
+                  @if (order.deliveryAddress) {
+                    <a [href]="tab === 'mine' ? routeUrl([order]) : mapsUrl(order.deliveryAddress)" target="_blank" rel="noopener">{{ order.deliveryAddress }}</a>
+                  }
+                  @if (!order.deliveryAddress) {
+                    <span class="muted">Adresa nije uneta</span>
+                  }
+                </p>
+                @if (order.contactPhone) {
+                  <p class="phone">
+                    <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + order.contactPhone">{{ order.contactPhone }}</a>
+                  </p>
+                }
+              </div>
             </div>
           </div>
-          <div class="stop">
-            <ion-icon name="location-outline" color="danger"></ion-icon>
-            <div>
-              <strong>Dostava</strong>
-              <p>{{ order.customerName }}</p>
-              <p>
-                <a *ngIf="order.deliveryAddress" [href]="tab === 'mine' ? routeUrl([order]) : mapsUrl(order.deliveryAddress)" target="_blank" rel="noopener">{{ order.deliveryAddress }}</a>
-                <span *ngIf="!order.deliveryAddress" class="muted">Adresa nije uneta</span>
-              </p>
-              <p *ngIf="order.contactPhone" class="phone">
-                <ion-icon name="call-outline"></ion-icon> <a [href]="'tel:' + order.contactPhone">{{ order.contactPhone }}</a>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <ion-list lines="none" class="order-items">
-          <ion-item *ngFor="let item of order.items">
-            <ion-label><p>{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p></ion-label>
-            <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} din</ion-note>
-          </ion-item>
-        </ion-list>
-        <p class="summary">Za naplatu: <strong>{{ order.amountToPay | number:'1.0-0' }} din</strong>&nbsp;<span class="muted">(roba {{ order.totalAmount | number:'1.0-0' }}<ng-container *ngIf="order.deliveryFee > 0"> + usluga {{ order.deliveryFee | number:'1.0-0' }}</ng-container>)</span></p>
-        <p *ngIf="order.note" class="note">Napomena: {{ order.note }}</p>
-        <p *ngIf="order.closedByAdminAt" class="admin-closed">
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          <span>Zatvorio administrator<span *ngIf="order.closedByAdminName"> {{ order.closedByAdminName }}</span> · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</span>
-        </p>
-
-        <ion-button *ngIf="order.status === 'Confirmed' || order.status === 'ReadyForPickup'" expand="block"
-                    [disabled]="busyId === order.id" (click)="markPickedUp(order)">
-          <ion-icon name="bag-handle-outline" slot="start"></ion-icon>
-          Preuzeo sam robu
-        </ion-button>
-        <p *ngIf="order.status === 'Pending'" class="note">Sačekajte da prodavac potvrdi porudžbinu pre preuzimanja.</p>
-        <ion-button *ngIf="order.status === 'InDelivery'" expand="block" color="success"
-                    [disabled]="busyId === order.id" (click)="markDelivered(order)">
-          <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-          Isporučeno
-        </ion-button>
-        <ion-button *ngIf="order.status === 'InDelivery'" expand="block" color="danger" fill="outline"
-                    [disabled]="busyId === order.id" (click)="markNotDelivered(order)">
-          <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-          Nije dostavljeno
-        </ion-button>
-        <p *ngIf="order.status === 'NotDelivered'" class="not-delivered">
-          <ion-icon name="close-circle-outline"></ion-icon>
-          <span>Nije dostavljeno: {{ order.notDeliveredReason }}</span>
-        </p>
+          <ion-list lines="none" class="order-items">
+            @for (item of order.items; track item) {
+              <ion-item>
+                <ion-label><p>{{ item.productName }} — {{ item.quantity | number:'1.0-2' }} {{ getUnitLabel(item.unit, item.quantity) }}</p></ion-label>
+                <ion-note slot="end">{{ item.totalPrice | number:'1.0-0' }} din</ion-note>
+              </ion-item>
+            }
+          </ion-list>
+          <p class="summary">Za naplatu: <strong>{{ order.amountToPay | number:'1.0-0' }} din</strong>&nbsp;<span class="muted">(roba {{ order.totalAmount | number:'1.0-0' }}@if (order.deliveryFee > 0) {
+          + usluga {{ order.deliveryFee | number:'1.0-0' }}
+        })</span></p>
+        @if (order.note) {
+          <p class="note">Napomena: {{ order.note }}</p>
+        }
+        @if (order.closedByAdminAt) {
+          <p class="admin-closed">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Zatvorio administrator@if (order.closedByAdminName) {
+              <span> {{ order.closedByAdminName }}</span>
+            } · {{ order.closedByAdminAt | date:'dd.MM.yyyy HH:mm' }}</span>
+          </p>
+        }
+        @if (order.status === 'Confirmed' || order.status === 'ReadyForPickup') {
+          <ion-button expand="block"
+            [disabled]="busyId === order.id" (click)="markPickedUp(order)">
+            <ion-icon name="bag-handle-outline" slot="start"></ion-icon>
+            Preuzeo sam robu
+          </ion-button>
+        }
+        @if (order.status === 'Pending') {
+          <p class="note">Sačekajte da prodavac potvrdi porudžbinu pre preuzimanja.</p>
+        }
+        @if (order.status === 'InDelivery') {
+          <ion-button expand="block" color="success"
+            [disabled]="busyId === order.id" (click)="markDelivered(order)">
+            <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+            Isporučeno
+          </ion-button>
+        }
+        @if (order.status === 'InDelivery') {
+          <ion-button expand="block" color="danger" fill="outline"
+            [disabled]="busyId === order.id" (click)="markNotDelivered(order)">
+            <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+            Nije dostavljeno
+          </ion-button>
+        }
+        @if (order.status === 'NotDelivered') {
+          <p class="not-delivered">
+            <ion-icon name="close-circle-outline"></ion-icon>
+            <span>Nije dostavljeno: {{ order.notDeliveredReason }}</span>
+          </p>
+        }
       </ion-card-content>
     </ion-card>
-
-    <app-pager *ngIf="tab === 'finished'" [page]="finishedPage" [pageSize]="finishedPageSize" [totalCount]="finishedTotal"
-               [storageKey]="pageSizeKey" (pageChange)="goToFinishedPage($event)" (pageSizeChange)="setFinishedPageSize($event)">
+  }
+  @if (tab === 'finished') {
+    <app-pager [page]="finishedPage" [pageSize]="finishedPageSize" [totalCount]="finishedTotal"
+      [storageKey]="pageSizeKey" (pageChange)="goToFinishedPage($event)" (pageSizeChange)="setFinishedPageSize($event)">
     </app-pager>
-  </ng-container>
+  }
+}
 
-  <!-- Dnevni obračun: naplaćeno od kupaca, dugovanje prodavcima, zarada -->
-  <ng-container *ngIf="tab === 'settlement'">
-    <div class="settlement">
-      <label class="date-pick">Dan <input type="date" [(ngModel)]="settlementDate" (change)="loadSettlement()" /></label>
-      <ng-container *ngIf="settlement">
-        <div class="stats">
-          <div class="stat"><span class="value">{{ settlement.delivered }}</span><span class="label">isporučeno</span></div>
-          <div class="stat"><span class="value">{{ settlement.collected | number:'1.0-0' }}</span><span class="label">naplaćeno od kupaca (din)</span></div>
-          <div class="stat warn"><span class="value">{{ settlement.owedToVendors | number:'1.0-0' }}</span><span class="label">predati prodavcima (din)</span></div>
-          <div class="stat ok"><span class="value">{{ settlement.earned | number:'1.0-0' }}</span><span class="label">moja zarada (din)</span></div>
-        </div>
-        <p class="muted">Usluga se naplaćuje jednom po turi (jedna pijaca), bez obzira na broj tezgi.</p>
-        <p class="settlement-day">Obračun za {{ settlement.date | date:'dd.MM.yyyy.' }}</p>
-        <p *ngIf="settlement.inProgress > 0" class="muted">{{ inProgressText(settlement.inProgress) }}</p>
-
-        <h3>Predati prodavcima</h3>
-        <p *ngIf="settlement.vendors.length === 0" class="muted">Nema isporuka tog dana.</p>
-        <div *ngFor="let v of settlement.vendors" class="row" [class.handed]="isHanded(v.vendorId)">
+<!-- Dnevni obračun: naplaćeno od kupaca, dugovanje prodavcima, zarada -->
+@if (tab === 'settlement') {
+  <div class="settlement">
+    <label class="date-pick">Dan <input type="date" [(ngModel)]="settlementDate" (change)="loadSettlement()" /></label>
+    @if (settlement) {
+      <div class="stats">
+        <div class="stat"><span class="value">{{ settlement.delivered }}</span><span class="label">isporučeno</span></div>
+        <div class="stat"><span class="value">{{ settlement.collected | number:'1.0-0' }}</span><span class="label">naplaćeno od kupaca (din)</span></div>
+        <div class="stat warn"><span class="value">{{ settlement.owedToVendors | number:'1.0-0' }}</span><span class="label">predati prodavcima (din)</span></div>
+        <div class="stat ok"><span class="value">{{ settlement.earned | number:'1.0-0' }}</span><span class="label">moja zarada (din)</span></div>
+      </div>
+      <p class="muted">Usluga se naplaćuje jednom po turi (jedna pijaca), bez obzira na broj tezgi.</p>
+      <p class="settlement-day">Obračun za {{ settlement.date | date:'dd.MM.yyyy.' }}</p>
+      @if (settlement.inProgress > 0) {
+        <p class="muted">{{ inProgressText(settlement.inProgress) }}</p>
+      }
+      <h3>Predati prodavcima</h3>
+      @if (settlement.vendors.length === 0) {
+        <p class="muted">Nema isporuka tog dana.</p>
+      }
+      @for (v of settlement.vendors; track v) {
+        <div class="row" [class.handed]="isHanded(v.vendorId)">
           <span>
-            {{ v.vendorName }} <span class="muted">· {{ v.marketName }}<span *ngIf="v.stallLabel">, tezga {{ v.stallLabel }}</span> · {{ v.orders }} porudž.</span>
-            <a *ngIf="v.vendorPhone" class="muted" [href]="'tel:' + v.vendorPhone"><br>{{ v.vendorPhone }}</a>
-          </span>
-          <span class="amount-col">
-            <strong class="nowrap">{{ v.amount | number:'1.0-0' }} din</strong>
-            <ion-checkbox [checked]="isHanded(v.vendorId)" (ionChange)="toggleHanded(v.vendorId)" labelPlacement="start">Predato</ion-checkbox>
-          </span>
-        </div>
-
-        <ng-container *ngIf="settlement.returns.length > 0">
-          <h3>Vratiti robu na tezgu</h3>
-          <div *ngFor="let r of settlement.returns" class="row return">
-            <span>#{{ r.orderId }} {{ r.vendorName }} <span class="muted">· {{ r.marketName }}<span *ngIf="r.stallLabel">, tezga {{ r.stallLabel }}</span></span>
-              <br><span class="muted">{{ r.items }} – {{ r.reason }}</span>
-              <a *ngIf="r.vendorPhone" class="muted" [href]="'tel:' + r.vendorPhone"><br>{{ r.vendorPhone }}</a>
-            </span>
-          </div>
-        </ng-container>
-
-        <h3 *ngIf="settlement.deliveries.length > 0">Isporuke</h3>
-        <div *ngFor="let d of settlement.deliveries" class="row">
-          <span>#{{ d.orderId }} {{ d.deliveredAt | date:'HH:mm' }} · {{ d.vendorName }} <span class="muted">→ {{ d.deliveryAddress }}</span></span>
-          <strong class="nowrap">{{ d.goods + d.fee | number:'1.0-0' }} din</strong>
-        </div>
-      </ng-container>
+            {{ v.vendorName }} <span class="muted">· {{ v.marketName }}@if (v.stallLabel) {
+            <span>, tezga {{ v.stallLabel }}</span>
+          } · {{ v.orders }} porudž.</span>
+          @if (v.vendorPhone) {
+            <a class="muted" [href]="'tel:' + v.vendorPhone"><br>{{ v.vendorPhone }}</a>
+          }
+        </span>
+        <span class="amount-col">
+          <strong class="nowrap">{{ v.amount | number:'1.0-0' }} din</strong>
+          <ion-checkbox [checked]="isHanded(v.vendorId)" (ionChange)="toggleHanded(v.vendorId)" labelPlacement="start">Predato</ion-checkbox>
+        </span>
+      </div>
+    }
+    @if (settlement.returns.length > 0) {
+      <h3>Vratiti robu na tezgu</h3>
+      @for (r of settlement.returns; track r) {
+        <div class="row return">
+          <span>#{{ r.orderId }} {{ r.vendorName }} <span class="muted">· {{ r.marketName }}@if (r.stallLabel) {
+            <span>, tezga {{ r.stallLabel }}</span>
+          }</span>
+          <br><span class="muted">{{ r.items }} – {{ r.reason }}</span>
+          @if (r.vendorPhone) {
+            <a class="muted" [href]="'tel:' + r.vendorPhone"><br>{{ r.vendorPhone }}</a>
+          }
+        </span>
+      </div>
+    }
+  }
+  @if (settlement.deliveries.length > 0) {
+    <h3>Isporuke</h3>
+  }
+  @for (d of settlement.deliveries; track d) {
+    <div class="row">
+      <span>#{{ d.orderId }} {{ d.deliveredAt | date:'HH:mm' }} · {{ d.vendorName }} <span class="muted">→ {{ d.deliveryAddress }}</span></span>
+      <strong class="nowrap">{{ d.goods + d.fee | number:'1.0-0' }} din</strong>
     </div>
-  </ng-container>
+  }
+}
+</div>
+}
 </ion-content>
