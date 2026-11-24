@@ -41,10 +41,19 @@ public class PushService : IPushService
             var path = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_PATH") ?? config["Firebase:CredentialsPath"];
 
             GoogleCredential? credential = null;
-            if (!string.IsNullOrWhiteSpace(json))
-                credential = GoogleCredential.FromJson(json);
-            else if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
-                credential = GoogleCredential.FromFile(path);
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(json))
+                    credential = GoogleCredential.FromJson(NormalizeCredentialsJson(json));
+                else if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                    credential = GoogleCredential.FromFile(path);
+            }
+            catch (Exception ex)
+            {
+                // Neispravan ključ ne sme da obori zahtev koji je prvi napravio PushService (prijava, porudžbina)
+                logger.LogError(ex, "FIREBASE_CREDENTIALS_JSON nije ispravan (ceo JSON fajl servisnog naloga, od {{ do }}) - push obaveštenja su isključena.");
+                return;
+            }
 
             if (credential == null)
             {
@@ -56,6 +65,13 @@ public class PushService : IPushService
             _messaging = FirebaseMessaging.GetMessaging(app);
             logger.LogInformation("Firebase push obaveštenja su uključena.");
         }
+    }
+
+    // Render polje se lako zalepi bez prve i poslednje vitičaste zagrade: tada ih dodajemo
+    public static string NormalizeCredentialsJson(string json)
+    {
+        var trimmed = json.Trim();
+        return trimmed.StartsWith('{') ? trimmed : "{" + trimmed.TrimEnd(',') + "}";
     }
 
     public async Task RegisterDevice(int userId, string token, string? platform)

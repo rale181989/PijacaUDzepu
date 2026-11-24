@@ -10,12 +10,33 @@ U nazivima env varijabli dvostruka donja crta `__` znači „pod-podešavanje”
 
 ---
 
+## Mapa servisa – šta je šta
+
+Aplikacija koristi nekoliko spoljnih servisa. Svaki ima svoj nalog; ovde je pregled, a detalji su u odeljcima ispod.
+
+| Servis | Čemu služi | Stanje (24. 11. 2026.) | Za komercijalni rad |
+|---|---|---|---|
+| **GitHub** | kod i automatska provera (CI: testovi pri svakom push-u) | ✅ radi | – |
+| **Render** | server (API) i web verzija aplikacije | ✅ radi, besplatni plan (uspava se posle neaktivnosti) | plaćeni plan, da se ne uspava i ne briše disk (odeljak 2) |
+| **Neon** | baza podataka (Postgres), `DATABASE_URL` | ✅ radi | proveriti backup i plan (odeljak 9) |
+| **Firebase** | zvono i obaveštenja na telefonu kad je aplikacija zatvorena | ⚠️ ključ upisan bez `{ }` na početku i kraju – push ne radi; napraviti nov ključ i zalepiti ceo fajl (odeljak 3) | isto |
+| **Cloudflare R2** | trajno čuvanje slika proizvoda | ⏸ odloženo – do tada slike dodate preko aplikacije nestanu pri deploy-u/restartu | obavezno (odeljak 7) |
+| **Brevo** | e-mail (pozivnice, zaboravljena lozinka, odbijena porudžbina) | ⏸ nije podešeno | obavezno (odeljak 1) |
+| **Sentry** | prijava grešaka sa servera | ⏸ nije podešeno | preporučeno (odeljak 8) |
+| **Google Play** | objava Android aplikacije | ⏸ APK se deli ručno (debug) | ključ za potpis + nalog (odeljak 4c) |
+| **OpenStreetMap / OSM.de** | mapa tezgi | ✅ radi, bez naloga | kod većeg saobraćaja servis sa ključem (odeljak 4b) |
+
+Tajne vrednosti (ključevi, lozinke) se upisuju samo na Render (Environment) ili lokalno – nikad u git i nikad u poruke.
+Ako ključ izađe, napravi nov i stari obriši.
+
+---
+
 ## 0. Trenutno: DEMO faza
 
 Aplikacija je za sada demo: test nalozi i demo prodavci/proizvodi ostaju, admin može da ostane sa `admin1234`.
 Na Render-u je za to potrebna **samo jedna** varijabla:
 
-- [ ] `DEMO_ACCOUNTS` = `true` dodat na Render (pre sledećeg deploy-a)
+- [x] `DEMO_ACCOUNTS` = `true` dodat na Render (pre sledećeg deploy-a)
 
 Bez nje server u produkciji **zaključava** test naloge koji imaju poznate lozinke (kupac, kurir1/2, marko… –
 `kupac1234`, `kurir1234`, `vendor1234`) i prijava na njih javlja „Nalog je onemogućen”. Admin se ne zaključava.
@@ -126,7 +147,7 @@ a **blokira mobilnu aplikaciju** (CORS). Dok se ne objavi, APK prikazuje prazan 
 - [x] Napravljen Firebase projekat sa Android aplikacijom `rs.pijacaudzepu.app` (projekat `pijacaudzepu`)
 - [x] `google-services.json` dodat u `PijacaUDzepu.Client/android/app/` (samo lokalno: repozitorijum je javan, fajl je u `.gitignore`; na drugom računaru ga ponovo preuzmi iz Firebase-a)
 - [x] `pushEnabled: true` u `PijacaUDzepu.Client/src/environments/environment.mobile.ts`
-- [ ] Env varijabla `FIREBASE_CREDENTIALS_JSON` na Render-u
+- [ ] Env varijabla `FIREBASE_CREDENTIALS_JSON` na Render-u (upisana 24. 11. bez `{ }` – zameniti novim ključem, ceo fajl)
 
 Bez ovoga obaveštenja stižu samo dok je aplikacija otvorena.
 
@@ -140,7 +161,10 @@ Bez ovoga obaveštenja stižu samo dok je aplikacija otvorena.
 4. U `environment.mobile.ts` promeni `pushEnabled: false` u `pushEnabled: true`.
    **Ne uključuj pre koraka 3** – bez tog fajla aplikacija se ruši pri prijavi.
 5. Firebase → **Project settings → Service accounts → Generate new private key**.
-   Ceo sadržaj preuzetog JSON fajla upiši na Render kao `FIREBASE_CREDENTIALS_JSON`.
+   Ceo sadržaj preuzetog JSON fajla (Notepad → Ctrl+A, Ctrl+C – **od `{` do `}`**) upiši na Render kao
+   `FIREBASE_CREDENTIALS_JSON`. Provera: u Render → Logs posle pokretanja piše „Firebase push obaveštenja su uključena.”;
+   ako piše „FIREBASE_CREDENTIALS_JSON nije ispravan”, ključ nije ceo. Ključ ne deli nikome (ni u porukama): ako izađe,
+   napravi nov i stari obriši (Google Cloud → IAM & Admin → Service Accounts → Keys).
 6. `npm run build:android` u `PijacaUDzepu.Client`, pa napravi novi APK.
 
 ---
